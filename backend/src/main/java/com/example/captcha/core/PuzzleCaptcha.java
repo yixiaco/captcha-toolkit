@@ -43,6 +43,10 @@ public class PuzzleCaptcha {
     }
 
     public void run() {
+        // 缺少底图时使用默认生成的风景背景
+        if (source == null) {
+            source = com.example.captcha.util.SceneBackground.create(width, height);
+        }
         // 参考 puzzle_captcha：280 宽用 30 的拼图块，按宽度等比缩放
         vwh = Math.max(24, (int) Math.round(width * 30.0 / 280.0));
         x = random(vwh, width - vwh - MARGIN);

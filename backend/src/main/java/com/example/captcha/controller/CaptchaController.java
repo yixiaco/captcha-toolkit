@@ -58,7 +58,7 @@ public class CaptchaController {
     @GetMapping
     public CaptchaVo captcha(@RequestParam(defaultValue = "slider") String type,
                              @RequestParam(defaultValue = "classic") String shape,
-                             @RequestParam(defaultValue = "false") boolean debug) throws IOException {
+                             @RequestParam(defaultValue = "false") boolean debug) {
         String id = UUID.randomUUID().toString();
         CaptchaVo vo = new CaptchaVo();
         vo.setId(id);
@@ -84,26 +84,28 @@ public class CaptchaController {
         if (!Arrays.asList(PuzzleShape.NAMES).contains(shape)) {
             shape = "classic";
         }
+        BufferedImage source = null;
         try (InputStream in = getClass().getResourceAsStream("/images/captcha/default.jpg")) {
-            if (in == null) {
-                throw new IOException("缺少默认验证码图片 images/captcha/default.jpg");
+            if (in != null) {
+                source = ImageIO.read(in);
             }
-            BufferedImage source = ImageIO.read(in);
-            PuzzleCaptcha captcha = new PuzzleCaptcha(source);
-            captcha.setShape(shape);
-            captcha.run();
-            vo.setShape(shape);
-            vo.setImage1(ImageConvertUtil.toDataUri(captcha.getArtwork(), "png"));
-            vo.setImage2(ImageConvertUtil.toDataUri(captcha.getVacancy(), "png"));
-            vo.setWidth(captcha.getWidth());
-            vo.setHeight(captcha.getHeight());
-            vo.setPieceOffsetX(captcha.getPieceOffsetX());
-            if (debug) {
-                vo.setDebugX(captcha.getX());
-            }
-            store.put(CaptchaSession.slider(id, shape, captcha.getX(), captcha.getWidth(),
-                    captcha.getHeight(), expireSeconds * 1000));
+        } catch (IOException ignored) {
+            // 读取失败时 source 保持 null，由 PuzzleCaptcha 使用默认背景图生成方案
         }
+        PuzzleCaptcha captcha = new PuzzleCaptcha(source);
+        captcha.setShape(shape);
+        captcha.run();
+        vo.setShape(shape);
+        vo.setImage1(ImageConvertUtil.toDataUri(captcha.getArtwork(), "png"));
+        vo.setImage2(ImageConvertUtil.toDataUri(captcha.getVacancy(), "png"));
+        vo.setWidth(captcha.getWidth());
+        vo.setHeight(captcha.getHeight());
+        vo.setPieceOffsetX(captcha.getPieceOffsetX());
+        if (debug) {
+            vo.setDebugX(captcha.getX());
+        }
+        store.put(CaptchaSession.slider(id, shape, captcha.getX(), captcha.getWidth(),
+                captcha.getHeight(), expireSeconds * 1000));
         return vo;
     }
 

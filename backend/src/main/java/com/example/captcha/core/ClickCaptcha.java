@@ -1,12 +1,12 @@
 package com.example.captcha.core;
 
+import com.example.captcha.util.SceneBackground;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -47,8 +47,7 @@ public class ClickCaptcha {
     }
 
     public void run() {
-        image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
-        drawScene(image.createGraphics());
+        image = SceneBackground.create(WIDTH, HEIGHT);
 
         List<String> pool = new ArrayList<>(List.of(CHAR_POOL));
         Collections.shuffle(pool, random);
@@ -80,70 +79,6 @@ public class ClickCaptcha {
 
         image = warp(image);
         drawNoise(image.createGraphics());
-    }
-
-    private void drawScene(Graphics2D g) {
-        int hue = random.nextInt(360);
-        g.setPaint(new GradientPaint(0, 0, Color.getHSBColor(hue / 360f, 0.65f, 0.78f),
-                0, HEIGHT, Color.getHSBColor(((hue + 55) % 360) / 360f, 0.65f, 0.94f)));
-        g.fillRect(0, 0, WIDTH, HEIGHT);
-
-        // 太阳
-        int sunX = (int) (WIDTH * (0.18 + random.nextDouble() * 0.64));
-        int sunY = (int) (HEIGHT * (0.1 + random.nextDouble() * 0.22));
-        int sunR = 13 + random.nextInt(12);
-        g.setColor(new Color(255, 244, 179));
-        g.fillOval(sunX - sunR, sunY - sunR, sunR * 2, sunR * 2);
-
-        // 云
-        g.setColor(new Color(255, 255, 255, 150));
-        for (int i = 0; i < 4; i++) {
-            int cx = (int) (WIDTH * (0.08 + random.nextDouble() * 0.84));
-            int cy = (int) (HEIGHT * (0.08 + random.nextDouble() * 0.34));
-            int r = 9 + random.nextInt(8);
-            g.fillOval(cx - r, cy - r, r * 2, r * 2);
-            g.fillOval(cx + r - (int) (r * 0.7), cy - (int) (r * 0.35) - (int) (r * 0.7), (int) (r * 1.4), (int) (r * 1.4));
-            g.fillOval(cx - r - (int) (r * 0.5), cy - (int) (r * 0.3), (int) (r * 1.2), (int) (r * 1.2));
-        }
-
-        // 远山
-        ridge(g, hue + 140, 0.38f, 0.62f, HEIGHT * 0.13, 5);
-        // 近丘
-        ridge(g, hue + 152, 0.42f, 0.52f, HEIGHT * 0.09, 7);
-
-        // 草地
-        g.setPaint(new GradientPaint(0, HEIGHT * 0.72f,
-                Color.getHSBColor(((hue + 160) % 360) / 360f, 0.46f, 0.58f),
-                0, HEIGHT, Color.getHSBColor(((hue + 170) % 360) / 360f, 0.4f, 0.44f)));
-        g.fillRect(0, (int) (HEIGHT * 0.72), WIDTH, (int) (HEIGHT * 0.28));
-
-        // 树
-        for (int i = 0; i < 9; i++) {
-            int tx = (int) (WIDTH * (0.04 + random.nextDouble() * 0.92));
-            int baseY = (int) (HEIGHT * (0.76 + random.nextDouble() * 0.2));
-            int size = 7 + random.nextInt(8);
-            g.setColor(new Color(92, 64, 38, 220));
-            g.fillRect(tx - size / 8, baseY - size * 7 / 10, size / 4, size * 9 / 10);
-            g.setColor(Color.getHSBColor(((hue + 150) % 360) / 360f, 0.48f, 0.42f));
-            g.fillOval(tx - size / 2, baseY - size - size / 2, size, size);
-            g.fillOval(tx - size, baseY - size * 3 / 4, size, size);
-            g.fillOval(tx, baseY - size * 3 / 4, size, size);
-        }
-    }
-
-    private void ridge(Graphics2D g, int hue, float sat, float bright, double amp, int steps) {
-        double phase = random.nextDouble() * Math.PI * 2;
-        int baseY = (int) (HEIGHT * (hue % 90 == 0 ? 0.62 : 0.78));
-        Polygon polygon = new Polygon();
-        polygon.addPoint(0, HEIGHT);
-        polygon.addPoint(0, baseY);
-        for (int x = 0; x <= WIDTH; x += WIDTH / steps) {
-            int y = (int) (baseY + Math.sin(x * 0.02 + phase) * amp + random(-3, 3));
-            polygon.addPoint(x, y);
-        }
-        polygon.addPoint(WIDTH, HEIGHT);
-        g.setColor(Color.getHSBColor(((hue % 360)) / 360f, sat, bright));
-        g.fillPolygon(polygon);
     }
 
     private Chip tryPlace(String ch, boolean target, List<Chip> placed, int maxAttempts) {
