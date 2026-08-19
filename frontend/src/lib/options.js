@@ -19,7 +19,7 @@ export const defaultCaptchaOptions = {
   showShapePicker: true,
   handleWidth: 44,
   // 点选
-  promptPrefix: '请依次点击',
+  promptPrefix: '请依次点选',
   markMinDistance: 16,
   // 行为
   debug: false,

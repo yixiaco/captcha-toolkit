@@ -86,4 +86,25 @@ class CaptchaEngineTest {
         VerifyResult result = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
         assertFalse(result.isSuccess());
     }
+
+    @Test
+    void clickUsesConfiguredTargetText() {
+        CaptchaConfig config = new CaptchaConfig();
+        config.setDebugEnabled(true);
+        config.getClick().setMinElapsedMs(0);
+        config.getClick().setTargetText("星巴克");
+        CaptchaEngine engine = CaptchaEngine.of(config,
+                new InMemoryCaptchaSessionStore(), new DataUriImageCodec(),
+                List.of(), new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())));
+
+        CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
+        assertEquals(List.of("星", "巴", "克"), challenge.getPrompt());
+        assertEquals(3, challenge.getDebugTargets().size());
+
+        List<PointVo> points = challenge.getDebugTargets().stream()
+                .map(p -> new PointVo(p.getX(), p.getY()))
+                .toList();
+        VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+    }
 }

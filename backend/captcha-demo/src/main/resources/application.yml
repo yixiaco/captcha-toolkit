@@ -46,6 +46,8 @@ captcha:
       generate-fallback: true
     width: 340
     height: 190
+    # 指定目标文字：例如“星巴克”→ 请依次点选 星、巴、克；留空则随机选字
+    target-text: 星巴克
     target-count: 3
     distractor-count: 5
     tolerance: 18

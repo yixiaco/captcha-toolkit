@@ -218,6 +218,7 @@ public class CaptchaProperties {
         private int height = 190;
         private int targetCount = 3;
         private int distractorCount = 5;
+        private String targetText = "";
         private double tolerance = 18;
         private long minElapsedMs = 800;
         private long expireSeconds = 300;
@@ -282,6 +283,14 @@ public class CaptchaProperties {
 
         public void setTargetCount(int targetCount) {
             this.targetCount = targetCount;
+        }
+
+        public String getTargetText() {
+            return targetText;
+        }
+
+        public void setTargetText(String targetText) {
+            this.targetText = targetText;
         }
 
         public int getDistractorCount() {
@@ -552,6 +561,7 @@ public class CaptchaProperties {
         c.setHeight(click.getHeight());
         c.setTargetCount(click.getTargetCount());
         c.setDistractorCount(click.getDistractorCount());
+        c.setTargetText(click.getTargetText());
         c.setTolerance(click.getTolerance());
         c.setMinElapsedMs(click.getMinElapsedMs());
         c.setExpireSeconds(click.getExpireSeconds());
