@@ -3,6 +3,7 @@ node_modules/
 
 # 构建产物
 dist/
+backend/target/
 
 # 本地环境与编辑器
 .vite/

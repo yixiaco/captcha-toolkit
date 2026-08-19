@@ -28,19 +28,17 @@
     </div>
 
     <div class="img-wrap" :style="{ width: width + 'px', height: height + 'px' }">
-      <img v-if="holeData" :src="holeData" class="captcha-img" alt="验证图片" draggable="false" />
+      <img v-if="image1" :src="image1" class="captcha-img" alt="验证图片" draggable="false" />
 
       <img
-        v-if="pieceData"
-        :src="pieceData"
+        v-if="image2"
+        :src="image2"
         class="piece"
         alt=""
         draggable="false"
         :style="{
-          width: pieceCanvasSize + 'px',
-          height: pieceCanvasSize + 'px',
-          left: pieceLeft - pieceMargin + 'px',
-          top: targetY - pieceMargin + 'px',
+          height: height + 'px',
+          transform: `translateX(${pieceLeft - pieceOffsetX}px)`,
         }"
       />
 
@@ -82,7 +80,8 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { createSliderAssets, PUZZLE_SHAPES } from '../utils/captchaImages'
+import { getCaptcha, verifyCaptcha } from '../api/captcha'
+import { PUZZLE_SHAPES } from '../utils/puzzleShapes'
 
 const props = defineProps({
   width: { type: Number, default: 340 },
@@ -92,25 +91,20 @@ const props = defineProps({
 
 const emit = defineEmits(['success'])
 
+const rootRef = ref(null)
+const trackRef = ref(null)
 const status = ref('loading')
-const holeData = ref('')
-const pieceData = ref('')
-const pieceSize = ref(0)
-const pieceMargin = ref(0)
-const pieceCanvasSize = ref(0)
-const targetX = ref(0)
-const targetY = ref(0)
+const image1 = ref('')
+const image2 = ref('')
+const captchaId = ref('')
+const pieceOffsetX = ref(0)
 const pieceLeft = ref(0)
 const dragging = ref(false)
 const shaking = ref(false)
-const trackRef = ref(null)
-const rootRef = ref(null)
 const selectedShape = ref('')
 
 const HANDLE_WIDTH = 44
-const TOLERANCE = 6
 let trackWidth = props.width
-let assets = null
 let startClientX = 0
 let startLeft = 0
 
@@ -122,37 +116,39 @@ function maxLeft() {
   return Math.max(0, trackWidth - HANDLE_WIDTH)
 }
 
+async function loadCaptcha() {
+  status.value = 'loading'
+  image1.value = ''
+  image2.value = ''
+  try {
+    const res = await getCaptcha({
+      type: 'slider',
+      shape: selectedShape.value || undefined,
+      debug: import.meta.env.DEV ? '1' : undefined,
+    })
+    captchaId.value = res.id
+    image1.value = res.image1
+    image2.value = res.image2
+    pieceOffsetX.value = res.pieceOffsetX || 0
+    pieceLeft.value = 0
+    status.value = 'idle'
+    // 仅开发模式暴露答案，便于自动化自检；生产构建不会发送 debug 参数
+    if (import.meta.env.DEV && rootRef.value) {
+      rootRef.value.dataset.captchaId = res.id
+      if (res.debugX != null) {
+        rootRef.value.dataset.debugX = String(res.debugX)
+      }
+    }
+  } catch (error) {
+    console.error('加载滑块验证码失败', error)
+    status.value = 'idle'
+  }
+}
+
 function selectShape(key) {
   if (status.value === 'success') return
   selectedShape.value = key
-  generate()
-}
-
-function generate() {
-  status.value = 'loading'
-  holeData.value = ''
-  pieceData.value = ''
-
-  // 模拟图片异步加载，让加载态可见
-  setTimeout(() => {
-    assets = createSliderAssets(props.width, props.height, selectedShape.value || undefined)
-    holeData.value = assets.hole
-    pieceData.value = assets.piece
-    pieceSize.value = assets.pieceSize
-    pieceMargin.value = assets.margin
-    pieceCanvasSize.value = assets.pieceSize + assets.margin * 2
-    targetX.value = assets.targetX
-    targetY.value = assets.targetY
-    pieceLeft.value = 0
-    status.value = 'idle'
-    // 仅开发模式暴露答案坐标，便于自动化自检；生产构建不会写入
-    if (import.meta.env.DEV && rootRef.value) {
-      rootRef.value.dataset.targetX = String(assets.targetX)
-      rootRef.value.dataset.targetY = String(assets.targetY)
-      rootRef.value.dataset.pieceSize = String(assets.pieceSize)
-      rootRef.value.dataset.shape = assets.shape
-    }
-  }, 450)
+  loadCaptcha()
 }
 
 function onPointerDown(event) {
@@ -170,31 +166,49 @@ function onPointerMove(event) {
   pieceLeft.value = Math.min(maxLeft(), Math.max(0, next))
 }
 
-function onPointerUp() {
+async function onPointerUp() {
   if (!dragging.value) return
   dragging.value = false
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
 
-  if (Math.abs(pieceLeft.value - targetX.value) <= TOLERANCE) {
-    status.value = 'success'
-    emit('success')
-  } else {
+  try {
+    const res = await verifyCaptcha({
+      id: captchaId.value,
+      type: 'slider',
+      x: Math.round(pieceLeft.value),
+      width: props.width,
+    })
+    if (res.success) {
+      status.value = 'success'
+      emit('success')
+    } else {
+      shaking.value = true
+      setTimeout(() => {
+        shaking.value = false
+        pieceLeft.value = 0
+        loadCaptcha()
+      }, 450)
+    }
+  } catch (error) {
+    console.error('滑块验证请求失败', error)
     shaking.value = true
     setTimeout(() => {
       shaking.value = false
       pieceLeft.value = 0
-    }, 420)
+    }, 450)
   }
 }
 
 onMounted(async () => {
   await nextTick()
-  if (trackRef.value) trackWidth = trackRef.value.clientWidth
+  if (trackRef.value) {
+    trackWidth = trackRef.value.clientWidth
+  }
   if (props.initialShape && PUZZLE_SHAPES[props.initialShape]) {
     selectedShape.value = props.initialShape
   }
-  generate()
+  loadCaptcha()
 })
 
 onBeforeUnmount(() => {

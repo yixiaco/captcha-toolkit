@@ -431,9 +431,11 @@ button {
 
 .piece {
   position: absolute;
+  left: 0;
+  top: 0;
   z-index: 2;
   pointer-events: none;
-  will-change: left;
+  will-change: transform;
 }
 
 .slider-track {

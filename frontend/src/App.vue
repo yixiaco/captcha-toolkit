@@ -71,7 +71,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import CaptchaModal from './components/CaptchaModal.vue'
-import { PUZZLE_SHAPES } from './utils/captchaImages'
+import { PUZZLE_SHAPES } from './utils/puzzleShapes'
 
 const account = ref('')
 const password = ref('')
