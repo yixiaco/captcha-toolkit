@@ -144,13 +144,15 @@ public class ClickCaptcha {
      * 绘制单个字：阴影 → 变形容器 → multiply/screen 混合
      */
     private void drawChip(Chip chip) {
-        // 采样该字所在位置的背景色，作为同色系配色的基准
-        int px = clamp((int) Math.round(chip.x), 0, WIDTH - 1);
-        int py = clamp((int) Math.round(chip.y), 0, HEIGHT - 1);
-        Color bg = new Color(image.getRGB(px, py));
-        chip.textColor = pickColor(bg);
-        chip.lightColor = lighten(chip.textColor);
-        chip.dark = brightness(chip.textColor) < 0.45f;
+        // 采样字形上下两片区域的背景平均色：
+        // 上端颜色作为字顶部渐变、下端颜色作为字底部渐变，
+        // 让字形颜色跟随照片本身的明暗/色相变化，而不是单一取色。
+        int radius = chip.size / 2 + 4;
+        Color bgTop = sampleArea(chip.x, chip.y - chip.size * 0.5, radius);
+        Color bgBottom = sampleArea(chip.x, chip.y + chip.size * 0.5, radius);
+        chip.textColor = pickColor(bgTop);
+        chip.lightColor = pickColor(bgBottom);
+        chip.dark = (brightness(bgTop) + brightness(bgBottom)) / 2f < 0.55f;
 
         // 高清渲染一个“脏字形”
         BufferedImage glyph = renderGlyph(chip);
@@ -455,27 +457,47 @@ public class ClickCaptcha {
     }
 
     /**
-     * 根据背景色挑选同色系文字颜色：
-     * 明度差只保留 16%~24%，饱和度压低、色相偏移收窄，
+     * 取某个圆形区域内的背景平均色，避免单像素取色偏差
+     */
+    private Color sampleArea(double cx, double cy, int radius) {
+        long r = 0;
+        long g = 0;
+        long b = 0;
+        int count = 0;
+        int minX = clamp((int) Math.floor(cx - radius), 0, WIDTH - 1);
+        int maxX = clamp((int) Math.ceil(cx + radius), 0, WIDTH - 1);
+        int minY = clamp((int) Math.floor(cy - radius), 0, HEIGHT - 1);
+        int maxY = clamp((int) Math.ceil(cy + radius), 0, HEIGHT - 1);
+        for (int y = minY; y <= maxY; y++) {
+            for (int x = minX; x <= maxX; x++) {
+                int rgb = image.getRGB(x, y);
+                r += (rgb >> 16) & 0xFF;
+                g += (rgb >> 8) & 0xFF;
+                b += rgb & 0xFF;
+                count++;
+            }
+        }
+        if (count == 0) {
+            return new Color(image.getRGB(clamp((int) Math.round(cx), 0, WIDTH - 1),
+                    clamp((int) Math.round(cy), 0, HEIGHT - 1)));
+        }
+        return new Color((int) (r / count), (int) (g / count), (int) (b / count));
+    }
+
+    /**
+     * 根据背景平均色挑选文字颜色：
+     * 明度差只保留 12%~18%，饱和度几乎跟随背景、色相偏移 ±5°，
      * 让人眼能辨认但颜色与背景融为一体，OCR 很难做颜色分割。
      */
     private Color pickColor(Color bg) {
         float[] hsl = rgbToHsl(bg.getRed(), bg.getGreen(), bg.getBlue());
         float shift = hsl[2] > 0.55f
-                ? -(0.16f + random.nextFloat() * 0.08f)
-                : 0.16f + random.nextFloat() * 0.08f;
+                ? -(0.12f + random.nextFloat() * 0.06f)
+                : 0.12f + random.nextFloat() * 0.06f;
         float nl = clamp(hsl[2] + shift, 0.14f, 0.88f);
-        float ns = clamp(hsl[1] + (random.nextFloat() - 0.5f) * 0.14f, 0.15f, 0.35f);
-        float nh = (hsl[0] + (random.nextFloat() * 16 - 8) + 360) % 360;
+        float ns = clamp(hsl[1] + (random.nextFloat() - 0.5f) * 0.08f, 0.15f, 0.4f);
+        float nh = (hsl[0] + (random.nextFloat() * 10 - 5) + 360) % 360;
         return Color.getHSBColor(nh / 360f, ns, nl);
-    }
-
-    /**
-     * 同色相浅色版本，用于字形渐变
-     */
-    private Color lighten(Color c) {
-        float[] hsb = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), null);
-        return Color.getHSBColor(hsb[0], hsb[1], Math.min(0.95f, hsb[2] + 0.12f));
     }
 
     /**
