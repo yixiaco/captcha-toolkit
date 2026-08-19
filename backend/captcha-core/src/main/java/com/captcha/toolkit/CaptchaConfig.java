@@ -223,10 +223,10 @@ public class CaptchaConfig {
         private double tolerance = 18;
         private long minElapsedMs = 800;
         private long expireSeconds = 300;
-        private int fontSizeMin = 14;
-        private int fontSizeMax = 18;
+        private int fontSizeMin = 18;
+        private int fontSizeMax = 24;
         /** 字符间最小间距 */
-        private int minSpacing = 36;
+        private int minSpacing = 40;
         private List<String> charPool = new ArrayList<>(Arrays.asList(
                 "安", "全", "快", "捷", "智", "能", "验", "证",
                 "风", "控", "点", "选", "文", "字", "极", "简"));

@@ -53,9 +53,9 @@ captcha:
     tolerance: 18
     min-elapsed-ms: 800
     expire-seconds: 300
-    font-size-min: 14
-    font-size-max: 18
-    min-spacing: 36
+    font-size-min: 18
+    font-size-max: 24
+    min-spacing: 40
     # 字号小 + 明度差低 + 色相偏移小，让字融入背景但肉眼可辨
     lightness-delta-min: 0.12
     lightness-delta-max: 0.18

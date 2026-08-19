@@ -170,7 +170,7 @@ npm run dev
 | `click.background.sources` | 点选背景素材（默认空 = 程序生成风景图） | `[]` |
 | `click.background.generate-fallback` | 点选背景生成兜底 | `true` |
 | `click.tolerance` | 点选容差（px） | `18` |
-| `click.font-size-min/max` | 字号范围 | `14/18` |
+| `click.font-size-min/max` | 字号范围 | `18/24` |
 | `click.lightness-delta-min/max` | 字形与背景明度差 | `0.12/0.18` |
 | `click.hue-shift-max` | 字形色相偏移上限 | `5` |
 | `click.curve-count` / `dash-count` / `dot-count` | 干扰线/噪点数量 | `24/12/160` |
