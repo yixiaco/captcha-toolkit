@@ -250,16 +250,13 @@ export function createSliderAssets(width, height, shape) {
   holeCtx.fill()
   holeCtx.restore()
 
-  // 缺口内凹阴影：沿缺口边缘向内做一圈柔和的凹陷暗影
+  // 缺口凹陷：把缺口区域填回原图并整体压暗，模拟真实极验的“凹陷阴影”
   holeCtx.save()
   shapeDraw(holeCtx, targetX, targetY, pieceSize)
   holeCtx.clip()
-  shapeDraw(holeCtx, targetX, targetY, pieceSize)
-  holeCtx.shadowColor = 'rgba(0,0,0,0.55)'
-  holeCtx.shadowBlur = pieceSize * 0.2
-  holeCtx.strokeStyle = 'rgba(0,0,0,0.5)'
-  holeCtx.lineWidth = pieceSize * 0.16
-  holeCtx.stroke()
+  holeCtx.drawImage(bg, 0, 0)
+  holeCtx.fillStyle = 'rgba(0,0,0,0.3)'
+  holeCtx.fillRect(0, 0, width, height)
   holeCtx.restore()
 
   // 可拖动的拼图块（画布比块本身大一圈，容纳外凸卡榫和阴影）
@@ -267,19 +264,21 @@ export function createSliderAssets(width, height, shape) {
   piece.width = pieceCanvasSize
   piece.height = pieceCanvasSize
   const pieceCtx = piece.getContext('2d')
+
+  // 先画黑色柔光投影，再盖上拼图图像，只露出外侧阴影
   pieceCtx.save()
   shapeDraw(pieceCtx, margin, margin, pieceSize)
-  pieceCtx.clip()
-  pieceCtx.drawImage(bg, -targetX + margin, -targetY + margin)
+  pieceCtx.shadowColor = 'rgba(0,0,0,0.75)'
+  pieceCtx.shadowBlur = 9
+  pieceCtx.shadowOffsetY = 1
+  pieceCtx.fillStyle = '#000'
+  pieceCtx.fill()
   pieceCtx.restore()
 
   pieceCtx.save()
   shapeDraw(pieceCtx, margin, margin, pieceSize)
-  pieceCtx.shadowColor = 'rgba(0,0,0,0.35)'
-  pieceCtx.shadowBlur = 7
-  pieceCtx.strokeStyle = 'rgba(255,255,255,0.92)'
-  pieceCtx.lineWidth = 2
-  pieceCtx.stroke()
+  pieceCtx.clip()
+  pieceCtx.drawImage(bg, -targetX + margin, -targetY + margin)
   pieceCtx.restore()
 
   return {
