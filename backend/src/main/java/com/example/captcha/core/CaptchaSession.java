@@ -18,7 +18,6 @@ public class CaptchaSession {
     private final List<String> prompt;
     private final long createdAt;
     private final long expiresAt;
-    private int clickIndex;
 
     private CaptchaSession(String id, String type, String shape, int x, int width, int height,
                            List<Point> targets, List<String> prompt, long ttlMillis) {
@@ -84,11 +83,4 @@ public class CaptchaSession {
         return expiresAt;
     }
 
-    public int getClickIndex() {
-        return clickIndex;
-    }
-
-    public void setClickIndex(int clickIndex) {
-        this.clickIndex = clickIndex;
-    }
 }

@@ -123,30 +123,25 @@ public class CaptchaController {
                 return CaptchaResult.fail("验证速度异常");
             }
             Object raw = body.get("points");
-            if (!(raw instanceof List<?> points) || points.size() != 1) {
+            if (!(raw instanceof List<?> points)
+                    || points.size() != session.getTargets().size()) {
                 return CaptchaResult.fail("参数错误");
             }
-            Object rawPoint = points.get(0);
-            if (!(rawPoint instanceof Map<?, ?> point)) {
-                return CaptchaResult.fail("参数错误");
-            }
-            double px = num(point.get("x"));
-            double py = num(point.get("y"));
-            if (session.getClickIndex() >= session.getTargets().size()) {
-                store.remove(id);
-                return CaptchaResult.fail("参数错误");
-            }
-            Point expected = session.getTargets().get(session.getClickIndex());
-            if (Math.hypot(px - expected.x, py - expected.y) <= clickTolerance) {
-                session.setClickIndex(session.getClickIndex() + 1);
-                if (session.getClickIndex() >= session.getTargets().size()) {
-                    store.remove(id);
-                    return CaptchaResult.ok("验证通过", true);
+            for (int i = 0; i < points.size(); i++) {
+                Object rawPoint = points.get(i);
+                if (!(rawPoint instanceof Map<?, ?> point)) {
+                    return CaptchaResult.fail("参数错误");
                 }
-                return CaptchaResult.ok("正确", false);
+                double px = num(point.get("x"));
+                double py = num(point.get("y"));
+                Point expected = session.getTargets().get(i);
+                if (Math.hypot(px - expected.x, py - expected.y) > clickTolerance) {
+                    store.remove(id);
+                    return CaptchaResult.fail("点击错误，请重试");
+                }
             }
             store.remove(id);
-            return CaptchaResult.fail("点击错误，请重试");
+            return CaptchaResult.ok("验证通过", true);
         }
 
         // 滑块

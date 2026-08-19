@@ -57,14 +57,12 @@ const captchaId = ref('')
 const prompt = ref([])
 const marks = ref([])
 const shaking = ref(false)
-
-let expectedIndex = 0
+const submitting = ref(false)
 
 async function loadCaptcha() {
   status.value = 'loading'
   image1.value = ''
   marks.value = []
-  expectedIndex = 0
   try {
     const res = await getCaptcha({
       type: 'click',
@@ -91,27 +89,29 @@ async function loadCaptcha() {
 }
 
 async function onClick(event) {
-  if (status.value !== 'idle') return
+  if (status.value !== 'idle' || submitting.value) return
   const rect = imageRef.value.getBoundingClientRect()
   const x = Math.round((event.clientX - rect.left) * (props.width / rect.width))
   const y = Math.round((event.clientY - rect.top) * (props.height / rect.height))
 
+  // 避免重复点击同一个字
+  if (marks.value.some((m) => Math.hypot(m.x - x, m.y - y) < 16)) return
+  marks.value.push({ x, y, index: marks.value.length + 1 })
+
+  // 点完所有目标字后，一次性提交后端校验
+  if (marks.value.length < prompt.value.length) return
+  submitting.value = true
   try {
     const res = await verifyCaptcha({
       id: captchaId.value,
       type: 'click',
-      points: [{ x, y }],
+      points: marks.value.map((m) => ({ x: m.x, y: m.y })),
     })
     if (res.success) {
-      marks.value.push({ x, y, index: expectedIndex + 1 })
-      expectedIndex++
-      if (res.done) {
-        status.value = 'success'
-        emit('success')
-      }
+      status.value = 'success'
+      emit('success')
     } else {
       marks.value = []
-      expectedIndex = 0
       shaking.value = true
       setTimeout(() => {
         shaking.value = false
@@ -120,6 +120,9 @@ async function onClick(event) {
     }
   } catch (error) {
     console.error('点选验证请求失败', error)
+    submitting.value = false
+  } finally {
+    submitting.value = false
   }
 }
 

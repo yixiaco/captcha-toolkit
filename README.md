@@ -41,7 +41,7 @@ npm run dev
   返回验证码图片与元数据（`debug=1` 时额外返回答案，仅用于调试/自动化测试）
 - `POST /api/captcha/verify` 提交验证：
   - 滑块：`{ id, type: "slider", x, width }`
-  - 点选：`{ id, type: "click", points: [{ x, y }] }`（每次提交一个点，按顺序校验）
+  - 点选：`{ id, type: "click", points: [{ x, y }, ...] }`（点完目标字后一次性提交全部点，按顺序校验）
 
 ## 安全说明
 
