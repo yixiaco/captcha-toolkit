@@ -9,6 +9,7 @@ import com.captcha.toolkit.model.GeneratedCaptcha;
 import com.captcha.toolkit.model.PointVo;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
+import com.captcha.toolkit.util.ImageUtil;
 import com.captcha.toolkit.util.ColorUtil;
 
 import java.awt.AlphaComposite;
@@ -129,8 +130,11 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
      * 生成一张完整点选验证码图片。
      */
     private void run() {
-        image = backgroundProvider.provide(options.getWidth(), options.getHeight())
+        // 背景素材可能是任意尺寸的图片，必须统一等比裁剪到验证码画布大小，
+        // 否则文字坐标（340x190 坐标系）会画错位置、整体看起来“找不到字”
+        BufferedImage raw = backgroundProvider.provide(options.getWidth(), options.getHeight())
                 .orElseThrow(() -> new CaptchaException("没有可用的背景图，请配置 captcha.background.sources 或开启 generate-fallback"));
+        image = ImageUtil.cover(raw, options.getWidth(), options.getHeight());
         chips.clear();
         targets.clear();
         prompt.clear();
@@ -218,6 +222,10 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         punchHoles(mask);
         BufferedImage glyph = colorize(mask, chip.textColor, chip.lightColor);
         addGlyphTexture(glyph);
+        // 高清字形画完后缩回目标字号（chip.size + 留白），
+        // 否则 3 倍画布会直接 1:1 贴到图上，字比配置大 3 倍且互相挤压
+        int targetSize = chip.size + 26;
+        glyph = ImageUtil.scaleDown(glyph, targetSize, targetSize);
         return glyph;
     }
 

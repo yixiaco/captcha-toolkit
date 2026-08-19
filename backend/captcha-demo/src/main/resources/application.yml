@@ -40,6 +40,10 @@ captcha:
     shadow-offset-y: -1
     piece-padding: 8
   click:
+    background:
+      # 点选默认使用程序生成风景图；如需图片素材在这里配置
+      sources: []
+      generate-fallback: true
     width: 340
     height: 190
     target-count: 3

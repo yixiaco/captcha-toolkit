@@ -67,9 +67,16 @@ public class CaptchaAutoConfiguration {
                                        CaptchaSessionStore store,
                                        CaptchaImageCodec codec,
                                        BackgroundProvider backgroundProvider,
-                                       List<CaptchaFactory> userFactories) {
+                                       List<CaptchaFactory> userFactories,
+                                       CaptchaProperties properties) {
+        // 滑块使用 background.sources 素材 + 生成兜底；点选默认只使用程序生成风景图，
+        // 让字在简单背景上更醒目；宿主可通过 click.background.* 为点选单独配置素材。
+        BackgroundProvider clickBackgroundProvider = FallbackBackgroundProvider.of(
+                properties.getClick().getBackground().getSources(),
+                properties.getClick().getBackground().isGenerateFallback());
         return CaptchaEngine.of(config, store, codec,
-                userFactories == null ? List.of() : userFactories, backgroundProvider);
+                userFactories == null ? List.of() : userFactories,
+                backgroundProvider, clickBackgroundProvider);
     }
 
     @Bean

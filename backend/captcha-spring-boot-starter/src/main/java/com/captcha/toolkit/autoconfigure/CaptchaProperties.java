@@ -212,6 +212,8 @@ public class CaptchaProperties {
     }
 
     public static class Click {
+        /** 点选背景：默认 sources 为空，使用程序生成风景图；也可单独配置图片素材 */
+        private Background background = emptyClickBackground();
         private int width = 340;
         private int height = 190;
         private int targetCount = 3;
@@ -243,6 +245,20 @@ public class CaptchaProperties {
         private int dashCount = 12;
         private int dotCount = 160;
         private double occlusionProbability = 0.6;
+
+        private static Background emptyClickBackground() {
+            Background background = new Background();
+            background.setSources(new ArrayList<>());
+            return background;
+        }
+
+        public Background getBackground() {
+            return background;
+        }
+
+        public void setBackground(Background background) {
+            this.background = background;
+        }
 
         public int getWidth() {
             return width;

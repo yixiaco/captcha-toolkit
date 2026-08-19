@@ -49,6 +49,19 @@ public class CaptchaEngine {
                                    CaptchaImageCodec codec,
                                    List<CaptchaFactory> userFactories,
                                    BackgroundProvider defaultBackgroundProvider) {
+        return of(config, store, codec, userFactories,
+                defaultBackgroundProvider, defaultBackgroundProvider);
+    }
+
+    /**
+     * 分类型指定背景策略：滑块与点选可以使用不同的背景来源。
+     */
+    public static CaptchaEngine of(CaptchaConfig config,
+                                   CaptchaSessionStore store,
+                                   CaptchaImageCodec codec,
+                                   List<CaptchaFactory> userFactories,
+                                   BackgroundProvider sliderBackgroundProvider,
+                                   BackgroundProvider clickBackgroundProvider) {
         Map<CaptchaType, CaptchaGenerator> map = new EnumMap<>(CaptchaType.class);
         if (userFactories != null) {
             for (CaptchaFactory factory : userFactories) {
@@ -56,9 +69,9 @@ public class CaptchaEngine {
             }
         }
         map.putIfAbsent(CaptchaType.SLIDER,
-                new SliderCaptchaFactory(defaultBackgroundProvider).create(config));
+                new SliderCaptchaFactory(sliderBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.CLICK,
-                new ClickCaptchaFactory(defaultBackgroundProvider).create(config));
+                new ClickCaptchaFactory(clickBackgroundProvider).create(config));
         return new CaptchaEngine(map, store, codec, config.isDebugEnabled());
     }
 

@@ -4,6 +4,7 @@ import com.captcha.toolkit.CaptchaConfig;
 import com.captcha.toolkit.model.CaptchaException;
 import com.captcha.toolkit.shape.PuzzleShape;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
+import com.captcha.toolkit.util.ImageUtil;
 import com.jhlabs.image.InvertAlphaFilter;
 import com.jhlabs.image.ShadowFilter;
 
@@ -67,7 +68,7 @@ public class SliderRenderer {
         int renderVwh = vwh * renderScale;
         PuzzleShape shape = shapeRegistry.resolve(shapeName);
         Path2D path = shape.create(x * renderScale, y * renderScale, renderVwh);
-        BufferedImage thumbnail = cover(source, renderWidth, renderHeight);
+        BufferedImage thumbnail = ImageUtil.cover(source, renderWidth, renderHeight);
 
         // 小图（高清画布）：拼图块 = 原图按路径裁剪
         BufferedImage pieceFull = transparent(renderWidth, renderHeight);
@@ -97,7 +98,7 @@ public class SliderRenderer {
         g.dispose();
 
         // 高清大图缩小回目标尺寸，边缘自动平滑
-        artwork = scaleDown(artworkFull, width, height);
+        artwork = ImageUtil.scaleDown(artworkFull, width, height);
 
         // 小图裁剪成竖条（拼图块 + 投影），并记录内部左侧留白
         Rectangle2D bounds = path.getBounds2D();
@@ -108,37 +109,8 @@ public class SliderRenderer {
         int cropWHigh = cropW * renderScale;
         BufferedImage strip = pieceFull.getSubimage(cropX, 0, cropWHigh, renderHeight);
         BufferedImage stripShadowed = shadowFilter.filter(strip, null);
-        vacancy = scaleDown(stripShadowed, cropW, height);
+        vacancy = ImageUtil.scaleDown(stripShadowed, cropW, height);
         pieceOffsetX = x - cropX / renderScale;
-    }
-
-    private BufferedImage scaleDown(BufferedImage src, int w, int h) {
-        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = out.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.drawImage(src, 0, 0, w, h, null);
-        g.dispose();
-        return out;
-    }
-
-    private BufferedImage cover(BufferedImage src, int w, int h) {
-        double scale = Math.max((double) w / src.getWidth(), (double) h / src.getHeight());
-        int sw = (int) Math.ceil(src.getWidth() * scale);
-        int sh = (int) Math.ceil(src.getHeight() * scale);
-        BufferedImage scaled = new BufferedImage(sw, sh, BufferedImage.TYPE_INT_RGB);
-        Graphics2D sg = scaled.createGraphics();
-        sg.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        sg.drawImage(src, 0, 0, sw, sh, null);
-        sg.dispose();
-
-        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = out.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g.drawImage(scaled, (w - sw) / 2, (h - sh) / 2, null);
-        g.dispose();
-        return out;
     }
 
     private BufferedImage transparent(int w, int h) {
