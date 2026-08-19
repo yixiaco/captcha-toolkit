@@ -21,6 +21,11 @@ public class PuzzleCaptcha {
     private static final int DEFAULT_WIDTH = 340;
     private static final int DEFAULT_HEIGHT = 190;
     private static final int MARGIN = 10;
+    /**
+     * 超采样倍数：先用 2 倍分辨率渲染拼图边缘，再缩小回目标尺寸，
+     * 可以让弧形/斜边产生平滑的抗锯齿过渡，避免 1x 直出的锯齿感。
+     */
+    private static final int RENDER_SCALE = 2;
     /** 缺口填充：白色半透明蒙版（alpha 204） */
     private static final Color HOLE_COLOR = new Color(255, 255, 255, 204);
     private static final InvertAlphaFilter ALPHA_FILTER = new InvertAlphaFilter();
@@ -52,19 +57,23 @@ public class PuzzleCaptcha {
         x = random(vwh, width - vwh - MARGIN);
         y = random(MARGIN, height - vwh - MARGIN);
 
-        Path2D path = PuzzleShape.create(shape, x, y, vwh);
-        BufferedImage thumbnail = cover(source, width, height);
+        // 超采样：所有绘制都在 2 倍分辨率的画布上进行
+        int renderWidth = width * RENDER_SCALE;
+        int renderHeight = height * RENDER_SCALE;
+        int renderVwh = vwh * RENDER_SCALE;
+        Path2D path = PuzzleShape.create(shape, x * RENDER_SCALE, y * RENDER_SCALE, renderVwh);
+        BufferedImage thumbnail = cover(source, renderWidth, renderHeight);
 
-        // 小图：拼图块（原图裁剪）
-        BufferedImage pieceFull = transparent(width, height);
+        // 小图（高分辨率）：拼图块 = 原图按路径裁剪
+        BufferedImage pieceFull = transparent(renderWidth, renderHeight);
         Graphics2D vg = pieceFull.createGraphics();
         vg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         vg.setClip(path);
         vg.drawImage(thumbnail, 0, 0, null);
         vg.dispose();
 
-        // 大图：原图 + 缺口白色半透明蒙版 + 内阴影
-        BufferedImage artworkFull = transparent(width, height);
+        // 大图（高分辨率）：原图 + 缺口白色半透明蒙版 + 内阴影
+        BufferedImage artworkFull = transparent(renderWidth, renderHeight);
         Graphics2D g = artworkFull.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.drawImage(thumbnail, 0, 0, null);
@@ -72,21 +81,42 @@ public class PuzzleCaptcha {
         g.setComposite(AlphaComposite.SrcAtop);
         g.setColor(HOLE_COLOR);
         g.fill(path);
-        float radius = 6f;
-        ShadowFilter shadowFilter = new ShadowFilter(radius, 2f, -1f, 0.8f);
+        // 阴影参数同样按超采样倍数放大
+        float radius = 6f * RENDER_SCALE;
+        ShadowFilter shadowFilter = new ShadowFilter(radius, 2f * RENDER_SCALE, -1f * RENDER_SCALE, 0.8f);
         BufferedImage innerShadow = shadowFilter.filter(ALPHA_FILTER.filter(pieceFull, null), null);
         g.drawImage(innerShadow, 0, 0, null);
         g.dispose();
-        artwork = artworkFull;
+
+        // 高分辨率大图缩小回目标尺寸，边缘自动平滑
+        artwork = scaleDown(artworkFull, width, height);
 
         // 小图裁剪成竖条（拼图块 + 投影），并记录内部左侧留白
         Rectangle2D bounds = path.getBounds2D();
-        int pad = (int) Math.ceil(radius) + 2;
-        int cropX = Math.max(0, x - pad);
-        int cropW = Math.min(width - cropX, (int) Math.ceil(bounds.getWidth()) + pad * 2);
-        BufferedImage strip = pieceFull.getSubimage(cropX, 0, cropW, height);
-        vacancy = shadowFilter.filter(strip, null);
-        pieceOffsetX = x - cropX;
+        int pad = 8; // 最终尺寸下的左右留白（容纳阴影）
+        int cropX = Math.max(0, (x - pad) * RENDER_SCALE);
+        int cropW = (int) Math.ceil(bounds.getWidth() / RENDER_SCALE) + pad * 2;
+        cropW = Math.min(width - cropX / RENDER_SCALE, cropW);
+        int cropWHigh = cropW * RENDER_SCALE;
+        BufferedImage strip = pieceFull.getSubimage(cropX, 0, cropWHigh, renderHeight);
+        // 先加投影，再缩小回目标尺寸
+        BufferedImage stripShadowed = shadowFilter.filter(strip, null);
+        vacancy = scaleDown(stripShadowed, cropW, height);
+        pieceOffsetX = x - cropX / RENDER_SCALE;
+    }
+
+    /**
+     * 高质量缩小：双线性插值 + 质量优先渲染，消除高分辨率绘制留下的锯齿
+     */
+    private BufferedImage scaleDown(BufferedImage src, int w, int h) {
+        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = out.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.drawImage(src, 0, 0, w, h, null);
+        g.dispose();
+        return out;
     }
 
     private BufferedImage cover(BufferedImage src, int w, int h) {
