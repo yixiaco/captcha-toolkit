@@ -110,17 +110,13 @@ export const PUZZLE_SHAPES = {
   heart: { label: '爱心', draw: puzzlePathHeart },
 }
 
-// 经典极验造型：右侧半圆凸起，上边与左边各有一个向内凹陷的半圆
+// 经典极验造型：圆角方块 + 右侧半圆凸起
 function puzzlePathClassic(ctx, x, y, size) {
   const r = size * 0.09
   const knob = size * 0.14
 
   ctx.beginPath()
   ctx.moveTo(x + r, y)
-
-  // 上边：向内凹
-  ctx.lineTo(x + size * 0.38, y)
-  ctx.arc(x + size * 0.5, y, knob, Math.PI, 0, true)
   ctx.lineTo(x + size - r, y)
 
   ctx.arc(x + size - r, y + r, r, -Math.PI / 2, 0, false)
@@ -133,10 +129,6 @@ function puzzlePathClassic(ctx, x, y, size) {
   ctx.arc(x + size - r, y + size - r, r, 0, Math.PI / 2, false)
   ctx.lineTo(x + r, y + size)
   ctx.arc(x + r, y + size - r, r, Math.PI / 2, Math.PI, false)
-
-  // 左边：向内凹
-  ctx.lineTo(x, y + size * 0.62)
-  ctx.arc(x, y + size * 0.5, knob, Math.PI / 2, -Math.PI / 2, true)
   ctx.lineTo(x, y + r)
 
   ctx.arc(x + r, y + r, r, Math.PI, -Math.PI / 2, true)
@@ -256,6 +248,18 @@ export function createSliderAssets(width, height, shape) {
   shapeDraw(holeCtx, targetX, targetY, pieceSize)
   holeCtx.globalCompositeOperation = 'destination-out'
   holeCtx.fill()
+  holeCtx.restore()
+
+  // 缺口内凹阴影：沿缺口边缘向内做一圈柔和的凹陷暗影
+  holeCtx.save()
+  shapeDraw(holeCtx, targetX, targetY, pieceSize)
+  holeCtx.clip()
+  shapeDraw(holeCtx, targetX, targetY, pieceSize)
+  holeCtx.shadowColor = 'rgba(0,0,0,0.55)'
+  holeCtx.shadowBlur = pieceSize * 0.2
+  holeCtx.strokeStyle = 'rgba(0,0,0,0.5)'
+  holeCtx.lineWidth = pieceSize * 0.16
+  holeCtx.stroke()
   holeCtx.restore()
 
   // 可拖动的拼图块（画布比块本身大一圈，容纳外凸卡榫和阴影）

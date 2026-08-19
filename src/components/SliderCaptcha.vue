@@ -148,6 +148,8 @@ function generate() {
     // 仅开发模式暴露答案坐标，便于自动化自检；生产构建不会写入
     if (import.meta.env.DEV && rootRef.value) {
       rootRef.value.dataset.targetX = String(assets.targetX)
+      rootRef.value.dataset.targetY = String(assets.targetY)
+      rootRef.value.dataset.pieceSize = String(assets.pieceSize)
       rootRef.value.dataset.shape = assets.shape
     }
   }, 450)
