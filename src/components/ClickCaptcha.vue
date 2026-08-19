@@ -64,7 +64,7 @@ let expectedIndex = 0
 function build() {
   const shuffled = shuffle(CHAR_POOL)
   const targetChars = shuffled.slice(0, 3)
-  const distractorChars = shuffle(CHAR_POOL.filter((c) => !targetChars.includes(c))).slice(0, 6)
+  const distractorChars = shuffle(CHAR_POOL.filter((c) => !targetChars.includes(c))).slice(0, 5)
   targets.value = targetChars
 
   const placed = []
@@ -97,11 +97,11 @@ function build() {
 
 function tryPlace(item, placed, maxAttempts) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const size = Math.round(rand(22, 30))
-    const x = rand(26 + size / 2, props.width - 26 - size / 2)
-    const y = rand(30 + size / 2, props.height - 16 - size / 2)
+    const size = Math.round(rand(18, 24))
+    const x = rand(18 + size / 2, props.width - 18 - size / 2)
+    const y = rand(24 + size / 2, props.height - 12 - size / 2)
     const clear = placed.every(
-      (p) => Math.hypot(p.x - x, p.y - y) > (p.size + size) / 2 + 24
+      (p) => Math.hypot(p.x - x, p.y - y) > (p.size + size) / 2 + 36
     )
     if (clear) {
       return {
@@ -122,12 +122,12 @@ function tryPlace(item, placed, maxAttempts) {
 
 // 兜底：目标字即使在极端情况下没有空位，也强制放入图中
 function forcePlace(item) {
-  const size = Math.round(rand(22, 30))
+  const size = Math.round(rand(18, 24))
   return {
     char: item.char,
     isTarget: item.isTarget,
-    x: rand(26 + size / 2, props.width - 26 - size / 2),
-    y: rand(30 + size / 2, props.height - 16 - size / 2),
+    x: rand(18 + size / 2, props.width - 18 - size / 2),
+    y: rand(24 + size / 2, props.height - 12 - size / 2),
     size,
     rotation: rand(-18, 18),
     shear: rand(-0.14, 0.14),
