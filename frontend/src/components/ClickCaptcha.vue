@@ -59,11 +59,15 @@ const marks = ref([])
 const shaking = ref(false)
 const submitting = ref(false)
 
+/**
+ * 从后端加载一张点选验证码图片与提示字
+ */
 async function loadCaptcha() {
   status.value = 'loading'
   image1.value = ''
   marks.value = []
   try {
+    // 开发环境带 debug=1，后端会返回目标坐标便于自动化自检
     const res = await getCaptcha({
       type: 'click',
       debug: import.meta.env.DEV ? '1' : undefined,
@@ -88,8 +92,12 @@ async function loadCaptcha() {
   }
 }
 
+/**
+ * 点击图片：本地先标记，点满目标字数量后一次性提交后端校验
+ */
 async function onClick(event) {
   if (status.value !== 'idle' || submitting.value) return
+  // 把浏览器坐标换算成图片内部坐标（图片可能被 CSS 缩放）
   const rect = imageRef.value.getBoundingClientRect()
   const x = Math.round((event.clientX - rect.left) * (props.width / rect.width))
   const y = Math.round((event.clientY - rect.top) * (props.height / rect.height))
@@ -102,6 +110,7 @@ async function onClick(event) {
   if (marks.value.length < prompt.value.length) return
   submitting.value = true
   try {
+    // 按点击顺序提交全部坐标，后端按顺序逐个校验
     const res = await verifyCaptcha({
       id: captchaId.value,
       type: 'click',
@@ -111,6 +120,7 @@ async function onClick(event) {
       status.value = 'success'
       emit('success')
     } else {
+      // 校验失败：清空标记、抖动提示并重新加载
       marks.value = []
       shaking.value = true
       setTimeout(() => {

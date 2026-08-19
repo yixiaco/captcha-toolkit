@@ -116,11 +116,15 @@ function maxLeft() {
   return Math.max(0, trackWidth - HANDLE_WIDTH)
 }
 
+/**
+ * 从后端获取滑块验证码：大图（带缺口）+ 小图（拼图块）
+ */
 async function loadCaptcha() {
   status.value = 'loading'
   image1.value = ''
   image2.value = ''
   try {
+    // 开发环境带 debug=1，后端会返回答案 x 便于自动化自检
     const res = await getCaptcha({
       type: 'slider',
       shape: selectedShape.value || undefined,
@@ -129,6 +133,8 @@ async function loadCaptcha() {
     captchaId.value = res.id
     image1.value = res.image1
     image2.value = res.image2
+    // 小图是从拼图块左侧留白处裁剪的，需要把图片整体左移 offset，
+    // 让拼图块初始位置正好贴住大图左边缘
     pieceOffsetX.value = res.pieceOffsetX || 0
     pieceLeft.value = 0
     status.value = 'idle'
@@ -145,12 +151,18 @@ async function loadCaptcha() {
   }
 }
 
+/**
+ * 切换拼图形状：通知后端按新形状重新生成
+ */
 function selectShape(key) {
   if (status.value === 'success') return
   selectedShape.value = key
   loadCaptcha()
 }
 
+/**
+ * 按下滑块：记录起点并监听全局移动事件
+ */
 function onPointerDown(event) {
   if (status.value !== 'idle') return
   dragging.value = true
@@ -160,12 +172,18 @@ function onPointerDown(event) {
   window.addEventListener('pointerup', onPointerUp)
 }
 
+/**
+ * 拖动过程：限制在轨道范围内
+ */
 function onPointerMove(event) {
   if (!dragging.value) return
   const next = startLeft + event.clientX - startClientX
   pieceLeft.value = Math.min(maxLeft(), Math.max(0, next))
 }
 
+/**
+ * 松开滑块：把最终位移提交后端校验
+ */
 async function onPointerUp() {
   if (!dragging.value) return
   dragging.value = false
@@ -173,6 +191,7 @@ async function onPointerUp() {
   window.removeEventListener('pointerup', onPointerUp)
 
   try {
+    // x 是滑块走过的像素距离，width 用于后端做缩放换算
     const res = await verifyCaptcha({
       id: captchaId.value,
       type: 'slider',
@@ -183,6 +202,7 @@ async function onPointerUp() {
       status.value = 'success'
       emit('success')
     } else {
+      // 失败：抖动后重置滑块并换一张新验证码
       shaking.value = true
       setTimeout(() => {
         shaking.value = false
