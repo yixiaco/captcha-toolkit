@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.captcha.toolkit</groupId>
+        <artifactId>captcha-toolkit-parent</artifactId>
+        <version>0.1.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>captcha-spring-boot-starter</artifactId>
+    <name>captcha-spring-boot-starter</name>
+    <description>Spring Boot 自动配置：一行依赖即可把验证码接口嵌入任意 Web 项目</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.captcha.toolkit</groupId>
+            <artifactId>captcha-core</artifactId>
+        </dependency>
+        <!-- 传递核心启动器：自动配置、ConfigurationProperties 绑定 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <!-- Web 支持设为 optional：宿主项目已有 Web 时由宿主提供，纯后端项目也不会被强制引入 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+</project>

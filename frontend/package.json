@@ -1,11 +1,24 @@
 {
-  "name": "geetest-style-captcha-prototype",
-  "private": true,
-  "version": "1.0.0",
+  "name": "captcha-toolkit-vue",
+  "version": "0.1.0",
   "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/captcha-toolkit.umd.cjs",
+  "module": "./dist/captcha-toolkit.js",
+  "style": "./dist/captcha-toolkit.css",
+  "exports": {
+    ".": {
+      "import": "./dist/captcha-toolkit.js",
+      "require": "./dist/captcha-toolkit.umd.cjs"
+    },
+    "./style.css": "./dist/captcha-toolkit.css"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build:lib": "vite build",
+    "build:demo": "vite build --mode demo",
     "preview": "vite preview"
   },
   "dependencies": {

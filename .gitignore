@@ -3,7 +3,13 @@ node_modules/
 
 # 构建产物
 dist/
+dist-demo/
 backend/target/
+backend/**/target/
+backend/**/target/*
+
+# 前端临时构建文件
+frontend/.vite-temp/
 
 # 本地环境与编辑器
 .vite/

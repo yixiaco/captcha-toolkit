@@ -4,6 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- 父 POM：统一 Spring Boot 版本、Java 版本与模块依赖 -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -11,40 +12,37 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.example</groupId>
-    <artifactId>captcha-backend</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>captcha-backend</name>
-    <description>前后端结合的滑块/点选验证码后端</description>
+    <groupId>com.captcha.toolkit</groupId>
+    <artifactId>captcha-toolkit-parent</artifactId>
+    <version>0.1.0</version>
+    <packaging>pom</packaging>
+    <name>captcha-toolkit-parent</name>
+    <description>可嵌入的极验风格行为验证码工具：核心引擎 + Spring Boot Starter + 演示应用</description>
+
+    <modules>
+        <module>captcha-core</module>
+        <module>captcha-spring-boot-starter</module>
+        <module>captcha-demo</module>
+    </modules>
 
     <properties>
         <java.version>21</java.version>
+        <!-- 与 puzzle_captcha 参考实现一致：柔光投影 / alpha 反转滤镜 -->
+        <jhlabs.version>2.0.235-1</jhlabs.version>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <!-- 图像滤镜：阴影、alpha 反转（与 puzzle_captcha 参考实现一致） -->
-        <dependency>
-            <groupId>com.jhlabs</groupId>
-            <artifactId>filters</artifactId>
-            <version>2.0.235-1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.captcha.toolkit</groupId>
+                <artifactId>captcha-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.captcha.toolkit</groupId>
+                <artifactId>captcha-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

@@ -1,0 +1,66 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: captcha-demo
+
+captcha:
+  # 演示项目开放 debug 答案，便于自动化自检；生产环境务必设为 false
+  debug-enabled: true
+  api-prefix: /api/captcha
+  background:
+    sources:
+      - /images/captcha/default.jpg
+    generate-fallback: true
+  slider:
+    width: 340
+    height: 190
+    # 验证容差（像素，服务端图片坐标系）
+    tolerance: 8
+    # 最短验证耗时（毫秒），拦截脚本秒答
+    min-elapsed-ms: 500
+    expire-seconds: 300
+    default-shape: classic
+    enabled-shapes:
+      - classic
+      - leaf
+      - triangle
+      - circle
+      - diamond
+      - star
+      - heart
+    piece-size-ratio: 0.10714285714285714
+    margin: 10
+    render-scale: 2
+    hole-alpha: 204
+    shadow-radius: 6
+    shadow-opacity: 0.8
+    shadow-offset-x: 2
+    shadow-offset-y: -1
+    piece-padding: 8
+  click:
+    width: 340
+    height: 190
+    target-count: 3
+    distractor-count: 5
+    tolerance: 18
+    min-elapsed-ms: 800
+    expire-seconds: 300
+    font-size-min: 14
+    font-size-max: 18
+    min-spacing: 36
+    # 字号小 + 明度差低 + 色相偏移小，让字融入背景但肉眼可辨
+    lightness-delta-min: 0.12
+    lightness-delta-max: 0.18
+    hue-shift-max: 5
+    alpha-min: 0.78
+    alpha-max: 0.9
+    glyph-render-scale: 3
+    punch-holes-min: 5
+    punch-holes-max: 9
+    warp-amplitude: 2.0
+    curve-count: 24
+    dash-count: 12
+    dot-count: 160
+    occlusion-probability: 0.6
