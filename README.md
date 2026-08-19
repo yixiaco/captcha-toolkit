@@ -166,7 +166,7 @@ npm run dev
 | `slider.render-scale` | 抗锯齿超采样倍数 | `2` |
 | `click.target-count` | 点选目标字数 | `3` |
 | `click.distractor-count` | 干扰字数 | `5` |
-| `click.target-text` | 指定目标文字（如“星巴克”），留空则随机选字 | `''` |
+| `click.target-text` | 目标文字候选数组，每次随机选一个（如 `[星巴克, 麦当劳]`），留空则随机选字 | `[]` |
 | `click.background.sources` | 点选背景素材（默认空 = 程序生成风景图） | `[]` |
 | `click.background.generate-fallback` | 点选背景生成兜底 | `true` |
 | `click.tolerance` | 点选容差（px） | `18` |

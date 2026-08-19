@@ -218,7 +218,8 @@ public class CaptchaProperties {
         private int height = 190;
         private int targetCount = 3;
         private int distractorCount = 5;
-        private String targetText = "";
+        /** 目标文字候选数组：每次随机选一个，例如 [星巴克, 麦当劳] */
+        private List<String> targetText = new ArrayList<>();
         private double tolerance = 18;
         private long minElapsedMs = 800;
         private long expireSeconds = 300;
@@ -285,11 +286,11 @@ public class CaptchaProperties {
             this.targetCount = targetCount;
         }
 
-        public String getTargetText() {
+        public List<String> getTargetText() {
             return targetText;
         }
 
-        public void setTargetText(String targetText) {
+        public void setTargetText(List<String> targetText) {
             this.targetText = targetText;
         }
 
@@ -561,7 +562,7 @@ public class CaptchaProperties {
         c.setHeight(click.getHeight());
         c.setTargetCount(click.getTargetCount());
         c.setDistractorCount(click.getDistractorCount());
-        c.setTargetText(click.getTargetText());
+        c.setTargetText(new ArrayList<>(click.getTargetText()));
         c.setTolerance(click.getTolerance());
         c.setMinElapsedMs(click.getMinElapsedMs());
         c.setExpireSeconds(click.getExpireSeconds());

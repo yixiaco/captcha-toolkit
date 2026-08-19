@@ -92,13 +92,15 @@ class CaptchaEngineTest {
         CaptchaConfig config = new CaptchaConfig();
         config.setDebugEnabled(true);
         config.getClick().setMinElapsedMs(0);
-        config.getClick().setTargetText("星巴克");
+        config.getClick().setTargetText(List.of("星巴克", "麦当劳"));
         CaptchaEngine engine = CaptchaEngine.of(config,
                 new InMemoryCaptchaSessionStore(), new DataUriImageCodec(),
                 List.of(), new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())));
 
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
-        assertEquals(List.of("星", "巴", "克"), challenge.getPrompt());
+        // 每次从数组中随机选一个词组，并按词组内文字顺序提示
+        assertTrue(challenge.getPrompt().equals(List.of("星", "巴", "克"))
+                || challenge.getPrompt().equals(List.of("麦", "当", "劳")));
         assertEquals(3, challenge.getDebugTargets().size());
 
         List<PointVo> points = challenge.getDebugTargets().stream()

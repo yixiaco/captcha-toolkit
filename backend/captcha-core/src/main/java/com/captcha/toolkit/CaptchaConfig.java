@@ -215,10 +215,10 @@ public class CaptchaConfig {
         private int targetCount = 3;
         private int distractorCount = 5;
         /**
-         * 指定目标文字：例如“星巴克”会生成 星、巴、克 三个目标字，
-         * 提示也依次显示这三个字；留空则从 charPool 随机选 targetCount 个字。
+         * 目标文字候选数组：每次生成时随机选一个词组（如“星巴克”→ 星/巴/克），
+         * 提示也依次显示这个词组的字；留空则从 charPool 随机选 targetCount 个字。
          */
-        private String targetText = "";
+        private List<String> targetText = new ArrayList<>();
         /** 像素容差 */
         private double tolerance = 18;
         private long minElapsedMs = 800;
@@ -276,11 +276,11 @@ public class CaptchaConfig {
             this.targetCount = targetCount;
         }
 
-        public String getTargetText() {
+        public List<String> getTargetText() {
             return targetText;
         }
 
-        public void setTargetText(String targetText) {
+        public void setTargetText(List<String> targetText) {
             this.targetText = targetText;
         }
 

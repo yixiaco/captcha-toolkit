@@ -142,11 +142,14 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         List<String> pool = new ArrayList<>(options.getCharPool());
         Collections.shuffle(pool, random);
 
-        // 优先使用 target-text 指定的目标字（如“星巴克”→ 星/巴/克），
-        // 未配置时退回从字库随机选 targetCount 个字
+        // 优先从 target-text 数组里随机选一个词组作为目标
+        // （如“星巴克”→ 星/巴/克）；未配置时退回从字库随机选 targetCount 个字
         List<String> targetChars = new ArrayList<>();
-        String targetText = options.getTargetText();
-        if (targetText != null && !targetText.isBlank()) {
+        List<String> targetTexts = options.getTargetText();
+        if (targetTexts != null && !targetTexts.isEmpty()) {
+            List<String> candidates = new ArrayList<>(targetTexts);
+            Collections.shuffle(candidates, random);
+            String targetText = candidates.get(0);
             for (int i = 0; i < targetText.length(); i++) {
                 targetChars.add(String.valueOf(targetText.charAt(i)));
             }
