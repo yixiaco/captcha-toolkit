@@ -4,12 +4,31 @@ node_modules/
 # 构建产物
 dist/
 dist-demo/
-backend/target/
-backend/**/target/
-backend/**/target/*
 
 # 前端临时构建文件
 frontend/.vite-temp/
+
+# ========== 后端（Java / Maven） ==========
+
+# Maven 构建输出（多模块各自的 target 目录）
+backend/target/
+backend/**/target/
+
+# Maven 插件生成物
+dependency-reduced-pom.xml
+.flattened-pom.xml
+
+# 运行日志与 JVM 崩溃转储
+*.log
+hs_err_pid*
+replay_pid*
+*.hprof
+
+# IDE 项目文件
+*.iml
+.classpath
+.project
+.settings/
 
 # 本地环境与编辑器
 .vite/
