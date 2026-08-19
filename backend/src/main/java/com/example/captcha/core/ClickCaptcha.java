@@ -407,7 +407,8 @@ public class ClickCaptcha {
      */
     private Chip tryPlace(String ch, boolean target, List<Chip> placed, int maxAttempts) {
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
-            int size = 18 + random.nextInt(7);
+            // 字号 14~18px，更贴近极验点选字的比例，同时降低 OCR 可读性
+            int size = 14 + random.nextInt(5);
             double x = rand(18 + size / 2.0, WIDTH - 18 - size / 2.0);
             double y = rand(24 + size / 2.0, HEIGHT - 12 - size / 2.0);
             boolean clear = true;
@@ -428,7 +429,7 @@ public class ClickCaptcha {
      * 目标字兜底：即使没有空位也强制放入，保证提示中的字一定在图中
      */
     private Chip forcePlace(String ch, boolean target) {
-        int size = 18 + random.nextInt(7);
+        int size = 14 + random.nextInt(5);
         return chip(ch, target,
                 rand(18 + size / 2.0, WIDTH - 18 - size / 2.0),
                 rand(24 + size / 2.0, HEIGHT - 12 - size / 2.0),
@@ -447,22 +448,25 @@ public class ClickCaptcha {
         chip.size = size;
         chip.rotation = rand(-18, 18);
         chip.shear = rand(-0.14, 0.14);
-        chip.alpha = rand(0.82, 0.94);
+        // 半透明绘制，让字形颜色和背景进一步融合
+        chip.alpha = rand(0.78, 0.9);
         chip.font = FONTS[random.nextInt(FONTS.length)];
         return chip;
     }
 
     /**
-     * 根据背景色挑选同色系、仅靠明度差形成对比的文字颜色
+     * 根据背景色挑选同色系文字颜色：
+     * 明度差只保留 16%~24%，饱和度压低、色相偏移收窄，
+     * 让人眼能辨认但颜色与背景融为一体，OCR 很难做颜色分割。
      */
     private Color pickColor(Color bg) {
         float[] hsl = rgbToHsl(bg.getRed(), bg.getGreen(), bg.getBlue());
         float shift = hsl[2] > 0.55f
-                ? -(0.27f + random.nextFloat() * 0.07f)
-                : 0.27f + random.nextFloat() * 0.07f;
+                ? -(0.16f + random.nextFloat() * 0.08f)
+                : 0.16f + random.nextFloat() * 0.08f;
         float nl = clamp(hsl[2] + shift, 0.14f, 0.88f);
-        float ns = clamp(hsl[1] + (random.nextFloat() - 0.5f) * 0.18f, 0.2f, 0.45f);
-        float nh = (hsl[0] + (random.nextFloat() * 28 - 14) + 360) % 360;
+        float ns = clamp(hsl[1] + (random.nextFloat() - 0.5f) * 0.14f, 0.15f, 0.35f);
+        float nh = (hsl[0] + (random.nextFloat() * 16 - 8) + 360) % 360;
         return Color.getHSBColor(nh / 360f, ns, nl);
     }
 
