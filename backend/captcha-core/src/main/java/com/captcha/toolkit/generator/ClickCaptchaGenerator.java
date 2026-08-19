@@ -11,6 +11,7 @@ import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.util.ImageUtil;
 import com.captcha.toolkit.util.ColorUtil;
+import com.captcha.toolkit.word.WordFactory;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
@@ -48,6 +49,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
 
     private final CaptchaConfig.Click options;
     private final BackgroundProvider backgroundProvider;
+    private final WordFactory wordFactory;
     private final Random random = new Random();
 
     private BufferedImage image;
@@ -74,8 +76,15 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
     }
 
     public ClickCaptchaGenerator(CaptchaConfig.Click options, BackgroundProvider backgroundProvider) {
+        this(options, backgroundProvider, null);
+    }
+
+    public ClickCaptchaGenerator(CaptchaConfig.Click options,
+                                 BackgroundProvider backgroundProvider,
+                                 WordFactory wordFactory) {
         this.options = options;
         this.backgroundProvider = backgroundProvider;
+        this.wordFactory = wordFactory;
     }
 
     @Override
@@ -145,7 +154,9 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         // 优先从 target-text 数组里随机选一个词组作为目标
         // （如“星巴克”→ 星/巴/克）；未配置时退回从字库随机选 targetCount 个字
         List<String> targetChars = new ArrayList<>();
-        List<String> targetTexts = options.getTargetText();
+        List<String> targetTexts = wordFactory != null
+                ? wordFactory.getWords()
+                : options.getTargetText();
         if (targetTexts != null && !targetTexts.isEmpty()) {
             List<String> candidates = new ArrayList<>(targetTexts);
             Collections.shuffle(candidates, random);

@@ -12,6 +12,7 @@ import com.captcha.toolkit.model.GeneratedCaptcha;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.store.CaptchaSessionStore;
+import com.captcha.toolkit.word.WordFactory;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -62,6 +63,20 @@ public class CaptchaEngine {
                                    List<CaptchaFactory> userFactories,
                                    BackgroundProvider sliderBackgroundProvider,
                                    BackgroundProvider clickBackgroundProvider) {
+        return of(config, store, codec, userFactories,
+                sliderBackgroundProvider, clickBackgroundProvider, null);
+    }
+
+    /**
+     * 分类型指定背景策略，并允许注入词组工厂（点选目标词组来源）。
+     */
+    public static CaptchaEngine of(CaptchaConfig config,
+                                   CaptchaSessionStore store,
+                                   CaptchaImageCodec codec,
+                                   List<CaptchaFactory> userFactories,
+                                   BackgroundProvider sliderBackgroundProvider,
+                                   BackgroundProvider clickBackgroundProvider,
+                                   WordFactory wordFactory) {
         Map<CaptchaType, CaptchaGenerator> map = new EnumMap<>(CaptchaType.class);
         if (userFactories != null) {
             for (CaptchaFactory factory : userFactories) {
@@ -71,7 +86,7 @@ public class CaptchaEngine {
         map.putIfAbsent(CaptchaType.SLIDER,
                 new SliderCaptchaFactory(sliderBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.CLICK,
-                new ClickCaptchaFactory(clickBackgroundProvider).create(config));
+                new ClickCaptchaFactory(clickBackgroundProvider, wordFactory).create(config));
         return new CaptchaEngine(map, store, codec, config.isDebugEnabled());
     }
 

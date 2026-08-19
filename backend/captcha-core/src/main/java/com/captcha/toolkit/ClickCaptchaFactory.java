@@ -4,6 +4,7 @@ import com.captcha.toolkit.generator.CaptchaGenerator;
 import com.captcha.toolkit.generator.ClickCaptchaGenerator;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.SceneBackgroundProvider;
+import com.captcha.toolkit.word.WordFactory;
 
 /**
  * 文字点选验证码工厂。
@@ -11,13 +12,19 @@ import com.captcha.toolkit.render.SceneBackgroundProvider;
 public class ClickCaptchaFactory implements CaptchaFactory {
 
     private final BackgroundProvider backgroundProvider;
+    private final WordFactory wordFactory;
 
     public ClickCaptchaFactory() {
-        this(new SceneBackgroundProvider());
+        this(new SceneBackgroundProvider(), null);
     }
 
     public ClickCaptchaFactory(BackgroundProvider backgroundProvider) {
+        this(backgroundProvider, null);
+    }
+
+    public ClickCaptchaFactory(BackgroundProvider backgroundProvider, WordFactory wordFactory) {
         this.backgroundProvider = backgroundProvider;
+        this.wordFactory = wordFactory;
     }
 
     @Override
@@ -27,6 +34,6 @@ public class ClickCaptchaFactory implements CaptchaFactory {
 
     @Override
     public CaptchaGenerator create(CaptchaConfig config) {
-        return new ClickCaptchaGenerator(config.getClick(), backgroundProvider);
+        return new ClickCaptchaGenerator(config.getClick(), backgroundProvider, wordFactory);
     }
 }

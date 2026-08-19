@@ -9,6 +9,8 @@ import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.store.CaptchaSessionStore;
 import com.captcha.toolkit.store.InMemoryCaptchaSessionStore;
+import com.captcha.toolkit.word.ConfigWordFactory;
+import com.captcha.toolkit.word.WordFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -17,6 +19,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -51,6 +54,13 @@ public class CaptchaAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    public WordFactory captchaWordFactory(CaptchaProperties properties) {
+        // 默认从 click.target-text 配置读取词组；宿主自定义 WordFactory Bean 后自动替换
+        return new ConfigWordFactory(new ArrayList<>(properties.getClick().getTargetText()));
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public CaptchaSessionStore captchaSessionStore() {
         return new InMemoryCaptchaSessionStore();
     }
@@ -68,7 +78,8 @@ public class CaptchaAutoConfiguration {
                                        CaptchaImageCodec codec,
                                        BackgroundProvider backgroundProvider,
                                        List<CaptchaFactory> userFactories,
-                                       CaptchaProperties properties) {
+                                       CaptchaProperties properties,
+                                       WordFactory wordFactory) {
         // 滑块使用 background.sources 素材 + 生成兜底；点选默认只使用程序生成风景图，
         // 让字在简单背景上更醒目；宿主可通过 click.background.* 为点选单独配置素材。
         BackgroundProvider clickBackgroundProvider = FallbackBackgroundProvider.of(
@@ -76,7 +87,7 @@ public class CaptchaAutoConfiguration {
                 properties.getClick().getBackground().isGenerateFallback());
         return CaptchaEngine.of(config, store, codec,
                 userFactories == null ? List.of() : userFactories,
-                backgroundProvider, clickBackgroundProvider);
+                backgroundProvider, clickBackgroundProvider, wordFactory);
     }
 
     @Bean

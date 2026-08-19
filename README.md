@@ -74,6 +74,15 @@ VerifyResult result = engine.verify(challenge.getId(),
 - 换存储：实现 `CaptchaSessionStore` 并注册 Bean（默认内存实现，生产可换成 Redis）。
 - 换背景：实现 `BackgroundProvider` 并注册 Bean；默认支持 classpath/文件路径 + 程序生成兜底。
 - 换形状：实现 `PuzzleShape` 并注册到 `PuzzleShapeRegistry`。
+- 换词组来源：实现 `WordFactory` 并注册 Bean，点选目标词组可动态获取（数据库/远程接口等），
+  默认实现从 `captcha.click.target-text` 读取静态词组：
+
+  ```java
+  @Bean
+  public WordFactory dynamicWordFactory(WordService wordService) {
+      return () -> wordService.randomWords(10);
+  }
+  ```
 
 ## 前端：嵌入其他项目
 

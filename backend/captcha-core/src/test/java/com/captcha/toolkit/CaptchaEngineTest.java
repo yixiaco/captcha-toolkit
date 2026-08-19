@@ -6,9 +6,11 @@ import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
 import com.captcha.toolkit.model.PointVo;
 import com.captcha.toolkit.model.VerifyResult;
+import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.render.SceneBackgroundProvider;
 import com.captcha.toolkit.store.InMemoryCaptchaSessionStore;
+import com.captcha.toolkit.word.WordFactory;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -102,6 +104,30 @@ class CaptchaEngineTest {
         assertTrue(challenge.getPrompt().equals(List.of("星", "巴", "克"))
                 || challenge.getPrompt().equals(List.of("麦", "当", "劳")));
         assertEquals(3, challenge.getDebugTargets().size());
+
+        List<PointVo> points = challenge.getDebugTargets().stream()
+                .map(p -> new PointVo(p.getX(), p.getY()))
+                .toList();
+        VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+    }
+
+    @Test
+    void clickUsesWordFactory() {
+        CaptchaConfig config = new CaptchaConfig();
+        config.setDebugEnabled(true);
+        config.getClick().setMinElapsedMs(0);
+        BackgroundProvider background = new FallbackBackgroundProvider(
+                List.of(new SceneBackgroundProvider()));
+        // 宿主可注入任意词组工厂（例如从数据库/远程接口动态取词组）
+        WordFactory wordFactory = () -> List.of("星巴克", "麦当劳");
+        CaptchaEngine engine = CaptchaEngine.of(config,
+                new InMemoryCaptchaSessionStore(), new DataUriImageCodec(),
+                List.of(), background, background, wordFactory);
+
+        CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
+        assertTrue(challenge.getPrompt().equals(List.of("星", "巴", "克"))
+                || challenge.getPrompt().equals(List.of("麦", "当", "劳")));
 
         List<PointVo> points = challenge.getDebugTargets().stream()
                 .map(p -> new PointVo(p.getX(), p.getY()))
