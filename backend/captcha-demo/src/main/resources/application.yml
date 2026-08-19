@@ -39,6 +39,10 @@ captcha:
     shadow-offset-x: 2
     shadow-offset-y: -1
     piece-padding: 8
+    # 假目标（干扰凹槽）数量：图中会出现多个缺口，只有真目标能拼合
+    fake-target-count: 2
+    # 假目标纵向最小间距，避免与真目标/彼此落在同一 y 轴
+    fake-target-min-gap: 24
   click:
     background:
       # 点选默认使用程序生成风景图；如需图片素材在这里配置

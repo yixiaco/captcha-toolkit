@@ -5,6 +5,7 @@ import com.captcha.toolkit.CaptchaType;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.GeneratedCaptcha;
+import com.captcha.toolkit.model.PointVo;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.SliderRenderer;
@@ -55,6 +56,9 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
         result.setPieceOffsetX(renderer.getPieceOffsetX());
         if (request.isDebug()) {
             result.setDebugX(renderer.getX());
+            result.setDebugFakeTargets(renderer.getFakeTargets().stream()
+                    .map(p -> new PointVo(p.x, p.y))
+                    .toList());
         }
         return result;
     }

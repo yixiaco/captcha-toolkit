@@ -21,6 +21,7 @@ public class GeneratedCaptcha {
     private Integer pieceOffsetX;
     private Integer debugX;
     private List<PointVo> debugTargets;
+    private List<PointVo> debugFakeTargets;
     private final Map<String, Object> metadata = new HashMap<>();
 
     public CaptchaSession getSession() {
@@ -101,6 +102,14 @@ public class GeneratedCaptcha {
 
     public void setDebugTargets(List<PointVo> debugTargets) {
         this.debugTargets = debugTargets;
+    }
+
+    public List<PointVo> getDebugFakeTargets() {
+        return debugFakeTargets;
+    }
+
+    public void setDebugFakeTargets(List<PointVo> debugFakeTargets) {
+        this.debugFakeTargets = debugFakeTargets;
     }
 
     public Map<String, Object> getMetadata() {

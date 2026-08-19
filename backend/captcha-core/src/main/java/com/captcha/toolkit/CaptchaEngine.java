@@ -146,6 +146,7 @@ public class CaptchaEngine {
         if (debug && debugEnabled) {
             challenge.setDebugX(generated.getDebugX());
             challenge.setDebugTargets(generated.getDebugTargets());
+            challenge.setDebugFakeTargets(generated.getDebugFakeTargets());
         }
         return challenge;
     }

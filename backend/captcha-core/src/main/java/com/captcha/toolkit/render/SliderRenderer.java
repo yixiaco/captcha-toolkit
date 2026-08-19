@@ -11,10 +11,14 @@ import com.jhlabs.image.ShadowFilter;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -42,6 +46,7 @@ public class SliderRenderer {
     private BufferedImage artwork;
     private BufferedImage vacancy;
     private int pieceOffsetX;
+    private final List<Point> fakeTargets = new ArrayList<>();
 
     public SliderRenderer(CaptchaConfig.Slider options,
                           BackgroundProvider backgroundProvider,
@@ -59,8 +64,22 @@ public class SliderRenderer {
                 .orElseThrow(() -> new CaptchaException("没有可用的背景图，请配置 captcha.background.sources 或开启 generate-fallback"));
         // 拼图块边长按宽度等比缩放（参考 puzzle_captcha：280 宽用 30）
         vwh = Math.max(24, (int) Math.round(width * options.getPieceSizeRatio()));
+        // 假目标与真目标/彼此之间不能在同一 y 轴：
+        // 先把可放位置按最小纵向间距分成固定槽位，真目标和每个假目标各占一个槽位
+        int minGap = Math.max(vwh, options.getFakeTargetMinGap());
+        List<Integer> ySlots = buildYSlots(minGap);
+        y = ySlots.get(random.nextInt(ySlots.size()));
         x = random(options.getMargin(), width - vwh - options.getMargin());
-        y = random(options.getMargin(), height - vwh - options.getMargin());
+
+        fakeTargets.clear();
+        int fakeCount = Math.max(0, options.getFakeTargetCount());
+        List<Integer> remainingSlots = new ArrayList<>(ySlots);
+        remainingSlots.remove(Integer.valueOf(y));
+        Collections.shuffle(remainingSlots, random);
+        for (int i = 0; i < fakeCount && i < remainingSlots.size(); i++) {
+            int fx = random(options.getMargin(), width - vwh - options.getMargin());
+            fakeTargets.add(new Point(fx, remainingSlots.get(i)));
+        }
 
         int renderScale = Math.max(1, options.getRenderScale());
         int renderWidth = width * renderScale;
@@ -95,6 +114,24 @@ public class SliderRenderer {
                 options.getShadowOpacity());
         BufferedImage innerShadow = shadowFilter.filter(alphaFilter.filter(pieceFull, null), null);
         g.drawImage(innerShadow, 0, 0, null);
+
+        // 假目标：画成和真目标一样的白色缺口 + 内阴影，但小图里没有对应拼图块
+        for (Point fake : fakeTargets) {
+            Path2D fakePath = shape.create(fake.x * renderScale, fake.y * renderScale, renderVwh);
+            BufferedImage fakeHoleFull = transparent(renderWidth, renderHeight);
+            Graphics2D fg = fakeHoleFull.createGraphics();
+            fg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            fg.setClip(fakePath);
+            fg.setColor(Color.WHITE);
+            fg.fill(fakePath);
+            fg.dispose();
+            BufferedImage fakeShadow = shadowFilter.filter(alphaFilter.filter(fakeHoleFull, null), null);
+            g.setClip(fakePath);
+            g.setComposite(AlphaComposite.SrcAtop);
+            g.setColor(new Color(255, 255, 255, clampAlpha(options.getHoleAlpha())));
+            g.fill(fakePath);
+            g.drawImage(fakeShadow, 0, 0, null);
+        }
         g.dispose();
 
         // 高清大图缩小回目标尺寸，边缘自动平滑
@@ -119,6 +156,19 @@ public class SliderRenderer {
 
     private int random(int min, int max) {
         return min + random.nextInt(Math.max(1, max - min + 1));
+    }
+
+    /**
+     * 按最小纵向间距生成可放置拼图块的 y 槽位（每个槽位之间至少间隔 minGap）。
+     */
+    private List<Integer> buildYSlots(int minGap) {
+        List<Integer> slots = new ArrayList<>();
+        int start = options.getMargin();
+        int end = height - options.getMargin() - vwh;
+        for (int top = start; top <= end; top += minGap) {
+            slots.add(top + vwh / 2);
+        }
+        return slots;
     }
 
     private static int clampAlpha(int alpha) {
@@ -159,5 +209,9 @@ public class SliderRenderer {
 
     public int getPieceOffsetX() {
         return pieceOffsetX;
+    }
+
+    public List<Point> getFakeTargets() {
+        return new ArrayList<>(fakeTargets);
     }
 }

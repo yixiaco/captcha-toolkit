@@ -75,6 +75,10 @@ public class CaptchaConfig {
                 "classic", "leaf", "triangle", "circle", "diamond", "star", "heart"));
         /** 小图左右留白，用于容纳柔光投影 */
         private int piecePadding = 8;
+        /** 假目标（干扰凹槽）数量：图中会出现多个缺口，但只有真目标能拼合 */
+        private int fakeTargetCount = 0;
+        /** 假目标与真目标/彼此之间的最小纵向间距（像素），避免落在同一 y 轴 */
+        private int fakeTargetMinGap = 24;
 
         public int getWidth() {
             return width;
@@ -202,6 +206,22 @@ public class CaptchaConfig {
 
         public void setPiecePadding(int piecePadding) {
             this.piecePadding = piecePadding;
+        }
+
+        public int getFakeTargetCount() {
+            return fakeTargetCount;
+        }
+
+        public void setFakeTargetCount(int fakeTargetCount) {
+            this.fakeTargetCount = fakeTargetCount;
+        }
+
+        public int getFakeTargetMinGap() {
+            return fakeTargetMinGap;
+        }
+
+        public void setFakeTargetMinGap(int fakeTargetMinGap) {
+            this.fakeTargetMinGap = fakeTargetMinGap;
         }
     }
 

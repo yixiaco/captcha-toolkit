@@ -22,6 +22,8 @@ public class CaptchaChallenge {
     private Integer debugX;
     /** 调试字段：仅 debug=1 且引擎开启调试时返回点选目标坐标 */
     private List<PointVo> debugTargets;
+    /** 调试字段：仅 debug=1 且引擎开启调试时返回滑块假目标坐标 */
+    private List<PointVo> debugFakeTargets;
     /** 扩展元数据：自定义验证码可携带任意附加信息 */
     private Map<String, Object> metadata;
 
@@ -111,6 +113,14 @@ public class CaptchaChallenge {
 
     public void setDebugTargets(List<PointVo> debugTargets) {
         this.debugTargets = debugTargets;
+    }
+
+    public List<PointVo> getDebugFakeTargets() {
+        return debugFakeTargets;
+    }
+
+    public void setDebugFakeTargets(List<PointVo> debugFakeTargets) {
+        this.debugFakeTargets = debugFakeTargets;
     }
 
     public Map<String, Object> getMetadata() {

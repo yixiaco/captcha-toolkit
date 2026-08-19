@@ -81,6 +81,8 @@ public class CaptchaProperties {
         private List<String> enabledShapes = new ArrayList<>(Arrays.asList(
                 "classic", "leaf", "triangle", "circle", "diamond", "star", "heart"));
         private int piecePadding = 8;
+        private int fakeTargetCount = 0;
+        private int fakeTargetMinGap = 24;
 
         public int getWidth() {
             return width;
@@ -208,6 +210,22 @@ public class CaptchaProperties {
 
         public void setPiecePadding(int piecePadding) {
             this.piecePadding = piecePadding;
+        }
+
+        public int getFakeTargetCount() {
+            return fakeTargetCount;
+        }
+
+        public void setFakeTargetCount(int fakeTargetCount) {
+            this.fakeTargetCount = fakeTargetCount;
+        }
+
+        public int getFakeTargetMinGap() {
+            return fakeTargetMinGap;
+        }
+
+        public void setFakeTargetMinGap(int fakeTargetMinGap) {
+            this.fakeTargetMinGap = fakeTargetMinGap;
         }
     }
 
@@ -556,6 +574,8 @@ public class CaptchaProperties {
         s.setDefaultShape(slider.getDefaultShape());
         s.setEnabledShapes(new ArrayList<>(slider.getEnabledShapes()));
         s.setPiecePadding(slider.getPiecePadding());
+        s.setFakeTargetCount(slider.getFakeTargetCount());
+        s.setFakeTargetMinGap(slider.getFakeTargetMinGap());
 
         CaptchaConfig.Click c = config.getClick();
         c.setWidth(click.getWidth());

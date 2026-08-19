@@ -6,15 +6,20 @@ import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
 import com.captcha.toolkit.model.PointVo;
 import com.captcha.toolkit.model.VerifyResult;
+import com.captcha.toolkit.render.SliderRenderer;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.render.SceneBackgroundProvider;
+import com.captcha.toolkit.shape.PuzzleShapeRegistry;
 import com.captcha.toolkit.store.InMemoryCaptchaSessionStore;
 import com.captcha.toolkit.word.WordFactory;
 import org.junit.jupiter.api.Test;
 
+import java.awt.Point;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -134,5 +139,25 @@ class CaptchaEngineTest {
                 .toList();
         VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
         assertTrue(ok.isSuccess(), ok.getMessage());
+    }
+
+    @Test
+    void sliderFakeTargetsAvoidSameY() {
+        CaptchaConfig config = new CaptchaConfig();
+        config.getSlider().setFakeTargetCount(3);
+        SliderRenderer renderer = new SliderRenderer(config.getSlider(),
+                new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())),
+                new PuzzleShapeRegistry());
+        renderer.setShape("classic");
+        renderer.run();
+
+        List<Point> fakes = renderer.getFakeTargets();
+        assertEquals(3, fakes.size());
+        Set<Integer> ys = new HashSet<>();
+        ys.add(renderer.getY());
+        for (Point fake : fakes) {
+            assertTrue(ys.add(fake.y),
+                    "假目标与真目标或彼此位于同一 y 轴: " + fake.y);
+        }
     }
 }
