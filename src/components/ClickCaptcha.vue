@@ -97,7 +97,7 @@ function build() {
 
 function tryPlace(item, placed, maxAttempts) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const size = Math.round(rand(32, 44))
+    const size = Math.round(rand(22, 30))
     const x = rand(26 + size / 2, props.width - 26 - size / 2)
     const y = rand(30 + size / 2, props.height - 16 - size / 2)
     const clear = placed.every(
@@ -122,7 +122,7 @@ function tryPlace(item, placed, maxAttempts) {
 
 // 兜底：目标字即使在极端情况下没有空位，也强制放入图中
 function forcePlace(item) {
-  const size = Math.round(rand(32, 44))
+  const size = Math.round(rand(22, 30))
   return {
     char: item.char,
     isTarget: item.isTarget,
