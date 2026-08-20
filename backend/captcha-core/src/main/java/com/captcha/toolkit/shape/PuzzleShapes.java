@@ -107,14 +107,10 @@ public final class PuzzleShapes {
             double cx = x + size * 0.5;
             double cy = y + size * 0.5;
             double r = size * 0.5;
-            // 外弧：左半圆（顶部 → 左侧 → 底部）
+            // 标准月牙：左凸缘 + 右凹缘，两端在上下顶点闭合
             path.moveTo(cx, cy - r);
-            path.append(new Arc2D.Double(x, y, size, size, 270, 180, Arc2D.OPEN), true);
-            // 内弧：右移的小圆切出月牙凹边（底部 → 右侧 → 顶部）
-            double innerR = r * 1.05;
-            double innerCx = cx + r * 0.55;
-            path.append(new Arc2D.Double(innerCx - innerR, cy - innerR,
-                    innerR * 2, innerR * 2, 90, -180, Arc2D.OPEN), true);
+            path.quadTo(cx - size * 0.58, cy, cx, cy + r);
+            path.quadTo(cx - size * 0.18, cy, cx, cy - r);
             path.closePath();
             return path;
         });
