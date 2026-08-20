@@ -160,4 +160,20 @@ class CaptchaEngineTest {
                     "假目标与真目标或彼此位于同一 y 轴: " + fake.y);
         }
     }
+
+    @Test
+    void successReturnsOneTimeTicket() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
+                Map.of("shape", "classic"), true);
+
+        VerifyResult ok = engine.verify(challenge.getId(),
+                CaptchaAnswer.slider(challenge.getDebugX().doubleValue(), challenge.getWidth()));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+        assertNotNull(ok.getTicket());
+
+        // 票据一次性：第一次校验有效，第二次即失效
+        assertTrue(engine.consumeTicket(ok.getTicket()).isSuccess());
+        assertFalse(engine.consumeTicket(ok.getTicket()).isSuccess());
+    }
 }

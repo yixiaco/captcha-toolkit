@@ -139,9 +139,10 @@ function close() {
   emit('close')
 }
 
-function onCaptchaSuccess() {
+function onCaptchaSuccess(result) {
   setTimeout(() => {
-    emit('success')
+    // 把验证结果（含一次性票据 ticket）透传给宿主业务代码
+    emit('success', result)
     if (opts.closeOnSuccess) {
       emit('close')
     }

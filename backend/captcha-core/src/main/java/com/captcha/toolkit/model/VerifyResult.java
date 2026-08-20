@@ -10,6 +10,8 @@ public class VerifyResult {
     private String message;
     /** 业务码：OK / WRONG / TOO_FAST / EXPIRED / BAD_REQUEST */
     private String code = "OK";
+    /** 验证通过后发放的一次性票据，供登录等业务接口校验 */
+    private String ticket;
 
     public static VerifyResult ok(String message) {
         VerifyResult result = new VerifyResult();
@@ -71,5 +73,13 @@ public class VerifyResult {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getTicket() {
+        return ticket;
+    }
+
+    public void setTicket(String ticket) {
+        this.ticket = ticket;
     }
 }

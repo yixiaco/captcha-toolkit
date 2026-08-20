@@ -8,7 +8,9 @@ import com.captcha.toolkit.image.DataUriImageCodec;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.store.CaptchaSessionStore;
+import com.captcha.toolkit.store.CaptchaTicketStore;
 import com.captcha.toolkit.store.InMemoryCaptchaSessionStore;
+import com.captcha.toolkit.store.InMemoryCaptchaTicketStore;
 import com.captcha.toolkit.word.ConfigWordFactory;
 import com.captcha.toolkit.word.WordFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -67,6 +69,12 @@ public class CaptchaAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    public CaptchaTicketStore captchaTicketStore() {
+        return new InMemoryCaptchaTicketStore();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public CaptchaConfig captchaConfig(CaptchaProperties properties) {
         return properties.toConfig();
     }
@@ -79,7 +87,8 @@ public class CaptchaAutoConfiguration {
                                        BackgroundProvider backgroundProvider,
                                        List<CaptchaFactory> userFactories,
                                        CaptchaProperties properties,
-                                       WordFactory wordFactory) {
+                                       WordFactory wordFactory,
+                                       CaptchaTicketStore ticketStore) {
         // 滑块使用 background.sources 素材 + 生成兜底；点选默认只使用程序生成风景图，
         // 让字在简单背景上更醒目；宿主可通过 click.background.* 为点选单独配置素材。
         BackgroundProvider clickBackgroundProvider = FallbackBackgroundProvider.of(
@@ -87,7 +96,7 @@ public class CaptchaAutoConfiguration {
                 properties.getClick().getBackground().isGenerateFallback());
         return CaptchaEngine.of(config, store, codec,
                 userFactories == null ? List.of() : userFactories,
-                backgroundProvider, clickBackgroundProvider, wordFactory);
+                backgroundProvider, clickBackgroundProvider, wordFactory, ticketStore);
     }
 
     @Bean

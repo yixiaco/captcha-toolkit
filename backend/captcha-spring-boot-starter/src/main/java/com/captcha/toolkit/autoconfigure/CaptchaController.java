@@ -4,6 +4,7 @@ import com.captcha.toolkit.CaptchaEngine;
 import com.captcha.toolkit.CaptchaType;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
+import com.captcha.toolkit.model.TicketVerifyRequest;
 import com.captcha.toolkit.model.VerifyResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +22,7 @@ import java.util.Map;
  *
  * <p>GET  {prefix}?type=slider|click&shape=...&debug=1
  * <br>POST {prefix}/verify
+ * <br>GET/POST {prefix}/ticket/verify?ticket=...（业务接口校验一次性票据）
  * <br>GET  {prefix}/types
  */
 @RestController
@@ -53,6 +55,21 @@ public class CaptchaController {
             return VerifyResult.badRequest("缺少验证码 id");
         }
         return engine.verify(answer.getId(), answer);
+    }
+
+    /** 业务接口校验一次性票据（GET 方式，适合快速联调） */
+    @GetMapping("/ticket/verify")
+    public VerifyResult verifyTicket(@RequestParam String ticket) {
+        return engine.consumeTicket(ticket);
+    }
+
+    /** 业务接口校验一次性票据（POST 方式，票据放请求体） */
+    @PostMapping("/ticket/verify")
+    public VerifyResult verifyTicket(@RequestBody TicketVerifyRequest request) {
+        if (request == null || request.getTicket() == null) {
+            return VerifyResult.badRequest("缺少票据 ticket");
+        }
+        return engine.consumeTicket(request.getTicket());
     }
 
     @GetMapping("/types")

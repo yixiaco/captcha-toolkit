@@ -88,6 +88,7 @@
         <div v-if="verified" class="verified-banner">
           <span class="verified-icon">✓</span>
           验证通过，登录成功（演示）
+          <span v-if="verifiedTicket" class="verified-ticket">票据：{{ verifiedTicket }}</span>
         </div>
       </transition>
     </div>
@@ -116,6 +117,7 @@ const captchaVisible = ref(false)
 const captchaMode = ref('slider')
 const shapeFromUrl = ref('')
 const verified = ref(false)
+const verifiedTicket = ref('')
 
 function open(mode) {
   captchaMode.value = mode
@@ -130,8 +132,9 @@ function onLogin() {
   openRandom()
 }
 
-function onVerified() {
+function onVerified(result) {
   verified.value = true
+  verifiedTicket.value = result?.ticket || ''
 }
 
 // 支持 URL 参数直接打开指定验证方式：?captcha=slider|click|random，滑块可追加 &shape=...

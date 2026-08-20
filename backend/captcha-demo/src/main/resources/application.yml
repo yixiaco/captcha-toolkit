@@ -9,6 +9,8 @@ captcha:
   # 演示项目开放 debug 答案，便于自动化自检；生产环境务必设为 false
   debug-enabled: true
   api-prefix: /api/captcha
+  # 验证通过后发放的一次性票据有效期（秒）
+  ticket-expire-seconds: 120
   background:
     sources:
       - /images/captcha/default.jpg

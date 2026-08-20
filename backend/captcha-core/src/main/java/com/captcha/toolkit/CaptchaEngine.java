@@ -8,10 +8,13 @@ import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
 import com.captcha.toolkit.model.CaptchaException;
 import com.captcha.toolkit.model.CaptchaSession;
+import com.captcha.toolkit.model.CaptchaTicket;
 import com.captcha.toolkit.model.GeneratedCaptcha;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.store.CaptchaSessionStore;
+import com.captcha.toolkit.store.CaptchaTicketStore;
+import com.captcha.toolkit.store.InMemoryCaptchaTicketStore;
 import com.captcha.toolkit.word.WordFactory;
 
 import java.util.ArrayList;
@@ -34,12 +37,21 @@ public class CaptchaEngine {
 
     private final Map<CaptchaType, CaptchaGenerator> generators;
     private final CaptchaSessionStore store;
+    private final CaptchaTicketStore ticketStore;
     private final CaptchaImageCodec codec;
     private final boolean debugEnabled;
+    private final long ticketTtlMillis;
 
     public CaptchaEngine(List<CaptchaFactory> factories, CaptchaConfig config,
                          CaptchaSessionStore store, CaptchaImageCodec codec) {
-        this(buildGenerators(factories, config), store, codec, config.isDebugEnabled());
+        this(factories, config, store, new InMemoryCaptchaTicketStore(), codec);
+    }
+
+    public CaptchaEngine(List<CaptchaFactory> factories, CaptchaConfig config,
+                         CaptchaSessionStore store, CaptchaTicketStore ticketStore,
+                         CaptchaImageCodec codec) {
+        this(buildGenerators(factories, config), store, ticketStore, codec,
+                config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000);
     }
 
     /**
@@ -77,6 +89,22 @@ public class CaptchaEngine {
                                    BackgroundProvider sliderBackgroundProvider,
                                    BackgroundProvider clickBackgroundProvider,
                                    WordFactory wordFactory) {
+        return of(config, store, codec, userFactories,
+                sliderBackgroundProvider, clickBackgroundProvider, wordFactory,
+                new InMemoryCaptchaTicketStore());
+    }
+
+    /**
+     * 完整入口：分类型背景 + 词组工厂 + 票据存储。
+     */
+    public static CaptchaEngine of(CaptchaConfig config,
+                                   CaptchaSessionStore store,
+                                   CaptchaImageCodec codec,
+                                   List<CaptchaFactory> userFactories,
+                                   BackgroundProvider sliderBackgroundProvider,
+                                   BackgroundProvider clickBackgroundProvider,
+                                   WordFactory wordFactory,
+                                   CaptchaTicketStore ticketStore) {
         Map<CaptchaType, CaptchaGenerator> map = new EnumMap<>(CaptchaType.class);
         if (userFactories != null) {
             for (CaptchaFactory factory : userFactories) {
@@ -87,17 +115,22 @@ public class CaptchaEngine {
                 new SliderCaptchaFactory(sliderBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.CLICK,
                 new ClickCaptchaFactory(clickBackgroundProvider, wordFactory).create(config));
-        return new CaptchaEngine(map, store, codec, config.isDebugEnabled());
+        return new CaptchaEngine(map, store, ticketStore, codec,
+                config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000);
     }
 
     private CaptchaEngine(Map<CaptchaType, CaptchaGenerator> generators,
                           CaptchaSessionStore store,
+                          CaptchaTicketStore ticketStore,
                           CaptchaImageCodec codec,
-                          boolean debugEnabled) {
+                          boolean debugEnabled,
+                          long ticketTtlMillis) {
         this.generators = generators;
         this.store = store;
+        this.ticketStore = ticketStore;
         this.codec = codec;
         this.debugEnabled = debugEnabled;
+        this.ticketTtlMillis = ticketTtlMillis;
     }
 
     private static Map<CaptchaType, CaptchaGenerator> buildGenerators(List<CaptchaFactory> factories,
@@ -165,7 +198,24 @@ public class CaptchaEngine {
         }
         VerifyResult result = generator.verify(session, answer);
         store.remove(id);
+        if (result.isSuccess()) {
+            String ticket = UUID.randomUUID().toString();
+            ticketStore.put(new CaptchaTicket(ticket, session.getType(), ticketTtlMillis));
+            result.setTicket(ticket);
+        }
         return result;
+    }
+
+    /**
+     * 校验业务票据（登录等接口调用）：票据存在且未过期即有效，校验后立即消费（一次性）。
+     */
+    public VerifyResult consumeTicket(String ticket) {
+        CaptchaTicket stored = ticketStore.get(ticket);
+        if (stored == null) {
+            return VerifyResult.fail("票据无效或已过期", "INVALID_TICKET");
+        }
+        ticketStore.remove(ticket);
+        return VerifyResult.ok("票据有效");
     }
 
     public List<String> supportedTypes() {

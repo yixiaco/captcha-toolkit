@@ -38,6 +38,8 @@ public class CaptchaProperties {
     private boolean enabled = true;
     private String apiPrefix = "/api/captcha";
     private boolean debugEnabled = false;
+    /** 验证通过后发放的票据有效期（秒） */
+    private long ticketExpireSeconds = 120;
     private Background background = new Background();
     private Slider slider = new Slider();
     private Click click = new Click();
@@ -529,6 +531,14 @@ public class CaptchaProperties {
         this.debugEnabled = debugEnabled;
     }
 
+    public long getTicketExpireSeconds() {
+        return ticketExpireSeconds;
+    }
+
+    public void setTicketExpireSeconds(long ticketExpireSeconds) {
+        this.ticketExpireSeconds = ticketExpireSeconds;
+    }
+
     public Background getBackground() {
         return background;
     }
@@ -556,6 +566,7 @@ public class CaptchaProperties {
     public CaptchaConfig toConfig() {
         CaptchaConfig config = new CaptchaConfig();
         config.setDebugEnabled(debugEnabled);
+        config.setTicketExpireSeconds(ticketExpireSeconds);
 
         CaptchaConfig.Slider s = config.getSlider();
         s.setWidth(slider.getWidth());

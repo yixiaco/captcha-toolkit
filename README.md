@@ -49,7 +49,12 @@ frontend/
 
    - `GET {prefix}?type=slider|click&shape=classic&debug=1` 下发验证码
    - `POST {prefix}/verify` 校验答案（滑块 `{id,type,x,width}`；点选 `{id,type,points:[{x,y}...]}`）
+   - `GET/POST {prefix}/ticket/verify?ticket=...` 业务接口校验一次性票据
    - `GET {prefix}/types` 查询后端支持的类型与形状（通用前端可动态渲染）
+
+验证通过后 `POST {prefix}/verify` 会返回一次性 `ticket`（默认 120 秒有效），
+登录等业务接口拿到 `ticket` 后调用 `POST {prefix}/ticket/verify`（请求体 `{"ticket":"..."}`）校验；
+校验成功即消费，同一票据不能重复使用。
 
 ### 程序化调用（不经过 HTTP）
 
@@ -166,6 +171,7 @@ npm run dev
 | `enabled` | 是否注册 HTTP 接口 | `true` |
 | `api-prefix` | 接口前缀 | `/api/captcha` |
 | `debug-enabled` | 是否允许 `debug=1` 返回答案 | `false` |
+| `ticket-expire-seconds` | 验证通过后票据有效期（秒），业务接口凭票据校验 | `120` |
 | `background.sources` | 背景图资源（classpath 或文件路径） | `/images/captcha/default.jpg` |
 | `background.generate-fallback` | 素材缺失时用程序生成风景图 | `true` |
 | `slider.width/height` | 滑块图片尺寸 | `340/190` |

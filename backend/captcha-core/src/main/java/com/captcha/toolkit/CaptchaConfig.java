@@ -14,6 +14,8 @@ public class CaptchaConfig {
 
     /** 是否允许 debug 参数返回答案（仅建议本地联调开启） */
     private boolean debugEnabled = false;
+    /** 验证通过后发放的票据有效期（秒），供登录等业务接口校验 */
+    private long ticketExpireSeconds = 120;
 
     private Slider slider = new Slider();
 
@@ -25,6 +27,14 @@ public class CaptchaConfig {
 
     public void setDebugEnabled(boolean debugEnabled) {
         this.debugEnabled = debugEnabled;
+    }
+
+    public long getTicketExpireSeconds() {
+        return ticketExpireSeconds;
+    }
+
+    public void setTicketExpireSeconds(long ticketExpireSeconds) {
+        this.ticketExpireSeconds = ticketExpireSeconds;
     }
 
     public Slider getSlider() {

@@ -217,6 +217,16 @@ button {
   font-weight: 700;
 }
 
+.verified-ticket {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 11px;
+  color: #6b7280;
+}
+
 .demo-footer {
   font-size: 12px;
   color: #a4abb5;
