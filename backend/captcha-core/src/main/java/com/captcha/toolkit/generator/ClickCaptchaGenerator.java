@@ -120,11 +120,28 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         if (points == null || points.size() != session.getTargets().size()) {
             return VerifyResult.badRequest("参数错误");
         }
+        // 前端可能被 CSS 缩放（嵌入容器变窄），客户端坐标是实际渲染尺寸；
+        // 服务端按客户端宽高比例换算回原始图片坐标，再做距离校验。
+        int clientWidth = answer.getClientWidth() == null ? 0 : answer.getClientWidth();
+        int clientHeight = answer.getClientHeight() == null ? 0 : answer.getClientHeight();
+        if (clientWidth < 0 || clientHeight < 0) {
+            return VerifyResult.badRequest("客户端宽高不合法");
+        }
+        double scaleX = clientWidth > 0
+                ? (double) session.getWidth() / clientWidth
+                : 1.0;
+        // 只传了一个维度时按统一比例缩放，两个都传则双轴独立换算
+        double scaleY = clientHeight > 0
+                ? (double) session.getHeight() / clientHeight
+                : scaleX;
+
         // 前端点满目标字后一次性提交，后端按点击顺序逐个校验
         for (int i = 0; i < points.size(); i++) {
             PointVo actual = points.get(i);
             PointVo expected = session.getTargets().get(i);
-            if (Math.hypot(actual.getX() - expected.getX(), actual.getY() - expected.getY())
+            double actualX = actual.getX() * scaleX;
+            double actualY = actual.getY() * scaleY;
+            if (Math.hypot(actualX - expected.getX(), actualY - expected.getY())
                     > options.getTolerance()) {
                 return VerifyResult.fail("点击错误，请重试", "WRONG");
             }

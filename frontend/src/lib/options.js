@@ -12,9 +12,9 @@ export const defaultCaptchaOptions = {
   baseUrl: '/api/captcha',
   /** 自定义请求函数，兼容 fetch(url, { method, query, json }) */
   request: null,
-  /** 验证图片宽度（px），同时也是前端坐标换算基准 */
+  /** 验证图片宽度（px）；组件加载后会以后端返回的 width 为准 */
   width: 340,
-  /** 验证图片高度（px） */
+  /** 验证图片高度（px）；组件加载后会以后端返回的 height 为准 */
   height: 190,
   /** 滑块初始形状，空串表示随机 */
   shape: '',

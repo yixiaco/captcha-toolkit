@@ -67,6 +67,20 @@ class CaptchaEngineTest {
     }
 
     @Test
+    void sliderScalesClientCoordinatesByClientSize() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
+                Map.of("shape", "classic"), true);
+
+        // 模拟前端嵌入容器缩放到 300x170（后端原图 340x190）
+        double scale = 300.0 / challenge.getWidth();
+        double clientX = challenge.getDebugX() * scale;
+        VerifyResult ok = engine.verify(challenge.getId(),
+                CaptchaAnswer.slider(clientX, 300, 170));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+    }
+
+    @Test
     void clickGeneratesAndVerifiesInOrder() {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
@@ -80,6 +94,24 @@ class CaptchaEngineTest {
                 .map(p -> new PointVo(p.getX(), p.getY()))
                 .toList();
         VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+    }
+
+    @Test
+    void clickScalesClientCoordinatesByClientSize() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
+
+        // 模拟前端嵌入容器缩放到 300x170：客户端坐标 = 服务端坐标 * 缩放比例
+        double scaleX = 300.0 / challenge.getWidth();
+        double scaleY = 170.0 / challenge.getHeight();
+        List<PointVo> points = challenge.getDebugTargets().stream()
+                .map(p -> new PointVo(
+                        (int) Math.round(p.getX() * scaleX),
+                        (int) Math.round(p.getY() * scaleY)))
+                .toList();
+        VerifyResult ok = engine.verify(challenge.getId(),
+                CaptchaAnswer.click(points, 300, 170));
         assertTrue(ok.isSuccess(), ok.getMessage());
     }
 

@@ -3,7 +3,7 @@
     ref="rootRef"
     class="slider-captcha"
     :class="{ 'is-success': status === 'success' }"
-    :style="{ width: opts.width + 'px', maxWidth: '100%' }"
+    :style="{ width: imgWidth + 'px', maxWidth: '100%' }"
   >
     <!-- 形状选择器仅在 debug 模式（前后端都开启）下显示，正常模式由后端决定形状 -->
     <div v-if="opts.debug && opts.showShapePicker" class="shape-picker">
@@ -28,7 +28,11 @@
       </button>
     </div>
 
-    <div class="img-wrap" :style="{ width: opts.width + 'px', height: opts.height + 'px' }">
+    <div
+      ref="imgWrapRef"
+      class="img-wrap"
+      :style="{ width: imgWidth + 'px', height: imgHeight + 'px' }"
+    >
       <img
         v-if="image1"
         :src="image1"
@@ -44,7 +48,7 @@
         alt=""
         draggable="false"
         :style="{
-          height: opts.height + 'px',
+          height: imgHeight + 'px',
           transform: `translateX(${pieceLeft - pieceOffsetX}px)`,
         }"
       />
@@ -152,6 +156,7 @@ const emit = defineEmits(['success', 'fail', 'error'])
 const opts = useCaptchaOptions(props)
 
 const rootRef = ref(null)
+const imgWrapRef = ref(null)
 const trackRef = ref(null)
 const status = ref('loading')
 const image1 = ref('')
@@ -162,6 +167,8 @@ const pieceLeft = ref(0)
 const dragging = ref(false)
 const shaking = ref(false)
 const selectedShape = ref('')
+const imgWidth = ref(opts.width)
+const imgHeight = ref(opts.height)
 
 let trackWidth = 0
 let startClientX = 0
@@ -190,6 +197,11 @@ async function loadCaptcha() {
     captchaId.value = res.id
     image1.value = res.image1
     image2.value = res.image2
+    // 以后端实际图片尺寸为准，避免前端配置宽度与后端不一致导致坐标换算错误
+    imgWidth.value = res.width || opts.width
+    imgHeight.value = res.height || opts.height
+    await nextTick()
+    trackWidth = trackRef.value ? trackRef.value.clientWidth : imgWidth.value
     // 小图是从拼图块左侧留白处裁剪的，整体左移 offset 让拼图块贴住大图左边缘
     pieceOffsetX.value = res.pieceOffsetX || 0
     pieceLeft.value = 0
@@ -235,11 +247,19 @@ async function onPointerUp() {
   window.removeEventListener('pointerup', onPointerUp)
 
   try {
+    const track = trackRef.value
+    const actualWidth = Math.round(
+      track ? track.clientWidth : imgWrapRef.value ? imgWrapRef.value.clientWidth : imgWidth.value
+    )
+    const actualHeight = Math.round(
+      imgWrapRef.value ? imgWrapRef.value.clientHeight : imgHeight.value
+    )
     const res = await opts.api.verify({
       id: captchaId.value,
       type: 'slider',
       x: Math.round(pieceLeft.value),
-      width: opts.width,
+      clientWidth: actualWidth,
+      clientHeight: actualHeight,
     })
     if (res.success) {
       status.value = 'success'

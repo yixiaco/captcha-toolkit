@@ -80,6 +80,9 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
         if (clientWidth <= 0) {
             return VerifyResult.badRequest("clientWidth 不合法");
         }
+        if (answer.getClientHeight() != null && answer.getClientHeight() <= 0) {
+            return VerifyResult.badRequest("clientHeight 不合法");
+        }
         // 前端图片可能被 CSS 缩放，按宽度比例换算回服务端坐标
         double ratio = (double) session.getWidth() / clientWidth;
         if (Math.abs(session.getX() - answer.getX() * ratio) <= options.getTolerance() * ratio) {

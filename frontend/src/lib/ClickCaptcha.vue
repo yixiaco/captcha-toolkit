@@ -5,7 +5,7 @@
       <span v-for="ch in prompt" :key="ch" class="prompt-char">{{ ch }}</span>
     </div>
 
-    <div class="img-wrap" :class="{ shake: shaking }" :style="{ height: opts.height + 'px' }">
+    <div class="img-wrap" :class="{ shake: shaking }" :style="{ height: imgHeight + 'px' }">
       <img
         v-if="image1"
         ref="imageRef"
@@ -21,8 +21,8 @@
         :key="mark.index"
         class="click-mark"
         :style="{
-          left: (mark.x / opts.width) * 100 + '%',
-          top: (mark.y / opts.height) * 100 + '%',
+          left: mark.x + 'px',
+          top: mark.y + 'px',
         }"
       >
         {{ mark.index }}
@@ -83,6 +83,7 @@ const prompt = ref([])
 const marks = ref([])
 const shaking = ref(false)
 const submitting = ref(false)
+const imgHeight = ref(opts.height)
 
 async function loadCaptcha() {
   status.value = 'loading'
@@ -96,6 +97,8 @@ async function loadCaptcha() {
     captchaId.value = res.id
     image1.value = res.image1
     prompt.value = res.prompt || []
+    // 以后端实际图片高度为准（宽度由父容器 100% 决定）
+    imgHeight.value = res.height || opts.height
     status.value = 'idle'
     await nextTick()
     if (opts.debug && imageRef.value) {
@@ -119,8 +122,9 @@ async function loadCaptcha() {
 async function onClick(event) {
   if (status.value !== 'idle' || submitting.value) return
   const rect = imageRef.value.getBoundingClientRect()
-  const x = Math.round((event.clientX - rect.left) * (opts.width / rect.width))
-  const y = Math.round((event.clientY - rect.top) * (opts.height / rect.height))
+  // 保存相对于图片元素的实际渲染像素坐标，由后端按 clientWidth/clientHeight 换算
+  const x = event.clientX - rect.left
+  const y = event.clientY - rect.top
 
   if (marks.value.some((m) => Math.hypot(m.x - x, m.y - y) < opts.markMinDistance)) return
   marks.value.push({ x, y, index: marks.value.length + 1 })
@@ -132,6 +136,8 @@ async function onClick(event) {
       id: captchaId.value,
       type: 'click',
       points: marks.value.map((m) => ({ x: m.x, y: m.y })),
+      clientWidth: Math.round(rect.width),
+      clientHeight: Math.round(rect.height),
     })
     if (res.success) {
       status.value = 'success'
