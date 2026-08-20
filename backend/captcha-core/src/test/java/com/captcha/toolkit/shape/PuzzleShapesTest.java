@@ -35,29 +35,49 @@ class PuzzleShapesTest {
     }
 
     @Test
-    void moonIsLeftFacingCrescent() {
+    void moonIsPlumpCrescent() {
         Path2D path = PuzzleShapes.moon().create(0, 0, 100);
+        Rectangle2D bounds = path.getBounds2D();
+
+        // 外圆减内圆后应完整落在方块内
+        assertTrue(bounds.getMinX() >= -0.01 && bounds.getMinY() >= -0.01
+                        && bounds.getMaxX() <= 100.01 && bounds.getMaxY() <= 100.01,
+                "月亮应完整位于方块内: " + bounds);
+
         BufferedImage image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
         g.setColor(Color.WHITE);
         g.fill(path);
         g.dispose();
 
-        int left = 0;
-        int right = 0;
+        long filled = 0;
+        int[] rowCount = new int[100];
         for (int y = 0; y < 100; y++) {
             for (int x = 0; x < 100; x++) {
                 if (((image.getRGB(x, y) >>> 24) & 0xFF) > 0) {
-                    if (x < 50) {
-                        left++;
-                    } else {
-                        right++;
-                    }
+                    filled++;
+                    rowCount[y]++;
                 }
             }
         }
-        // 月牙主体应在左半侧（凸面朝左、凹面朝右）
-        assertTrue(left > right * 2,
-                "月亮应为左侧月牙，实际 left=" + left + ", right=" + right);
+        // 外圆减内圆的面积约 34% 方块：既不是半圆也不是细条
+        double ratio = filled / 10000.0;
+        assertTrue(ratio > 0.25 && ratio < 0.45,
+                "月亮面积占比应在饱满月牙范围，实际 ratio=" + ratio);
+
+        // 内凹缺口在顶部：最顶行宽度应明显小于最宽行
+        int topFilledRow = 0;
+        for (int row : rowCount) {
+            if (row > 0) {
+                topFilledRow = row;
+                break;
+            }
+        }
+        int maxRow = 0;
+        for (int row : rowCount) {
+            maxRow = Math.max(maxRow, row);
+        }
+        assertTrue(topFilledRow < maxRow * 0.9,
+                "月亮顶部应有内凹缺口，top=" + topFilledRow + ", max=" + maxRow);
     }
 }

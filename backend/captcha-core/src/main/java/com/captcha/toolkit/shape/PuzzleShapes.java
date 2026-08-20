@@ -2,6 +2,7 @@ package com.captcha.toolkit.shape;
 
 import java.awt.geom.Arc2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
@@ -108,26 +109,30 @@ public final class PuzzleShapes {
                 }
             }
             path.closePath();
-            // 用实际边界平移，保证爱心完整且居中于 (x, y, size, size)
-            Rectangle2D bounds = path.getBounds2D();
-            double dx = x + (size - bounds.getWidth()) / 2.0 - bounds.getMinX();
-            double dy = y + (size - bounds.getHeight()) / 2.0 - bounds.getMinY();
-            path.transform(AffineTransform.getTranslateInstance(dx, dy));
+            // 等比缩放并居中到 (x, y, size, size)
+            fitToBox(path, x, y, size);
             return path;
         });
     }
 
     public static PuzzleShape moon() {
         return named("moon", "月亮", (x, y, size) -> {
-            Path2D path = new Path2D.Double();
             double cx = x + size * 0.5;
             double cy = y + size * 0.5;
             double r = size * 0.5;
-            // 标准月牙：外缘整半圆，内缘浅凹，中段宽度约 0.5r，饱满接近 🌙
-            path.moveTo(cx, cy - r);
-            path.quadTo(cx - size, cy, cx, cy + r);
-            path.quadTo(cx - size * 0.36, cy, cx, cy - r);
-            path.closePath();
+            // 外圆减内圆得到月牙：内圆向左上偏移 0.7r/1.4r，半径 0.9r
+            Ellipse2D outer = new Ellipse2D.Double(cx - r, cy - r, 2 * r, 2 * r);
+            Ellipse2D inner = new Ellipse2D.Double(cx - r * 0.7, cy - r * 1.4,
+                    2 * r * 0.9, 2 * r * 0.9);
+            Area moon = new Area(outer);
+            moon.subtract(new Area(inner));
+            // 顺时针倾斜 30°，更接近 🌙 的姿势
+            moon.transform(AffineTransform.getRotateInstance(Math.toRadians(30), cx, cy));
+
+            Path2D path = new Path2D.Double();
+            path.append(moon.getPathIterator(null), false);
+            // 等比缩放并居中到 (x, y, size, size)
+            fitToBox(path, x, y, size);
             return path;
         });
     }
@@ -199,6 +204,19 @@ public final class PuzzleShapes {
         path.lineTo(x, y);
         path.closePath();
         return path;
+    }
+
+    /**
+     * 将路径等比缩放并居中到 (x, y, size, size) 方块内。
+     */
+    private static void fitToBox(Path2D path, double x, double y, double size) {
+        Rectangle2D bounds = path.getBounds2D();
+        double scale = Math.min(size / bounds.getWidth(), size / bounds.getHeight());
+        path.transform(AffineTransform.getScaleInstance(scale, scale));
+        Rectangle2D scaled = path.getBounds2D();
+        double dx = x + (size - scaled.getWidth()) / 2.0 - scaled.getMinX();
+        double dy = y + (size - scaled.getHeight()) / 2.0 - scaled.getMinY();
+        path.transform(AffineTransform.getTranslateInstance(dx, dy));
     }
 
     @FunctionalInterface
