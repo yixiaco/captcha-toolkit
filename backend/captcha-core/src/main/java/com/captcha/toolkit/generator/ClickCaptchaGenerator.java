@@ -53,6 +53,8 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
     private final Random random = new Random();
 
     private BufferedImage image;
+    /** 文字图层：字形/遮挡线先画在这一层，形变后再与背景合成，保证背景不被整图 warp 影响 */
+    private BufferedImage textLayer;
     private final List<PointVo> targets = new ArrayList<>();
     private final List<String> prompt = new ArrayList<>();
     private final List<Chip> chips = new ArrayList<>();
@@ -144,6 +146,8 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         BufferedImage raw = backgroundProvider.provide(options.getWidth(), options.getHeight())
                 .orElseThrow(() -> new CaptchaException("没有可用的背景图，请配置 captcha.background.sources 或开启 generate-fallback"));
         image = ImageUtil.cover(raw, options.getWidth(), options.getHeight());
+        textLayer = new BufferedImage(options.getWidth(), options.getHeight(),
+                BufferedImage.TYPE_INT_ARGB);
         chips.clear();
         targets.clear();
         prompt.clear();
@@ -197,12 +201,16 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
             drawChip(chip);
         }
 
-        Graphics2D occlusion = image.createGraphics();
+        // 字形与遮挡线全部画在文字图层，背景保持干净
+        Graphics2D occlusion = textLayer.createGraphics();
         drawOcclusion(occlusion);
         occlusion.dispose();
 
-        image = warp(image);
+        // 只对文字图层做整图波浪形变，再与背景合成
+        textLayer = warp(textLayer);
+        image = composite(image, textLayer);
 
+        // 干扰线与噪点最后叠加在合成图上
         Graphics2D noise = image.createGraphics();
         drawNoise(noise);
         noise.dispose();
@@ -347,7 +355,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
             }
         }
         shadow = blur(shadow, 4);
-        Graphics2D g = image.createGraphics();
+        Graphics2D g = textLayer.createGraphics();
         g.drawImage(shadow, dx, dy, null);
         g.dispose();
     }
@@ -366,8 +374,8 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
     private void blendGlyph(BufferedImage glyph, int dx, int dy, boolean multiply, double alpha) {
         int gw = glyph.getWidth();
         int gh = glyph.getHeight();
-        int imgW = image.getWidth();
-        int imgH = image.getHeight();
+        int imgW = textLayer.getWidth();
+        int imgH = textLayer.getHeight();
         for (int y = 0; y < gh; y++) {
             for (int x = 0; x < gw; x++) {
                 int argb = glyph.getRGB(x, y);
@@ -401,13 +409,50 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
                     bb = 255 - (255 - db) * (255 - gb) / 255;
                 }
 
-                float a = ga / 255f * (float) alpha;
-                int nr = (int) (br * a + dr * (1 - a));
-                int ng = (int) (bg * a + dg * (1 - a));
-                int nb = (int) (bb * a + db * (1 - a));
-                image.setRGB(tx, ty, (nr << 16) | (ng << 8) | nb);
+                // 文字图层保存“混合后的字色 + alpha”，合成阶段再与背景做标准 alpha 混合
+                int alphaByte = (int) Math.round(ga / 255f * alpha * 255);
+                if (alphaByte <= 0) {
+                    continue;
+                }
+                textLayer.setRGB(tx, ty,
+                        (alphaByte << 24) | (br << 16) | (bg << 8) | bb);
             }
         }
+    }
+
+    /**
+     * 把文字图层按 alpha 合成到干净背景上。
+     */
+    private BufferedImage composite(BufferedImage bg, BufferedImage text) {
+        int w = bg.getWidth();
+        int h = bg.getHeight();
+        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int argb = text.getRGB(x, y);
+                int a = (argb >>> 24) & 0xFF;
+                if (a == 0) {
+                    out.setRGB(x, y, bg.getRGB(x, y));
+                    continue;
+                }
+                int tr = (argb >> 16) & 0xFF;
+                int tg = (argb >> 8) & 0xFF;
+                int tb = argb & 0xFF;
+                if (a == 255) {
+                    out.setRGB(x, y, (tr << 16) | (tg << 8) | tb);
+                    continue;
+                }
+                int drgb = bg.getRGB(x, y);
+                int dr = (drgb >> 16) & 0xFF;
+                int dg = (drgb >> 8) & 0xFF;
+                int db = drgb & 0xFF;
+                int nr = (tr * a + dr * (255 - a)) / 255;
+                int ng = (tg * a + dg * (255 - a)) / 255;
+                int nb = (tb * a + db * (255 - a)) / 255;
+                out.setRGB(x, y, (nr << 16) | (ng << 8) | nb);
+            }
+        }
+        return out;
     }
 
     private void drawOcclusion(Graphics2D g) {
@@ -542,7 +587,8 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         double freq = 0.08;
         double phase = random.nextDouble() * Math.PI * 2;
         double phase2 = random.nextDouble() * Math.PI * 2;
-        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        // 文字图层需要保留 alpha，因此用 ARGB 输出
+        BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 int sx = clamp(x + (int) Math.round(Math.sin(y * freq + phase) * amp), 0, w - 1);
