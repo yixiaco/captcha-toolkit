@@ -1,7 +1,7 @@
 package com.captcha.toolkit.generator;
 
-import com.captcha.toolkit.CaptchaConfig;
 import com.captcha.toolkit.CaptchaType;
+import com.captcha.toolkit.ClickConfig;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaException;
 import com.captcha.toolkit.model.CaptchaSession;
@@ -47,7 +47,7 @@ import java.util.Random;
  */
 public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
 
-    private final CaptchaConfig.Click options;
+    private final ClickConfig options;
     private final BackgroundProvider backgroundProvider;
     private final WordFactory wordFactory;
     private final Random random = new Random();
@@ -75,11 +75,11 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         boolean dark;
     }
 
-    public ClickCaptchaGenerator(CaptchaConfig.Click options, BackgroundProvider backgroundProvider) {
+    public ClickCaptchaGenerator(ClickConfig options, BackgroundProvider backgroundProvider) {
         this(options, backgroundProvider, null);
     }
 
-    public ClickCaptchaGenerator(CaptchaConfig.Click options,
+    public ClickCaptchaGenerator(ClickConfig options,
                                  BackgroundProvider backgroundProvider,
                                  WordFactory wordFactory) {
         this.options = options;

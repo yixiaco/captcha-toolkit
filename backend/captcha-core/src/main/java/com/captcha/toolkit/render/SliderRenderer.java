@@ -1,6 +1,6 @@
 package com.captcha.toolkit.render;
 
-import com.captcha.toolkit.CaptchaConfig;
+import com.captcha.toolkit.SliderConfig;
 import com.captcha.toolkit.model.CaptchaException;
 import com.captcha.toolkit.shape.PuzzleShape;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
@@ -30,7 +30,7 @@ import java.util.Random;
  */
 public class SliderRenderer {
 
-    private final CaptchaConfig.Slider options;
+    private final SliderConfig options;
     private final BackgroundProvider backgroundProvider;
     private final PuzzleShapeRegistry shapeRegistry;
     private final Random random = new Random();
@@ -48,7 +48,7 @@ public class SliderRenderer {
     private int pieceOffsetX;
     private final List<Point> fakeTargets = new ArrayList<>();
 
-    public SliderRenderer(CaptchaConfig.Slider options,
+    public SliderRenderer(SliderConfig options,
                           BackgroundProvider backgroundProvider,
                           PuzzleShapeRegistry shapeRegistry) {
         this.options = options;

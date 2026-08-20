@@ -1,7 +1,7 @@
 package com.captcha.toolkit.generator;
 
-import com.captcha.toolkit.CaptchaConfig;
 import com.captcha.toolkit.CaptchaType;
+import com.captcha.toolkit.SliderConfig;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.GeneratedCaptcha;
@@ -18,11 +18,11 @@ import java.util.List;
  */
 public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
 
-    private final CaptchaConfig.Slider options;
+    private final SliderConfig options;
     private final BackgroundProvider backgroundProvider;
     private final PuzzleShapeRegistry shapeRegistry;
 
-    public SliderCaptchaGenerator(CaptchaConfig.Slider options,
+    public SliderCaptchaGenerator(SliderConfig options,
                                   BackgroundProvider backgroundProvider,
                                   PuzzleShapeRegistry shapeRegistry) {
         this.options = options;
