@@ -86,22 +86,64 @@ public final class PuzzleShapes {
     public static PuzzleShape heart() {
         return named("heart", "爱心", (x, y, size) -> {
             Path2D path = new Path2D.Double();
-            path.moveTo(x + size * 0.5, y + size * 0.92);
-            path.curveTo(x + size * 0.06, y + size * 0.58, x + size * 0.04, y + size * 0.16,
-                    x + size * 0.3, y + size * 0.06);
-            path.curveTo(x + size * 0.44, y + size * 0.01, x + size * 0.5, y + size * 0.14,
-                    x + size * 0.5, y + size * 0.24);
-            path.curveTo(x + size * 0.5, y + size * 0.14, x + size * 0.56, y + size * 0.01,
-                    x + size * 0.7, y + size * 0.06);
-            path.curveTo(x + size * 0.96, y + size * 0.16, x + size * 0.94, y + size * 0.58,
-                    x + size * 0.5, y + size * 0.92);
+            // 宽版爱心：左右叶更宽，整体更接近方块比例
+            path.moveTo(x + size * 0.5, y + size * 0.95);
+            path.curveTo(x + size * 0.02, y + size * 0.6, x + size * 0.0, y + size * 0.12,
+                    x + size * 0.28, y + size * 0.04);
+            path.curveTo(x + size * 0.42, y + size * 0.0, x + size * 0.5, y + size * 0.16,
+                    x + size * 0.5, y + size * 0.26);
+            path.curveTo(x + size * 0.5, y + size * 0.16, x + size * 0.58, y + size * 0.0,
+                    x + size * 0.72, y + size * 0.04);
+            path.curveTo(x + size * 1.0, y + size * 0.12, x + size * 0.98, y + size * 0.6,
+                    x + size * 0.5, y + size * 0.95);
+            path.closePath();
+            return path;
+        });
+    }
+
+    public static PuzzleShape moon() {
+        return named("moon", "月亮", (x, y, size) -> {
+            Path2D path = new Path2D.Double();
+            double cx = x + size * 0.5;
+            double cy = y + size * 0.5;
+            double r = size * 0.5;
+            // 外弧：左半圆（顶部 → 左侧 → 底部）
+            path.moveTo(cx, cy - r);
+            path.append(new Arc2D.Double(x, y, size, size, 270, 180, Arc2D.OPEN), true);
+            // 内弧：右移的小圆切出月牙凹边（底部 → 右侧 → 顶部）
+            double innerR = r * 1.05;
+            double innerCx = cx + r * 0.55;
+            path.append(new Arc2D.Double(innerCx - innerR, cy - innerR,
+                    innerR * 2, innerR * 2, 90, -180, Arc2D.OPEN), true);
+            path.closePath();
+            return path;
+        });
+    }
+
+    public static PuzzleShape hexagon() {
+        return named("hexagon", "六边形", (x, y, size) -> {
+            Path2D path = new Path2D.Double();
+            double cx = x + size * 0.5;
+            double cy = y + size * 0.5;
+            double r = size * 0.5;
+            for (int i = 0; i < 6; i++) {
+                double angle = -Math.PI / 2 + i * Math.PI / 3;
+                double px = cx + Math.cos(angle) * r;
+                double py = cy + Math.sin(angle) * r;
+                if (i == 0) {
+                    path.moveTo(px, py);
+                } else {
+                    path.lineTo(px, py);
+                }
+            }
             path.closePath();
             return path;
         });
     }
 
     public static List<PuzzleShape> all() {
-        return List.of(classic(), leaf(), triangle(), circle(), diamond(), star(), heart());
+        return List.of(classic(), leaf(), triangle(), circle(), diamond(), star(), heart(),
+                moon(), hexagon());
     }
 
     private static PuzzleShape named(String name, String label, ShapeFactory factory) {

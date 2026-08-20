@@ -59,7 +59,7 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
         if (request.isDebug()) {
             result.setDebugX(renderer.getX());
             result.setDebugFakeTargets(renderer.getFakeTargets().stream()
-                    .map(p -> new PointVo(p.x, p.y))
+                    .map(p -> new PointVo(p.getX(), p.getY()))
                     .toList());
         }
         return result;

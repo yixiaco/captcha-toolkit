@@ -36,11 +36,12 @@ public class SliderConfig {
     private String defaultShape = "classic";
     /** 对外可用的形状白名单 */
     private List<String> enabledShapes = new ArrayList<>(Arrays.asList(
-            "classic", "leaf", "triangle", "circle", "diamond", "star", "heart"));
+            "classic", "leaf", "triangle", "circle", "diamond", "star", "heart",
+            "moon", "hexagon"));
     /** 小图左右留白，用于容纳柔光投影 */
     private int piecePadding = 8;
     /** 假目标（干扰凹槽）数量：图中会出现多个缺口，但只有真目标能拼合 */
     private int fakeTargetCount = 0;
-    /** 假目标与真目标/彼此之间的最小纵向间距（像素），避免落在同一 y 轴 */
+    /** 假目标中心最小间距（像素）；同 y 轴时大小和旋转必须不同 */
     private int fakeTargetMinGap = 24;
 }

@@ -8,6 +8,8 @@ export const PUZZLE_SHAPES = {
   diamond: { label: '菱形' },
   star: { label: '星星' },
   heart: { label: '爱心' },
+  moon: { label: '月亮' },
+  hexagon: { label: '六边形' },
 }
 
 /** 注册自定义形状（key 需与后端 shape 名称一致） */

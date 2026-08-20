@@ -135,7 +135,7 @@ import { CaptchaModal } from 'captcha-toolkit-vue'
 | `request` | 自定义请求函数，兼容 `fetch` 签名 | 内置 fetch |
 | `width` / `height` | 图片尺寸 | `340` / `190` |
 | `shape` | 滑块初始形状，空串表示随机 | `''` |
-| `shapes` | 形状选择器白名单 | 内置 7 种 |
+| `shapes` | 形状选择器白名单 | 内置 9 种 |
 | `shapeLabels` | 形状显示名覆盖（如 `{ classic: 'Classic' }`） | 内置中文名 |
 | `showShapePicker` | 是否显示形状选择器 | `true` |
 | `debug` | 是否请求调试答案（仅联调用） | `false` |
@@ -183,10 +183,10 @@ npm run dev
 | `slider.width/height` | 滑块图片尺寸 | `340/190` |
 | `slider.tolerance` | 滑块校验容差（px） | `8` |
 | `slider.min-elapsed-ms` | 滑块最短耗时 | `500` |
-| `slider.enabled-shapes` | 允许的形状白名单 | 内置 7 种 |
+| `slider.enabled-shapes` | 允许的形状白名单 | 内置 9 种 |
 | `slider.render-scale` | 抗锯齿超采样倍数 | `2` |
 | `slider.fake-target-count` | 假目标（干扰凹槽）数量 | `0` |
-| `slider.fake-target-min-gap` | 假目标纵向最小间距（px） | `24` |
+| `slider.fake-target-min-gap` | 假目标中心最小间距（px） | `24` |
 | `click.target-count` | 点选目标字数 | `3` |
 | `click.distractor-count` | 干扰字数 | `5` |
 | `click.target-text` | 目标文字候选数组，每次随机选一个（如 `[星巴克, 麦当劳]`），留空则随机选字 | `[]` |
@@ -199,8 +199,9 @@ npm run dev
 | `click.hue-shift-max` | 字形色相偏移上限 | `5` |
 | `click.curve-count` / `dash-count` / `dot-count` | 干扰线/噪点数量 | `24/12/160` |
 
-滑块可配置多个假目标凹槽（`slider.fake-target-count`），假目标与真目标、彼此之间
-自动分配在不同的 y 轴槽位（最小间距 `slider.fake-target-min-gap`），避免拖拽时对错位置。
+滑块可配置多个假目标凹槽（`slider.fake-target-count`）。假目标允许与真目标/彼此落在
+同一 y 轴，但同 y 轴时**大小和旋转必须不同**（大小 0.72–1.28 倍、旋转 ±28° 随机生成），
+配合 `slider.fake-target-min-gap` 控制中心最小间距，避免拖拽时对错位置。
 
 ## 安全说明
 

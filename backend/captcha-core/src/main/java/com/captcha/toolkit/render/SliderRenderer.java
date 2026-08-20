@@ -11,13 +11,12 @@ import com.jhlabs.image.ShadowFilter;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -46,7 +45,41 @@ public class SliderRenderer {
     private BufferedImage artwork;
     private BufferedImage vacancy;
     private int pieceOffsetX;
-    private final List<Point> fakeTargets = new ArrayList<>();
+    private final List<FakeTarget> fakeTargets = new ArrayList<>();
+
+    /**
+     * 假目标：位置 + 独立大小与旋转。
+     * 允许与真目标/其他假目标在同一 y 轴，但同 y 时大小和旋转必须不同。
+     */
+    public static class FakeTarget {
+        private final int x;
+        private final int y;
+        private final int size;
+        private final double rotation;
+
+        public FakeTarget(int x, int y, int size, double rotation) {
+            this.x = x;
+            this.y = y;
+            this.size = size;
+            this.rotation = rotation;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public double getRotation() {
+            return rotation;
+        }
+    }
 
     public SliderRenderer(SliderConfig options,
                           BackgroundProvider backgroundProvider,
@@ -64,21 +97,17 @@ public class SliderRenderer {
                 .orElseThrow(() -> new CaptchaException("没有可用的背景图，请配置 captcha.background.sources 或开启 generate-fallback"));
         // 拼图块边长按宽度等比缩放（参考 puzzle_captcha：280 宽用 30）
         vwh = Math.max(24, (int) Math.round(width * options.getPieceSizeRatio()));
-        // 假目标与真目标/彼此之间不能在同一 y 轴：
-        // 先把可放位置按最小纵向间距分成固定槽位，真目标和每个假目标各占一个槽位
-        int minGap = Math.max(vwh, options.getFakeTargetMinGap());
-        List<Integer> ySlots = buildYSlots(minGap);
-        y = ySlots.get(random.nextInt(ySlots.size()));
         x = random(options.getMargin(), width - vwh - options.getMargin());
+        y = random(options.getMargin(), height - vwh - options.getMargin());
 
         fakeTargets.clear();
         int fakeCount = Math.max(0, options.getFakeTargetCount());
-        List<Integer> remainingSlots = new ArrayList<>(ySlots);
-        remainingSlots.remove(Integer.valueOf(y));
-        Collections.shuffle(remainingSlots, random);
-        for (int i = 0; i < fakeCount && i < remainingSlots.size(); i++) {
-            int fx = random(options.getMargin(), width - vwh - options.getMargin());
-            fakeTargets.add(new Point(fx, remainingSlots.get(i)));
+        for (int i = 0; i < fakeCount; i++) {
+            FakeTarget fake = tryPlaceFake();
+            if (fake == null) {
+                break;
+            }
+            fakeTargets.add(fake);
         }
 
         int renderScale = Math.max(1, options.getRenderScale());
@@ -115,9 +144,16 @@ public class SliderRenderer {
         BufferedImage innerShadow = shadowFilter.filter(alphaFilter.filter(pieceFull, null), null);
         g.drawImage(innerShadow, 0, 0, null);
 
-        // 假目标：画成和真目标一样的白色缺口 + 内阴影，但小图里没有对应拼图块
-        for (Point fake : fakeTargets) {
-            Path2D fakePath = shape.create(fake.x * renderScale, fake.y * renderScale, renderVwh);
+        // 假目标：画成和真目标一样的白色缺口 + 内阴影，但小图里没有对应拼图块；
+        // 每个假目标有独立大小与旋转（同 y 轴时保证与真目标/彼此不同）
+        for (FakeTarget fake : fakeTargets) {
+            int fakeRenderSize = Math.max(8, fake.size * renderScale);
+            Path2D fakePath = shape.create(fake.x * renderScale, fake.y * renderScale,
+                    fakeRenderSize);
+            double centerX = (fake.x + fake.size / 2.0) * renderScale;
+            double centerY = (fake.y + fake.size / 2.0) * renderScale;
+            fakePath.transform(AffineTransform.getRotateInstance(
+                    Math.toRadians(fake.rotation), centerX, centerY));
             BufferedImage fakeHoleFull = transparent(renderWidth, renderHeight);
             Graphics2D fg = fakeHoleFull.createGraphics();
             fg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -159,16 +195,50 @@ public class SliderRenderer {
     }
 
     /**
-     * 按最小纵向间距生成可放置拼图块的 y 槽位（每个槽位之间至少间隔 minGap）。
+     * 放置一个假目标：
+     * <ul>
+     *   <li>允许与真目标/其他假目标在同一 y 轴；</li>
+     *   <li>但同 y 轴时，大小和旋转必须与对方不同；</li>
+     *   <li>任意两个目标中心距离不小于两者边长一半 + 最小间距，避免重叠。</li>
+     * </ul>
      */
-    private List<Integer> buildYSlots(int minGap) {
-        List<Integer> slots = new ArrayList<>();
-        int start = options.getMargin();
-        int end = height - options.getMargin() - vwh;
-        for (int top = start; top <= end; top += minGap) {
-            slots.add(top + vwh / 2);
+    private FakeTarget tryPlaceFake() {
+        for (int attempt = 0; attempt < 400; attempt++) {
+            int size = Math.max(16, (int) Math.round(vwh * rand(0.72, 1.28)));
+            double rotation = rand(-28, 28);
+            int fx = random(options.getMargin(), width - size - options.getMargin());
+            int fy = random(options.getMargin(), height - size - options.getMargin());
+
+            // 与真目标同 y 轴：大小、旋转都必须不同
+            if (fy == y && (size == vwh || Math.abs(rotation) < 0.5)) {
+                continue;
+            }
+
+            boolean clear = true;
+            for (FakeTarget existing : fakeTargets) {
+                double minDist = (existing.size + size) / 2.0
+                        + Math.max(4, options.getFakeTargetMinGap());
+                if (Math.hypot(existing.x - fx, existing.y - fy) < minDist) {
+                    clear = false;
+                    break;
+                }
+                // 与其他假目标同 y 轴：大小、旋转都必须不同
+                if (existing.y == fy
+                        && (existing.size == size
+                        || Math.abs(existing.rotation - rotation) < 0.5)) {
+                    clear = false;
+                    break;
+                }
+            }
+            if (clear) {
+                return new FakeTarget(fx, fy, size, rotation);
+            }
         }
-        return slots;
+        return null;
+    }
+
+    private double rand(double min, double max) {
+        return min + random.nextDouble() * (max - min);
     }
 
     private static int clampAlpha(int alpha) {
@@ -191,6 +261,10 @@ public class SliderRenderer {
         return y;
     }
 
+    public int getPieceSize() {
+        return vwh;
+    }
+
     public String getShape() {
         return shapeName;
     }
@@ -211,7 +285,7 @@ public class SliderRenderer {
         return pieceOffsetX;
     }
 
-    public List<Point> getFakeTargets() {
+    public List<FakeTarget> getFakeTargets() {
         return new ArrayList<>(fakeTargets);
     }
 }

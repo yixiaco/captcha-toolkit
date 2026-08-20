@@ -16,7 +16,6 @@ import com.captcha.toolkit.store.InMemoryCaptchaSessionStore;
 import com.captcha.toolkit.word.WordFactory;
 import org.junit.jupiter.api.Test;
 
-import java.awt.Point;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +23,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -143,8 +143,10 @@ class CaptchaEngineTest {
     }
 
     @Test
-    void sliderFakeTargetsAvoidSameY() {
+    void sliderFakeTargetsSameYRequireDifferentSizeAndRotation() {
         CaptchaConfig config = new CaptchaConfig();
+        // 小高度画布强制所有目标落在同一个 y 轴，专门验证同 y 约束
+        config.getSlider().setHeight(44);
         config.getSlider().setFakeTargetCount(3);
         SliderRenderer renderer = new SliderRenderer(config.getSlider(),
                 new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())),
@@ -152,13 +154,20 @@ class CaptchaEngineTest {
         renderer.setShape("classic");
         renderer.run();
 
-        List<Point> fakes = renderer.getFakeTargets();
+        var fakes = renderer.getFakeTargets();
         assertEquals(3, fakes.size());
-        Set<Integer> ys = new HashSet<>();
-        ys.add(renderer.getY());
-        for (Point fake : fakes) {
-            assertTrue(ys.add(fake.y),
-                    "假目标与真目标或彼此位于同一 y 轴: " + fake.y);
+        for (var fake : fakes) {
+            assertEquals(renderer.getY(), fake.getY(), "假目标应与真目标同 y 轴");
+            assertNotEquals(renderer.getPieceSize(), fake.getSize(), "同 y 轴时大小必须不同");
+            assertTrue(Math.abs(fake.getRotation()) >= 0.5, "同 y 轴时旋转必须不同");
+        }
+        for (int i = 0; i < fakes.size(); i++) {
+            for (int j = i + 1; j < fakes.size(); j++) {
+                assertNotEquals(fakes.get(i).getSize(), fakes.get(j).getSize(),
+                        "同 y 轴的假目标之间大小必须不同");
+                assertTrue(Math.abs(fakes.get(i).getRotation() - fakes.get(j).getRotation()) >= 0.5,
+                        "同 y 轴的假目标之间旋转必须不同");
+            }
         }
     }
 
