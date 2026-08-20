@@ -1,5 +1,6 @@
 server:
-  port: 8080
+  # 避开通用的 8080，演示服务使用 18080
+  port: 18080
 
 spring:
   application:

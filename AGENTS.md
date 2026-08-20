@@ -31,7 +31,7 @@ Frontend:
 ```bash
 cd frontend
 npm install
-npm run dev          # dev server on :5173, proxies /api to :8080
+npm run dev          # dev server on :5173, proxies /api to :18080
 npm run build:lib    # publishable component bundle
 npm run build:demo   # demo site
 ```

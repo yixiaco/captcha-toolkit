@@ -13,7 +13,7 @@
 
 ```bash
 npm install
-npm run dev          # 开发演示站（/api 代理到 http://localhost:8080）
+npm run dev          # 开发演示站（/api 代理到 http://localhost:18080）
 npm run build:lib    # 构建可发布组件库到 dist/
 npm run build:demo   # 构建演示站到 dist-demo/
 ```
