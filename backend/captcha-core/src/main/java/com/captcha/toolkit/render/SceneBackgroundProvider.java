@@ -1,57 +1,56 @@
 package com.captcha.toolkit.render;
 
+import com.captcha.toolkit.util.ImageUtil;
+
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
+import java.awt.RadialGradientPaint;
 import java.awt.RenderingHints;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Optional;
 import java.util.Random;
 
 /**
  * 程序生成随机风景背景：无底图素材时的兜底方案。
+ *
+ * <p>先按 2 倍分辨率超采样绘制，再高质量缩小回目标尺寸，
+ * 让太阳/云/山/树等曲线边缘产生平滑过渡，避免 1x 直出的锯齿感。</p>
  */
 public class SceneBackgroundProvider implements BackgroundProvider {
+
+    /** 超采样倍数：先画高清再缩小，等效于全局抗锯齿 */
+    private static final int RENDER_SCALE = 2;
 
     private final Random random = new Random();
 
     @Override
     public Optional<BufferedImage> provide(int width, int height) {
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        draw(image.createGraphics(), width, height);
-        return Optional.of(image);
+        int hiWidth = width * RENDER_SCALE;
+        int hiHeight = height * RENDER_SCALE;
+        BufferedImage hi = new BufferedImage(hiWidth, hiHeight, BufferedImage.TYPE_INT_RGB);
+        draw(hi.createGraphics(), hiWidth, hiHeight);
+        return Optional.of(ImageUtil.scaleDown(hi, width, height));
     }
 
     public void draw(Graphics2D g, int width, int height) {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
         int hue = random.nextInt(360);
+        // 天空渐变
         g.setPaint(new GradientPaint(0, 0, Color.getHSBColor(hue / 360f, 0.65f, 0.78f),
                 0, height, Color.getHSBColor(((hue + 55) % 360) / 360f, 0.65f, 0.94f)));
         g.fillRect(0, 0, width, height);
 
-        // 太阳
-        int sunX = (int) (width * (0.18 + random.nextDouble() * 0.64));
-        int sunY = (int) (height * (0.1 + random.nextDouble() * 0.22));
-        int sunR = 13 + random.nextInt(12);
-        g.setColor(new Color(255, 244, 179));
-        g.fillOval(sunX - sunR, sunY - sunR, sunR * 2, sunR * 2);
+        drawSun(g, width, height);
+        drawClouds(g, width, height);
 
-        // 云
-        g.setColor(new Color(255, 255, 255, 150));
-        for (int i = 0; i < 4; i++) {
-            int cx = (int) (width * (0.08 + random.nextDouble() * 0.84));
-            int cy = (int) (height * (0.08 + random.nextDouble() * 0.34));
-            int r = 9 + random.nextInt(8);
-            g.fillOval(cx - r, cy - r, r * 2, r * 2);
-            g.fillOval(cx + r - (int) (r * 0.7), cy - (int) (r * 0.35) - (int) (r * 0.7),
-                    (int) (r * 1.4), (int) (r * 1.4));
-            g.fillOval(cx - r - (int) (r * 0.5), cy - (int) (r * 0.3), (int) (r * 1.2), (int) (r * 1.2));
-        }
-
-        // 远山与近丘
-        ridge(g, width, height, hue + 140, 0.38f, 0.62f, height * 0.13, 5);
-        ridge(g, width, height, hue + 152, 0.42f, 0.52f, height * 0.09, 7);
+        // 远山与近丘（渐变填充 + 平滑起伏）
+        ridge(g, width, height, hue + 140, 0.38f, 0.72f, 0.55f, height * 0.13, 5);
+        ridge(g, width, height, hue + 152, 0.42f, 0.62f, 0.48f, height * 0.09, 7);
 
         // 草地
         g.setPaint(new GradientPaint(0, height * 0.72f,
@@ -64,28 +63,113 @@ public class SceneBackgroundProvider implements BackgroundProvider {
             int tx = (int) (width * (0.04 + random.nextDouble() * 0.92));
             int baseY = (int) (height * (0.76 + random.nextDouble() * 0.2));
             int size = 7 + random.nextInt(8);
-            g.setColor(new Color(92, 64, 38, 220));
-            g.fillRect(tx - size / 8, baseY - size * 7 / 10, size / 4, size * 9 / 10);
-            g.setColor(Color.getHSBColor(((hue + 150) % 360) / 360f, 0.48f, 0.42f));
-            g.fillOval(tx - size / 2, baseY - size - size / 2, size, size);
-            g.fillOval(tx - size, baseY - size * 3 / 4, size, size);
-            g.fillOval(tx, baseY - size * 3 / 4, size, size);
+            drawTree(g, tx, baseY, size, hue);
         }
     }
 
+    /**
+     * 太阳：柔光光晕（径向渐变）+ 明亮核心，不再是一块硬边圆。
+     */
+    private void drawSun(Graphics2D g, int width, int height) {
+        int cx = (int) (width * (0.18 + random.nextDouble() * 0.64));
+        int cy = (int) (height * (0.1 + random.nextDouble() * 0.22));
+        int r = 13 + random.nextInt(12);
+
+        // 外层光晕：中心亮黄 → 透明
+        float[] glowFractions = {0f, 0.55f, 1f};
+        Color[] glowColors = {
+                new Color(255, 244, 179, 120),
+                new Color(255, 244, 179, 40),
+                new Color(255, 244, 179, 0)
+        };
+        g.setPaint(new RadialGradientPaint(cx, cy, r * 2.4f, glowFractions, glowColors));
+        g.fillOval(cx - (int) (r * 2.4), cy - (int) (r * 2.4), (int) (r * 4.8), (int) (r * 4.8));
+
+        // 核心：中心更亮
+        float[] coreFractions = {0f, 0.7f, 1f};
+        Color[] coreColors = {
+                new Color(255, 252, 224),
+                new Color(255, 238, 170),
+                new Color(255, 220, 120)
+        };
+        g.setPaint(new RadialGradientPaint(cx, cy, r, coreFractions, coreColors));
+        g.fillOval(cx - r, cy - r, r * 2, r * 2);
+    }
+
+    /**
+     * 云：多圆叠加 + 圆角底座，做出蓬松柔边。
+     */
+    private void drawClouds(Graphics2D g, int width, int height) {
+        for (int i = 0; i < 4; i++) {
+            int cx = (int) (width * (0.08 + random.nextDouble() * 0.84));
+            int cy = (int) (height * (0.08 + random.nextDouble() * 0.34));
+            int r = 9 + random.nextInt(8);
+
+            // 底部圆角底座（柔化边缘）
+            g.setColor(new Color(255, 255, 255, 90));
+            g.fill(new RoundRectangle2D.Double(
+                    cx - r * 1.8, cy - r * 0.6, r * 3.6, r * 1.4, r, r));
+
+            // 蓬松云团：低透明度叠加 + 高透明度核心
+            g.setColor(new Color(255, 255, 255, 80));
+            g.fillOval((int) (cx - r * 1.4), (int) (cy - r * 0.9), (int) (r * 2.8), (int) (r * 2.0));
+            g.fillOval((int) (cx - r * 0.7), (int) (cy - r * 1.3), (int) (r * 2.4), (int) (r * 2.2));
+            g.fillOval((int) (cx + r * 0.2), (int) (cy - r * 0.9), (int) (r * 2.2), (int) (r * 1.8));
+
+            g.setColor(new Color(255, 255, 255, 170));
+            g.fillOval((int) (cx - r * 0.9), (int) (cy - r * 0.5), (int) (r * 1.8), (int) (r * 1.4));
+            g.fillOval((int) (cx + r * 0.1), (int) (cy - r * 0.6), (int) (r * 1.4), (int) (r * 1.2));
+        }
+    }
+
+    /**
+     * 山丘：渐变填充，顶部轻微起伏。
+     */
     private void ridge(Graphics2D g, int width, int height, int hue, float sat,
-                       float bright, double amp, int steps) {
+                       float brightTop, float brightBottom, double amp, int steps) {
         double phase = random.nextDouble() * Math.PI * 2;
         int baseY = (int) (height * 0.78);
         Polygon polygon = new Polygon();
         polygon.addPoint(0, height);
         polygon.addPoint(0, baseY);
         for (int x = 0; x <= width; x += width / steps) {
-            int y = (int) (baseY + Math.sin(x * 0.02 + phase) * amp + (random.nextDouble() * 6 - 3));
+            int y = (int) (baseY + Math.sin(x * 0.02 + phase) * amp + (random.nextDouble() * 5 - 2.5));
             polygon.addPoint(x, y);
         }
         polygon.addPoint(width, height);
-        g.setColor(Color.getHSBColor(((hue % 360)) / 360f, sat, bright));
+        g.setPaint(new GradientPaint(0, baseY,
+                Color.getHSBColor(((hue % 360)) / 360f, sat, brightTop),
+                0, height, Color.getHSBColor(((hue % 360)) / 360f, sat, brightBottom)));
         g.fillPolygon(polygon);
+    }
+
+    /**
+     * 树：圆角渐变树干 + 径向渐变树冠（中心亮、边缘深）。
+     */
+    private void drawTree(Graphics2D g, int tx, int baseY, int size, int hue) {
+        // 树干
+        int trunkW = Math.max(2, size / 4);
+        int trunkH = size * 9 / 10;
+        g.setPaint(new GradientPaint(tx - trunkW / 2f, 0,
+                new Color(120, 82, 46), tx + trunkW / 2f, 0, new Color(78, 52, 30)));
+        g.fill(new RoundRectangle2D.Double(
+                tx - trunkW / 2.0, baseY - trunkH, trunkW, trunkH, trunkW, trunkW));
+
+        // 树冠：三团径向渐变圆，中心偏亮、边缘加深
+        int canopyTop = baseY - size - size / 2;
+        drawCanopy(g, tx, canopyTop + size / 2, size, hue);
+        drawCanopy(g, tx - size / 2, canopyTop + (int) (size * 0.75), size, hue);
+        drawCanopy(g, tx + size / 2, canopyTop + (int) (size * 0.75), size, hue);
+    }
+
+    private void drawCanopy(Graphics2D g, int cx, int cy, int size, int hue) {
+        float[] fractions = {0f, 0.65f, 1f};
+        Color[] colors = {
+                Color.getHSBColor(((hue + 152) % 360) / 360f, 0.52f, 0.62f),
+                Color.getHSBColor(((hue + 148) % 360) / 360f, 0.50f, 0.46f),
+                Color.getHSBColor(((hue + 145) % 360) / 360f, 0.52f, 0.34f)
+        };
+        g.setPaint(new RadialGradientPaint(cx, cy, size * 0.9f, fractions, colors));
+        g.fillOval(cx - size / 2, cy - size / 2, size, size);
     }
 }
