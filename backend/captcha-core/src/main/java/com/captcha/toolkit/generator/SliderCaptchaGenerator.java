@@ -12,6 +12,7 @@ import com.captcha.toolkit.render.SliderRenderer;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  * 滑块拼图验证码生成器。
@@ -21,6 +22,7 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
     private final SliderConfig options;
     private final BackgroundProvider backgroundProvider;
     private final PuzzleShapeRegistry shapeRegistry;
+    private final Random random = new Random();
 
     public SliderCaptchaGenerator(SliderConfig options,
                                   BackgroundProvider backgroundProvider,
@@ -88,6 +90,15 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
     }
 
     private String resolveShape(String requested) {
+        // shape=random：从启用形状里随机挑一个
+        if ("random".equalsIgnoreCase(requested)) {
+            List<String> candidates = options.getEnabledShapes().stream()
+                    .filter(shapeRegistry::contains)
+                    .toList();
+            if (!candidates.isEmpty()) {
+                return candidates.get(random.nextInt(candidates.size()));
+            }
+        }
         if (requested != null && options.getEnabledShapes().contains(requested)
                 && shapeRegistry.contains(requested)) {
             return requested;

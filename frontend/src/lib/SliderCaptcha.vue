@@ -182,7 +182,8 @@ async function loadCaptcha() {
   try {
     const res = await opts.api.getCaptcha({
       type: 'slider',
-      shape: selectedShape.value || undefined,
+      // 空串表示随机：显式传 random，让后端从启用形状里随机选择
+      shape: selectedShape.value || 'random',
       debug: opts.debug ? '1' : undefined,
     })
     captchaId.value = res.id

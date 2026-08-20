@@ -177,4 +177,16 @@ class CaptchaEngineTest {
         assertTrue(engine.consumeTicket(ok.getTicket()).isSuccess());
         assertFalse(engine.consumeTicket(ok.getTicket()).isSuccess());
     }
+
+    @Test
+    void sliderRandomShapePicksRandomShape() {
+        CaptchaEngine engine = newEngine();
+        Set<String> shapes = new HashSet<>();
+        for (int i = 0; i < 12; i++) {
+            CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
+                    Map.of("shape", "random"), true);
+            shapes.add(challenge.getShape());
+        }
+        assertTrue(shapes.size() > 1, "shape=random 应出现多种形状: " + shapes);
+    }
 }
