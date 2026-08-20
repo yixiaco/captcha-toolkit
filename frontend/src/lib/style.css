@@ -76,7 +76,7 @@
   color: #fff;
   font-size: 26px;
   box-shadow: 0 6px 18px rgba(63, 199, 131, 0.4);
-  animation: pop-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: success-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .shake {
@@ -394,6 +394,17 @@
   }
   to {
     transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes success-pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
     opacity: 1;
   }
 }
