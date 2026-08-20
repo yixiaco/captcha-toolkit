@@ -10,9 +10,16 @@ import com.captcha.toolkit.CaptchaType;
  */
 public class CaptchaTicket {
 
+    /** 票据唯一标识，业务接口凭此校验 */
     private final String ticket;
+
+    /** 发放票据的验证码类型 */
     private final CaptchaType type;
+
+    /** 票据创建时间戳（毫秒） */
     private final long createdAt;
+
+    /** 票据过期时间戳（毫秒） */
     private final long expiresAt;
 
     public CaptchaTicket(String ticket, CaptchaType type, long ttlMillis) {

@@ -5,7 +5,10 @@ package com.captcha.toolkit.model;
  */
 public class PointVo {
 
+    /** 横坐标（图片内部像素坐标） */
     private int x;
+
+    /** 纵坐标（图片内部像素坐标） */
     private int y;
 
     public PointVo() {

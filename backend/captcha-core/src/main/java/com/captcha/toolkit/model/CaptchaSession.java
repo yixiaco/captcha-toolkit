@@ -9,16 +9,37 @@ import java.util.List;
  */
 public class CaptchaSession {
 
+    /** 会话唯一标识 */
     private final String id;
+
+    /** 验证码类型 */
     private final CaptchaType type;
+
+    /** 滑块拼图形状（点选为 null） */
     private final String shape;
+
+    /** 滑块正确答案 x（点选为 0） */
     private final int x;
+
+    /** 滑块正确答案 y（点选为 0） */
     private final int y;
+
+    /** 服务端图片宽度，用于前端位移比例换算 */
     private final int width;
+
+    /** 服务端图片高度 */
     private final int height;
+
+    /** 点选目标坐标（按点击顺序） */
     private final List<PointVo> targets;
+
+    /** 点选提示文字 */
     private final List<String> prompt;
+
+    /** 会话创建时间戳（毫秒） */
     private final long createdAt;
+
+    /** 会话过期时间戳（毫秒） */
     private final long expiresAt;
 
     private CaptchaSession(String id, CaptchaType type, String shape, int x, int y,

@@ -5,11 +5,18 @@ package com.captcha.toolkit.model;
  */
 public class VerifyResult {
 
+    /** 校验是否成功 */
     private boolean success;
+
+    /** 校验流程是否已完成（成功或失败都算完成） */
     private boolean done;
+
+    /** 面向用户的提示信息 */
     private String message;
+
     /** 业务码：OK / WRONG / TOO_FAST / EXPIRED / BAD_REQUEST */
     private String code = "OK";
+
     /** 验证通过后发放的一次性票据，供登录等业务接口校验 */
     private String ticket;
 

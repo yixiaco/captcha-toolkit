@@ -25,6 +25,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
+        <!-- Bean Validation：@Validated + @NotNull/@NotBlank 参数校验 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
         <!-- Web 支持设为 optional：宿主项目已有 Web 时由宿主提供，纯后端项目也不会被强制引入 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

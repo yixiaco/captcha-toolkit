@@ -8,13 +8,28 @@ import java.util.Map;
  */
 public class CaptchaChallenge {
 
+    /** 验证码会话 id，前端提交答案时原样带回 */
     private String id;
+
+    /** 验证码类型：slider / click */
     private String type;
+
+    /** 大图（滑块背景图 / 点选背景图），Base64 Data URI */
     private String image1;
+
+    /** 小图（滑块拼图块），仅滑块类型返回 */
     private String image2;
+
+    /** 图片宽度（服务端像素坐标系） */
     private Integer width;
+
+    /** 图片高度（服务端像素坐标系） */
     private Integer height;
+
+    /** 滑块拼图形状名 */
     private String shape;
+
+    /** 点选提示文字（词组模式为词组，单字模式为单个汉字） */
     private List<String> prompt;
     /** 小图（拼图块）内部左侧留白，前端定位时使用 */
     private Integer pieceOffsetX;

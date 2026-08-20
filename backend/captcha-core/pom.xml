@@ -21,6 +21,11 @@
             <artifactId>filters</artifactId>
             <version>${jhlabs.version}</version>
         </dependency>
+        <!-- 模型校验注解（@NotNull/@NotBlank），由 Starter 引入实现，核心不依赖 Spring -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

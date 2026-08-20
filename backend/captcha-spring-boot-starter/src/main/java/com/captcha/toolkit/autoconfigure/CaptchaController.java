@@ -6,6 +6,9 @@ import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
 import com.captcha.toolkit.model.TicketVerifyRequest;
 import com.captcha.toolkit.model.VerifyResult;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +30,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("${captcha.api-prefix:/api/captcha}")
+@Validated
 public class CaptchaController {
 
     private final CaptchaEngine engine;
@@ -50,7 +54,7 @@ public class CaptchaController {
     }
 
     @PostMapping("/verify")
-    public VerifyResult verify(@RequestBody CaptchaAnswer answer) {
+    public VerifyResult verify(@Valid @RequestBody CaptchaAnswer answer) {
         if (answer == null || answer.getId() == null) {
             return VerifyResult.badRequest("缺少验证码 id");
         }
@@ -59,13 +63,14 @@ public class CaptchaController {
 
     /** 业务接口校验一次性票据（GET 方式，适合快速联调） */
     @GetMapping("/ticket/verify")
-    public VerifyResult verifyTicket(@RequestParam String ticket) {
+    public VerifyResult verifyTicket(
+            @RequestParam @NotBlank(message = "缺少票据 ticket") String ticket) {
         return engine.consumeTicket(ticket);
     }
 
     /** 业务接口校验一次性票据（POST 方式，票据放请求体） */
     @PostMapping("/ticket/verify")
-    public VerifyResult verifyTicket(@RequestBody TicketVerifyRequest request) {
+    public VerifyResult verifyTicket(@Valid @RequestBody TicketVerifyRequest request) {
         if (request == null || request.getTicket() == null) {
             return VerifyResult.badRequest("缺少票据 ticket");
         }
