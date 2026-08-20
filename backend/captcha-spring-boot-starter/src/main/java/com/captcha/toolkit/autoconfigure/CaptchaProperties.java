@@ -1,9 +1,9 @@
 package com.captcha.toolkit.autoconfigure;
 
-import com.captcha.toolkit.BackgroundConfig;
-import com.captcha.toolkit.CaptchaConfig;
-import com.captcha.toolkit.ClickConfig;
-import com.captcha.toolkit.SliderConfig;
+import com.captcha.toolkit.config.BackgroundConfig;
+import com.captcha.toolkit.config.CaptchaConfig;
+import com.captcha.toolkit.config.ClickConfig;
+import com.captcha.toolkit.config.SliderConfig;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;

@@ -1,4 +1,4 @@
-package com.captcha.toolkit;
+package com.captcha.toolkit.config;
 
 import lombok.Data;
 

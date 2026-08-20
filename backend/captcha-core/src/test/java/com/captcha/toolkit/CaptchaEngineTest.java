@@ -1,5 +1,6 @@
 package com.captcha.toolkit;
 
+import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.image.DataUriImageCodec;
 import com.captcha.toolkit.model.CaptchaAnswer;

@@ -1,5 +1,6 @@
 package com.captcha.toolkit;
 
+import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.generator.CaptchaGenerator;
 import com.captcha.toolkit.generator.ClickCaptchaGenerator;
 import com.captcha.toolkit.render.BackgroundProvider;

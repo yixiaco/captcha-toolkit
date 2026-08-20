@@ -1,7 +1,7 @@
 package com.captcha.toolkit.generator;
 
 import com.captcha.toolkit.CaptchaType;
-import com.captcha.toolkit.ClickConfig;
+import com.captcha.toolkit.config.ClickConfig;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaException;
 import com.captcha.toolkit.model.CaptchaSession;

@@ -4,6 +4,7 @@ import com.captcha.toolkit.generator.CaptchaGenerator;
 import com.captcha.toolkit.generator.GenerateRequest;
 import com.captcha.toolkit.generator.SliderCaptchaGenerator;
 import com.captcha.toolkit.image.CaptchaImageCodec;
+import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
 import com.captcha.toolkit.model.CaptchaException;
