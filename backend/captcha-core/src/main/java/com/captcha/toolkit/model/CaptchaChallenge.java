@@ -1,7 +1,6 @@
 package com.captcha.toolkit.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.List;
 import java.util.Map;
@@ -9,8 +8,7 @@ import java.util.Map;
 /**
  * 验证码下发载荷（接口响应模型）。
  */
-@Setter
-@Getter
+@Data
 public class CaptchaChallenge {
 
     /** 验证码会话 id，前端提交答案时原样带回 */

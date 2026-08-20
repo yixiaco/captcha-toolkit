@@ -1,6 +1,7 @@
 package com.captcha.toolkit.model;
 
 import com.captcha.toolkit.CaptchaType;
+import lombok.Data;
 
 /**
  * 验证通过后发放的一次性票据。
@@ -8,6 +9,7 @@ import com.captcha.toolkit.CaptchaType;
  * <p>票据只保存在服务端，登录等业务接口提交 ticket 后由引擎校验并消费，
  * 校验成功即从存储中移除，防止重放。</p>
  */
+@Data
 public class CaptchaTicket {
 
     /** 票据唯一标识，业务接口凭此校验 */
@@ -34,19 +36,4 @@ public class CaptchaTicket {
         return System.currentTimeMillis() > expiresAt;
     }
 
-    public String getTicket() {
-        return ticket;
-    }
-
-    public CaptchaType getType() {
-        return type;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public long getExpiresAt() {
-        return expiresAt;
-    }
 }

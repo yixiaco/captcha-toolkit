@@ -1,6 +1,6 @@
 package com.captcha.toolkit.image;
 
-import com.captcha.toolkit.model.CaptchaException;
+import com.captcha.toolkit.exception.CaptchaException;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

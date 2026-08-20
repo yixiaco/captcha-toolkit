@@ -1,4 +1,4 @@
-package com.captcha.toolkit.model;
+package com.captcha.toolkit.exception;
 
 /**
  * 验证码引擎业务异常。

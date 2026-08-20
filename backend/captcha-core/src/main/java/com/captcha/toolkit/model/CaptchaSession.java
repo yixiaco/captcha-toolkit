@@ -1,12 +1,14 @@
 package com.captcha.toolkit.model;
 
 import com.captcha.toolkit.CaptchaType;
+import lombok.Data;
 
 import java.util.List;
 
 /**
  * 一次验证码会话：保存服务端答案，交给 {@link com.captcha.toolkit.store.CaptchaSessionStore} 缓存。
  */
+@Data
 public class CaptchaSession {
 
     /** 会话唯一标识 */
@@ -73,49 +75,5 @@ public class CaptchaSession {
 
     public boolean isExpired() {
         return System.currentTimeMillis() > expiresAt;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public CaptchaType getType() {
-        return type;
-    }
-
-    public String getShape() {
-        return shape;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public List<PointVo> getTargets() {
-        return targets;
-    }
-
-    public List<String> getPrompt() {
-        return prompt;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public long getExpiresAt() {
-        return expiresAt;
     }
 }

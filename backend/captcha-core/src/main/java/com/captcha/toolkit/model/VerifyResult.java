@@ -1,8 +1,11 @@
 package com.captcha.toolkit.model;
 
+import lombok.Data;
+
 /**
  * 验证结果（面向调用方/前端的响应模型）。
  */
+@Data
 public class VerifyResult {
 
     /** 校验是否成功 */
@@ -48,45 +51,5 @@ public class VerifyResult {
 
     public static VerifyResult badRequest(String message) {
         return fail(message, "BAD_REQUEST");
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-
-    public boolean isDone() {
-        return done;
-    }
-
-    public void setDone(boolean done) {
-        this.done = done;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getTicket() {
-        return ticket;
-    }
-
-    public void setTicket(String ticket) {
-        this.ticket = ticket;
     }
 }

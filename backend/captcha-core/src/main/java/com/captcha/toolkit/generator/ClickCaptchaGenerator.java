@@ -3,7 +3,7 @@ package com.captcha.toolkit.generator;
 import com.captcha.toolkit.CaptchaType;
 import com.captcha.toolkit.config.ClickConfig;
 import com.captcha.toolkit.model.CaptchaAnswer;
-import com.captcha.toolkit.model.CaptchaException;
+import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.GeneratedCaptcha;
 import com.captcha.toolkit.model.PointVo;

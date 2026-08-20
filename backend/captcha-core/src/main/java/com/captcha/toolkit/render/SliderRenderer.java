@@ -1,7 +1,7 @@
 package com.captcha.toolkit.render;
 
 import com.captcha.toolkit.config.SliderConfig;
-import com.captcha.toolkit.model.CaptchaException;
+import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.shape.PuzzleShape;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
 import com.captcha.toolkit.util.ImageUtil;
