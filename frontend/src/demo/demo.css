@@ -194,6 +194,45 @@ button {
   color: var(--gt-green);
 }
 
+.embed-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.embed-btn {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--gt-border);
+  border-radius: 6px;
+  background: #fff;
+  color: #5b6470;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.embed-btn:hover {
+  border-color: var(--gt-blue);
+  color: var(--gt-blue);
+}
+
+.embed-btn.active {
+  border-color: var(--gt-blue);
+  background: #eef4ff;
+  color: var(--gt-blue);
+  font-weight: 600;
+}
+
+.embed-panel {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  border: 1px dashed var(--gt-border);
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
 .verified-banner {
   display: flex;
   align-items: center;

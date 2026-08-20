@@ -101,6 +101,31 @@
         </button>
       </div>
 
+      <div class="demo-divider"><span>嵌入方式</span></div>
+
+      <div class="embed-actions">
+        <button
+          v-for="item in embedModes"
+          :key="item.key"
+          class="embed-btn"
+          :class="{ active: inlineMode === item.key }"
+          @click="inlineMode = item.key"
+        >
+          {{ item.label }}
+        </button>
+      </div>
+
+      <div class="embed-panel">
+        <Captcha
+          display="inline"
+          :mode="inlineMode"
+          :width="300"
+          :height="170"
+          :debug="isDev"
+          @success="onVerified"
+        />
+      </div>
+
       <transition name="fade">
         <div v-if="verified" class="verified-banner">
           <span class="verified-icon">✓</span>
@@ -127,7 +152,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import { CaptchaModal, PUZZLE_SHAPES } from '../lib'
+import { Captcha, CaptchaModal, PUZZLE_SHAPES } from '../lib'
 
 const isDev = import.meta.env.DEV
 const account = ref('')
@@ -137,6 +162,12 @@ const captchaMode = ref('slider')
 const shapeFromUrl = ref('')
 const verified = ref(false)
 const verifiedTicket = ref('')
+const inlineMode = ref('slider')
+const embedModes = [
+  { key: 'slider', label: '滑块' },
+  { key: 'click', label: '点选' },
+  { key: 'rotate', label: '旋转' },
+]
 
 function open(mode) {
   captchaMode.value = mode

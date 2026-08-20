@@ -108,6 +108,40 @@ createApp(App)
   .mount('#app')
 ```
 
+### 统一入口（嵌入 / 弹窗）
+
+`Captcha` 组件通过 `display` 一个参数切换两种形态：
+
+```vue
+<template>
+  <!-- 弹窗方式：visible 控制显隐 -->
+  <Captcha
+    display="modal"
+    :visible="visible"
+    mode="slider"
+    @success="onVerified"
+  />
+
+  <!-- 嵌入方式：直接渲染在页面里 -->
+  <Captcha
+    display="inline"
+    mode="click"
+    :width="300"
+    :height="170"
+    @success="onVerified"
+  />
+</template>
+
+<script setup>
+import { Captcha } from 'captcha-toolkit-vue'
+</script>
+```
+
+也可以按需单独使用底层组件：
+
+- 嵌入：`SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha`
+- 弹窗：`CaptchaModal`
+
 ### 按需引入组件
 
 ```vue
