@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,6 +14,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 内置形状的几何回归测试。
  */
 class PuzzleShapesTest {
+
+    @Test
+    void heartKeepsParametricProportions() {
+        Path2D path = PuzzleShapes.heart().create(0, 0, 100);
+        Rectangle2D bounds = path.getBounds2D();
+
+        // 参数方程爱心宽 32、高约 28.9：等比缩放后应落在方块内且宽大于高
+        assertTrue(bounds.getMinX() >= 0 && bounds.getMinY() >= 0,
+                "爱心应完整位于方块内: " + bounds);
+        assertTrue(bounds.getMaxX() <= 100 && bounds.getMaxY() <= 100,
+                "爱心应完整位于方块内: " + bounds);
+        assertTrue(bounds.getWidth() > bounds.getHeight(),
+                "参数方程爱心应宽于高，实际 width=" + bounds.getWidth()
+                        + ", height=" + bounds.getHeight());
+        // 高宽比应接近参数方程的 28.9/32，允许少量误差
+        double ratio = bounds.getHeight() / bounds.getWidth();
+        assertTrue(ratio > 0.85 && ratio < 0.95,
+                "爱心高宽比应接近 28.9/32，实际 ratio=" + ratio);
+    }
 
     @Test
     void moonIsLeftFacingCrescent() {

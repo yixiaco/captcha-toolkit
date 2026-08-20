@@ -1,8 +1,10 @@
 package com.captcha.toolkit.shape;
 
 import java.awt.geom.Arc2D;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 import java.util.List;
 
 /**
@@ -86,17 +88,31 @@ public final class PuzzleShapes {
     public static PuzzleShape heart() {
         return named("heart", "爱心", (x, y, size) -> {
             Path2D path = new Path2D.Double();
-            // 宽版爱心：左右叶更宽，整体更接近方块比例
-            path.moveTo(x + size * 0.5, y + size * 0.95);
-            path.curveTo(x + size * 0.02, y + size * 0.6, x + size * 0.0, y + size * 0.12,
-                    x + size * 0.28, y + size * 0.04);
-            path.curveTo(x + size * 0.42, y + size * 0.0, x + size * 0.5, y + size * 0.16,
-                    x + size * 0.5, y + size * 0.26);
-            path.curveTo(x + size * 0.5, y + size * 0.16, x + size * 0.58, y + size * 0.0,
-                    x + size * 0.72, y + size * 0.04);
-            path.curveTo(x + size * 1.0, y + size * 0.12, x + size * 0.98, y + size * 0.6,
-                    x + size * 0.5, y + size * 0.95);
+            // 经典参数方程爱心：
+            // x = 16 * sin^3(t)
+            // y = 13*cos(t) - 5*cos(2t) - 2*cos(3t) - cos(4t)
+            // 曲线横向 32 个单位，等比缩放到 size，再按实际边界居中
+            double scale = size / 32.0;
+            int steps = 256;
+            for (int i = 0; i <= steps; i++) {
+                double t = i * 2 * Math.PI / steps;
+                double sinT = Math.sin(t);
+                double px = 16 * sinT * sinT * sinT * scale;
+                // 屏幕坐标系 y 向下，参数方程的数学 y 需取反
+                double py = -(13 * Math.cos(t) - 5 * Math.cos(2 * t)
+                        - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * scale;
+                if (i == 0) {
+                    path.moveTo(px, py);
+                } else {
+                    path.lineTo(px, py);
+                }
+            }
             path.closePath();
+            // 用实际边界平移，保证爱心完整且居中于 (x, y, size, size)
+            Rectangle2D bounds = path.getBounds2D();
+            double dx = x + (size - bounds.getWidth()) / 2.0 - bounds.getMinX();
+            double dy = y + (size - bounds.getHeight()) / 2.0 - bounds.getMinY();
+            path.transform(AffineTransform.getTranslateInstance(dx, dy));
             return path;
         });
     }
