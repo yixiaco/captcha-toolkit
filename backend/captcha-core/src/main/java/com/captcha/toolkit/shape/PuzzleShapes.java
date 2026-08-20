@@ -107,12 +107,10 @@ public final class PuzzleShapes {
             double cx = x + size * 0.5;
             double cy = y + size * 0.5;
             double r = size * 0.5;
-            // 标准月牙：左凸缘 + 右凹缘，两端在上下顶点闭合
+            // 标准月牙：外缘整半圆，内缘浅凹，中段宽度约 0.5r，饱满接近 🌙
             path.moveTo(cx, cy - r);
-            // 外缘接近整半圆（最左点到 cx - r），内缘按 0.618 比例内凹，
-            // 中段月牙宽度约为 0.38r，接近 🌙 的比例
             path.quadTo(cx - size, cy, cx, cy + r);
-            path.quadTo(cx - size * 0.618, cy, cx, cy - r);
+            path.quadTo(cx - size * 0.36, cy, cx, cy - r);
             path.closePath();
             return path;
         });
