@@ -188,6 +188,7 @@ npm run dev
 | `click.background.generate-fallback` | 点选背景生成兜底 | `true` |
 | `click.tolerance` | 点选容差（px） | `18` |
 | `click.font-size-min/max` | 字号范围 | `18/24` |
+| `click.char-pool` | 汉字字库（默认中文常见字符范围 U+4E00–U+9FA5） | CJK 常用汉字 |
 | `click.lightness-delta-min/max` | 字形与背景明度差 | `0.12/0.18` |
 | `click.hue-shift-max` | 字形色相偏移上限 | `5` |
 | `click.curve-count` / `dash-count` / `dot-count` | 干扰线/噪点数量 | `24/12/160` |

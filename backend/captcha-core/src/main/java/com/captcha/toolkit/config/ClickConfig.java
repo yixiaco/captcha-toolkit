@@ -1,5 +1,6 @@
 package com.captcha.toolkit.config;
 
+import com.captcha.toolkit.util.CharPools;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -32,9 +33,8 @@ public class ClickConfig {
     private int fontSizeMax = 24;
     /** 字符间最小间距 */
     private int minSpacing = 40;
-    private List<String> charPool = new ArrayList<>(Arrays.asList(
-            "安", "全", "快", "捷", "智", "能", "验", "证",
-            "风", "控", "点", "选", "文", "字", "极", "简"));
+    /** 汉字字库：默认使用中文常见字符范围（CJK 统一汉字区 U+4E00–U+9FA5） */
+    private List<String> charPool = new ArrayList<>(CharPools.commonChinese());
     private List<String> fonts = new ArrayList<>(Arrays.asList(
             "华文行楷", "STXingkai", "华文彩云", "STCaiyun", "华文琥珀", "STHupo",
             "楷体", "KaiTi", "隶书", "LiSu", "幼圆", "YouYuan", "宋体", "SimSun"));
