@@ -46,8 +46,10 @@ captcha:
     piece-padding: 8
     # 假目标（干扰凹槽）数量：图中会出现多个缺口，只有真目标能拼合
     fake-target-count: 1
-    # 假目标中心最小间距；同 y 轴时大小和旋转会自动不同
+    # 假目标中心最小间距，避免图形重叠
     fake-target-min-gap: 24
+    # 判定“同一 y/x 轴”的像素阈值；同 y 时大小/旋转不同，同 x 时 y 必须不同
+    fake-target-axis-threshold: 12
   click:
     background:
       # 点选默认使用程序生成风景图；如需图片素材在这里配置

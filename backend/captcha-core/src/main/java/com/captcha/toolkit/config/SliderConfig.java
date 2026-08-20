@@ -42,6 +42,8 @@ public class SliderConfig {
     private int piecePadding = 8;
     /** 假目标（干扰凹槽）数量：图中会出现多个缺口，但只有真目标能拼合 */
     private int fakeTargetCount = 0;
-    /** 假目标中心最小间距（像素）；同 y 轴时大小和旋转必须不同 */
+    /** 假目标中心最小间距（像素），用于避免图形重叠 */
     private int fakeTargetMinGap = 24;
+    /** 判定“同一 y/x 轴”的像素阈值：小于该值视为同轴 */
+    private int fakeTargetAxisThreshold = 12;
 }

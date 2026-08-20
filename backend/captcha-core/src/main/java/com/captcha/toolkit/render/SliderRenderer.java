@@ -203,18 +203,40 @@ public class SliderRenderer {
      * </ul>
      */
     private FakeTarget tryPlaceFake() {
+        int axisThreshold = Math.max(1, options.getFakeTargetAxisThreshold());
         for (int attempt = 0; attempt < 400; attempt++) {
-            int size = Math.max(16, (int) Math.round(vwh * rand(0.72, 1.28)));
-            double rotation = rand(-28, 28);
-            int fx = random(options.getMargin(), width - size - options.getMargin());
-            int fy = random(options.getMargin(), height - size - options.getMargin());
-
-            // 与真目标同 y 轴：大小、旋转都必须不同
-            if (fy == y && (size == vwh || Math.abs(rotation) < 0.5)) {
+            int size = vwh;
+            double rotation = 0;
+            int fy = random(options.getMargin(), height - vwh - options.getMargin());
+            boolean sameY = Math.abs(fy - y) < axisThreshold;
+            if (sameY) {
+                size = Math.max(16, (int) Math.round(vwh * rand(0.72, 1.28)));
+                rotation = rand(-28, 28);
+                if (size == vwh && Math.abs(rotation) < 0.5) {
+                    continue;
+                }
+            }
+            int fx = random(options.getMargin(),
+                    Math.max(options.getMargin(), width - size - options.getMargin()));
+            fy = Math.min(fy, Math.max(options.getMargin(), height - size - options.getMargin()));
+            // 夹取后如果不再与真目标同 y，恢复成与真目标一致
+            if (Math.abs(fy - y) >= axisThreshold) {
+                size = vwh;
+                rotation = 0;
+            }
+            boolean sameX = Math.abs(fx - x) < axisThreshold;
+            // 同 x 时 y 必须不同（不能同时同 x 又同 y）
+            if (sameX && Math.abs(fy - y) < axisThreshold) {
                 continue;
             }
 
             boolean clear = true;
+            // 与真目标不重叠
+            double minDistReal = (vwh + size) / 2.0 + Math.max(4, options.getFakeTargetMinGap());
+            if (Math.hypot(fx - x, fy - y) < minDistReal) {
+                continue;
+            }
+            // 与其他假目标不重叠
             for (FakeTarget existing : fakeTargets) {
                 double minDist = (existing.size + size) / 2.0
                         + Math.max(4, options.getFakeTargetMinGap());
@@ -222,10 +244,16 @@ public class SliderRenderer {
                     clear = false;
                     break;
                 }
-                // 与其他假目标同 y 轴：大小、旋转都必须不同
-                if (existing.y == fy
-                        && (existing.size == size
-                        || Math.abs(existing.rotation - rotation) < 0.5)) {
+                // 同 x 且同 y 不允许
+                if (Math.abs(existing.x - fx) < axisThreshold
+                        && Math.abs(existing.y - fy) < axisThreshold) {
+                    clear = false;
+                    break;
+                }
+                // 同 y 时大小或旋转必须不同
+                if (Math.abs(existing.y - fy) < axisThreshold
+                        && existing.size == size
+                        && Math.abs(existing.rotation - rotation) < 0.5) {
                     clear = false;
                     break;
                 }

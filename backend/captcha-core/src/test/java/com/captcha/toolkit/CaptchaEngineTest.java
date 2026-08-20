@@ -23,7 +23,6 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -144,30 +143,90 @@ class CaptchaEngineTest {
     }
 
     @Test
-    void sliderFakeTargetsSameYRequireDifferentSizeAndRotation() {
+    void sliderFakeTargetsFollowPlacementRules() {
         CaptchaConfig config = new CaptchaConfig();
         // 小高度画布强制所有目标落在同一个 y 轴，专门验证同 y 约束
         config.getSlider().setHeight(44);
         config.getSlider().setFakeTargetCount(3);
+        BackgroundProvider background = new FallbackBackgroundProvider(
+                List.of(new SceneBackgroundProvider()));
         SliderRenderer renderer = new SliderRenderer(config.getSlider(),
-                new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())),
-                new PuzzleShapeRegistry());
+                background, new PuzzleShapeRegistry());
         renderer.setShape("classic");
         renderer.run();
 
+        int vwh = renderer.getPieceSize();
+        int gap = config.getSlider().getFakeTargetMinGap();
+        int threshold = config.getSlider().getFakeTargetAxisThreshold();
         var fakes = renderer.getFakeTargets();
         assertEquals(3, fakes.size());
         for (var fake : fakes) {
             assertEquals(renderer.getY(), fake.getY(), "假目标应与真目标同 y 轴");
-            assertNotEquals(renderer.getPieceSize(), fake.getSize(), "同 y 轴时大小必须不同");
-            assertTrue(Math.abs(fake.getRotation()) >= 0.5, "同 y 轴时旋转必须不同");
+            // 同 y：大小或旋转必须与真目标不同
+            assertTrue(fake.getSize() != vwh || Math.abs(fake.getRotation()) >= 0.5,
+                    "同 y 轴时大小或旋转必须不同");
+            // 同 x 且同 y 不允许
+            assertTrue(Math.abs(fake.getX() - renderer.getX()) >= threshold,
+                    "同 x 且同 y 不允许");
+            // 与真目标不能重叠
+            assertTrue(Math.hypot(fake.getX() - renderer.getX(), fake.getY() - renderer.getY())
+                            >= (vwh + fake.getSize()) / 2.0 + gap,
+                    "与真目标不能重叠");
         }
         for (int i = 0; i < fakes.size(); i++) {
             for (int j = i + 1; j < fakes.size(); j++) {
-                assertNotEquals(fakes.get(i).getSize(), fakes.get(j).getSize(),
-                        "同 y 轴的假目标之间大小必须不同");
-                assertTrue(Math.abs(fakes.get(i).getRotation() - fakes.get(j).getRotation()) >= 0.5,
-                        "同 y 轴的假目标之间旋转必须不同");
+                // 同 x 且同 y 不允许
+                assertTrue(Math.abs(fakes.get(i).getX() - fakes.get(j).getX()) >= threshold
+                                || Math.abs(fakes.get(i).getY() - fakes.get(j).getY()) >= threshold,
+                        "同 x 且同 y 不允许");
+                // 同 y：大小或旋转必须不同
+                assertTrue(fakes.get(i).getSize() != fakes.get(j).getSize()
+                                || Math.abs(fakes.get(i).getRotation() - fakes.get(j).getRotation()) >= 0.5,
+                        "同 y 轴时大小或旋转必须不同");
+                assertTrue(Math.hypot(fakes.get(i).getX() - fakes.get(j).getX(),
+                                fakes.get(i).getY() - fakes.get(j).getY())
+                                >= (fakes.get(i).getSize() + fakes.get(j).getSize()) / 2.0 + gap,
+                        "假目标之间不能重叠");
+            }
+        }
+
+        // 常规高度：不违反规则时，大小/旋转应与真目标一致
+        CaptchaConfig normal = new CaptchaConfig();
+        normal.getSlider().setFakeTargetCount(4);
+        for (int round = 0; round < 20; round++) {
+            SliderRenderer r2 = new SliderRenderer(normal.getSlider(), background,
+                    new PuzzleShapeRegistry());
+            r2.run();
+            int v = r2.getPieceSize();
+            var fs = r2.getFakeTargets();
+            for (var fake : fs) {
+                boolean sameY = Math.abs(fake.getY() - r2.getY()) < threshold;
+                if (sameY) {
+                    assertTrue(fake.getSize() != v || Math.abs(fake.getRotation()) >= 0.5,
+                            "同 y 轴时大小或旋转必须不同");
+                } else {
+                    assertEquals(v, fake.getSize(), "不同 y 轴时大小应与真目标一致");
+                    assertTrue(Math.abs(fake.getRotation()) < 0.5,
+                            "不同 y 轴时旋转应与真目标一致");
+                }
+                if (Math.abs(fake.getX() - r2.getX()) < threshold) {
+                    assertTrue(Math.abs(fake.getY() - r2.getY()) >= threshold,
+                            "同 x 时 y 必须不同");
+                }
+                assertTrue(Math.hypot(fake.getX() - r2.getX(), fake.getY() - r2.getY())
+                                >= (v + fake.getSize()) / 2.0 + gap,
+                        "与真目标不能重叠");
+            }
+            for (int i = 0; i < fs.size(); i++) {
+                for (int j = i + 1; j < fs.size(); j++) {
+                    assertTrue(Math.abs(fs.get(i).getX() - fs.get(j).getX()) >= threshold
+                                    || Math.abs(fs.get(i).getY() - fs.get(j).getY()) >= threshold,
+                            "同 x 且同 y 不允许");
+                    assertTrue(Math.hypot(fs.get(i).getX() - fs.get(j).getX(),
+                                    fs.get(i).getY() - fs.get(j).getY())
+                                    >= (fs.get(i).getSize() + fs.get(j).getSize()) / 2.0 + gap,
+                            "假目标之间不能重叠");
+                }
             }
         }
     }

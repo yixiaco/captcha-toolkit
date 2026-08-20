@@ -188,6 +188,7 @@ npm run dev
 | `slider.render-scale` | 抗锯齿超采样倍数 | `2` |
 | `slider.fake-target-count` | 假目标（干扰凹槽）数量 | `0` |
 | `slider.fake-target-min-gap` | 假目标中心最小间距（px） | `24` |
+| `slider.fake-target-axis-threshold` | 判定同一 y/x 轴的像素阈值 | `12` |
 | `click.target-count` | 点选目标字数 | `3` |
 | `click.distractor-count` | 干扰字数 | `5` |
 | `click.target-text` | 目标文字候选数组，每次随机选一个（如 `[星巴克, 麦当劳]`），留空则随机选字 | `[]` |
@@ -204,8 +205,11 @@ npm run dev
 | `rotate.min-angle/max-angle` | 错位角度范围（度） | `20/340` |
 
 滑块可配置多个假目标凹槽（`slider.fake-target-count`）。假目标允许与真目标/彼此落在
-同一 y 轴，但同 y 轴时**大小和旋转必须不同**（大小 0.72–1.28 倍、旋转 ±28° 随机生成），
-配合 `slider.fake-target-min-gap` 控制中心最小间距，避免拖拽时对错位置。
+同一 y 轴，但遵循以下规则：
+- 任意图形不能重叠（`slider.fake-target-min-gap` 控制中心最小间距）；
+- 与真目标/彼此同 y（差值小于 `slider.fake-target-axis-threshold`）时，**大小或旋转必须不同**；
+- 同 x 时 y 必须不同且不能重叠；
+- 不触发上述规则时，假目标的大小和旋转与真目标**完全一致**。
 
 ## 安全说明
 
