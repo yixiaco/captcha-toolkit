@@ -48,9 +48,9 @@ public class SceneBackgroundProvider implements BackgroundProvider {
         drawSun(g, width, height);
         drawClouds(g, width, height);
 
-        // 远山与近丘（渐变填充 + 平滑起伏）
-        ridge(g, width, height, hue + 140, 0.38f, 0.72f, 0.55f, height * 0.13, 5);
-        ridge(g, width, height, hue + 152, 0.42f, 0.62f, 0.48f, height * 0.09, 7);
+        // 远山与近丘（渐变填充 + 更大尺寸 + 多段起伏）
+        ridge(g, width, height, hue + 140, 0.38f, 0.75f, 0.55f, height * 0.17, 9);
+        ridge(g, width, height, hue + 152, 0.42f, 0.66f, 0.50f, height * 0.12, 13);
 
         // 草地
         g.setPaint(new GradientPaint(0, height * 0.72f,
@@ -59,10 +59,10 @@ public class SceneBackgroundProvider implements BackgroundProvider {
         g.fillRect(0, (int) (height * 0.72), width, (int) (height * 0.28));
 
         // 树
-        for (int i = 0; i < 9; i++) {
+        for (int i = 0; i < 7; i++) {
             int tx = (int) (width * (0.04 + random.nextDouble() * 0.92));
             int baseY = (int) (height * (0.76 + random.nextDouble() * 0.2));
-            int size = 7 + random.nextInt(8);
+            int size = 10 + random.nextInt(8);
             drawTree(g, tx, baseY, size, hue);
         }
     }
@@ -75,24 +75,25 @@ public class SceneBackgroundProvider implements BackgroundProvider {
         int cy = (int) (height * (0.1 + random.nextDouble() * 0.22));
         int r = 13 + random.nextInt(12);
 
-        // 外层光晕：中心亮黄 → 透明
-        float[] glowFractions = {0f, 0.55f, 1f};
+        // 外发光：两层光晕，中心亮黄 → 透明
+        float[] glowFractions = {0f, 0.4f, 1f};
         Color[] glowColors = {
-                new Color(255, 244, 179, 120),
-                new Color(255, 244, 179, 40),
+                new Color(255, 244, 179, 170),
+                new Color(255, 244, 179, 70),
                 new Color(255, 244, 179, 0)
         };
-        g.setPaint(new RadialGradientPaint(cx, cy, r * 2.4f, glowFractions, glowColors));
-        g.fillOval(cx - (int) (r * 2.4), cy - (int) (r * 2.4), (int) (r * 4.8), (int) (r * 4.8));
+        g.setPaint(new RadialGradientPaint(cx, cy, r * 3f, glowFractions, glowColors));
+        g.fillOval(cx - r * 3, cy - r * 3, r * 6, r * 6);
 
-        // 核心：中心更亮
+        // 核心：中心偏左上更亮，模拟光源
         float[] coreFractions = {0f, 0.7f, 1f};
         Color[] coreColors = {
-                new Color(255, 252, 224),
-                new Color(255, 238, 170),
-                new Color(255, 220, 120)
+                new Color(255, 252, 226),
+                new Color(255, 240, 180),
+                new Color(255, 215, 110)
         };
-        g.setPaint(new RadialGradientPaint(cx, cy, r, coreFractions, coreColors));
+        g.setPaint(new RadialGradientPaint(cx - r * 0.25f, cy - r * 0.25f,
+                r * 1.1f, coreFractions, coreColors));
         g.fillOval(cx - r, cy - r, r * 2, r * 2);
     }
 
@@ -128,12 +129,17 @@ public class SceneBackgroundProvider implements BackgroundProvider {
     private void ridge(Graphics2D g, int width, int height, int hue, float sat,
                        float brightTop, float brightBottom, double amp, int steps) {
         double phase = random.nextDouble() * Math.PI * 2;
-        int baseY = (int) (height * 0.78);
+        double phase2 = random.nextDouble() * Math.PI * 2;
+        int baseY = (int) (height * 0.72);
         Polygon polygon = new Polygon();
         polygon.addPoint(0, height);
         polygon.addPoint(0, baseY);
         for (int x = 0; x <= width; x += width / steps) {
-            int y = (int) (baseY + Math.sin(x * 0.02 + phase) * amp + (random.nextDouble() * 5 - 2.5));
+            // 双频正弦叠加 + 少量随机抖动，形成大小不一的起伏
+            double wave = Math.sin(x * 0.02 + phase) * amp
+                    + Math.sin(x * 0.05 + phase2) * amp * 0.45
+                    + (random.nextDouble() * 6 - 3);
+            int y = (int) (baseY + wave);
             polygon.addPoint(x, y);
         }
         polygon.addPoint(width, height);
@@ -155,21 +161,26 @@ public class SceneBackgroundProvider implements BackgroundProvider {
         g.fill(new RoundRectangle2D.Double(
                 tx - trunkW / 2.0, baseY - trunkH, trunkW, trunkH, trunkW, trunkW));
 
-        // 树冠：三团径向渐变圆，中心偏亮、边缘加深
+        // 树冠：主圆 + 左右侧圆，形成清晰的“伞形树”，渐变中心上移让底部更深
         int canopyTop = baseY - size - size / 2;
-        drawCanopy(g, tx, canopyTop + size / 2, size, hue);
-        drawCanopy(g, tx - size / 2, canopyTop + (int) (size * 0.75), size, hue);
-        drawCanopy(g, tx + size / 2, canopyTop + (int) (size * 0.75), size, hue);
+        int mainCy = canopyTop + (int) (size * 0.55);
+        drawCanopy(g, tx, mainCy, (int) (size * 1.1), hue);
+        drawCanopy(g, tx - (int) (size * 0.52), mainCy + (int) (size * 0.28),
+                (int) (size * 0.82), hue);
+        drawCanopy(g, tx + (int) (size * 0.52), mainCy + (int) (size * 0.28),
+                (int) (size * 0.82), hue);
     }
 
     private void drawCanopy(Graphics2D g, int cx, int cy, int size, int hue) {
         float[] fractions = {0f, 0.65f, 1f};
         Color[] colors = {
-                Color.getHSBColor(((hue + 152) % 360) / 360f, 0.52f, 0.62f),
-                Color.getHSBColor(((hue + 148) % 360) / 360f, 0.50f, 0.46f),
-                Color.getHSBColor(((hue + 145) % 360) / 360f, 0.52f, 0.34f)
+                Color.getHSBColor(((hue + 154) % 360) / 360f, 0.55f, 0.68f),
+                Color.getHSBColor(((hue + 148) % 360) / 360f, 0.52f, 0.48f),
+                Color.getHSBColor(((hue + 142) % 360) / 360f, 0.55f, 0.32f)
         };
-        g.setPaint(new RadialGradientPaint(cx, cy, size * 0.9f, fractions, colors));
+        // 渐变中心偏上，树冠顶部亮、底部暗，更像立体树冠
+        g.setPaint(new RadialGradientPaint(cx, cy - size * 0.2f, size * 0.9f,
+                fractions, colors));
         g.fillOval(cx - size / 2, cy - size / 2, size, size);
     }
 }
