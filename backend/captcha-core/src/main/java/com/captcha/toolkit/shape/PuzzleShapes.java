@@ -109,8 +109,10 @@ public final class PuzzleShapes {
             double r = size * 0.5;
             // 标准月牙：左凸缘 + 右凹缘，两端在上下顶点闭合
             path.moveTo(cx, cy - r);
-            path.quadTo(cx - size * 0.62, cy, cx, cy + r);
-            path.quadTo(cx - size * 0.02, cy, cx, cy - r);
+            // 外缘接近整半圆（最左点到 cx - r），内缘按 0.618 比例内凹，
+            // 中段月牙宽度约为 0.38r，接近 🌙 的比例
+            path.quadTo(cx - size, cy, cx, cy + r);
+            path.quadTo(cx - size * 0.618, cy, cx, cy - r);
             path.closePath();
             return path;
         });
