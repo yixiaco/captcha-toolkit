@@ -32,6 +32,8 @@ export const defaultCaptchaOptions = {
   randomLabel: '随机',
   /** 滑块轨道提示文案 */
   sliderTip: '按住滑块，拖动完成拼图',
+  /** 旋转提示文案 */
+  rotateTip: '拖动滑块旋转图片，使其对齐',
   /** 点选提示前缀文案 */
   promptPrefix: '请依次点选',
   /** 点选去重最小间距（px），防止重复点击同一位置 */

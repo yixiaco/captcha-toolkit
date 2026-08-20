@@ -147,7 +147,7 @@ button {
 
 .demo-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 
@@ -184,6 +184,10 @@ button {
 
 .mode-btn.click svg {
   color: #f08c2e;
+}
+
+.mode-btn.rotate svg {
+  color: #7c5cff;
 }
 
 .mode-btn.random svg {

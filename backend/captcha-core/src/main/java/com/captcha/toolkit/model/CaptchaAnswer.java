@@ -29,6 +29,9 @@ public class CaptchaAnswer {
     /** 点选答案：按点击顺序排列的坐标列表，点选类型必填 */
     private List<PointVo> points;
 
+    /** 旋转答案：用户旋转的角度（度），图片旋转类型必填 */
+    private Double angle;
+
     public static CaptchaAnswer slider(Double x, Integer clientWidth) {
         CaptchaAnswer answer = new CaptchaAnswer();
         answer.x = x;
@@ -39,6 +42,12 @@ public class CaptchaAnswer {
     public static CaptchaAnswer click(List<PointVo> points) {
         CaptchaAnswer answer = new CaptchaAnswer();
         answer.points = points;
+        return answer;
+    }
+
+    public static CaptchaAnswer rotate(Double angle) {
+        CaptchaAnswer answer = new CaptchaAnswer();
+        answer.angle = angle;
         return answer;
     }
 }

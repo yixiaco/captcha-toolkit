@@ -3,6 +3,7 @@ package com.captcha.toolkit.autoconfigure;
 import com.captcha.toolkit.config.BackgroundConfig;
 import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.config.ClickConfig;
+import com.captcha.toolkit.config.RotateConfig;
 import com.captcha.toolkit.config.SliderConfig;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
@@ -59,6 +60,9 @@ public class CaptchaProperties {
     /** 点选验证码配置 */
     private ClickConfig click = new ClickConfig();
 
+    /** 图片旋转验证码配置 */
+    private RotateConfig rotate = new RotateConfig();
+
     /**
      * 转换成核心引擎配置。滑块/点选直接复用同一套配置对象，
      * 通过属性拷贝避免两处配置实例互相共享可变引用。
@@ -69,6 +73,7 @@ public class CaptchaProperties {
         config.setTicketExpireSeconds(ticketExpireSeconds);
         BeanUtils.copyProperties(slider, config.getSlider());
         BeanUtils.copyProperties(click, config.getClick());
+        BeanUtils.copyProperties(rotate, config.getRotate());
         return config;
     }
 }

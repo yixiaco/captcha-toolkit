@@ -23,4 +23,7 @@ public class CaptchaConfig {
 
     /** 文字点选验证码配置 */
     private ClickConfig click = new ClickConfig();
+
+    /** 图片旋转验证码配置 */
+    private RotateConfig rotate = new RotateConfig();
 }

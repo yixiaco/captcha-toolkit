@@ -73,13 +73,27 @@
             @success="onCaptchaSuccess"
           />
           <ClickCaptcha
-            v-else
+            v-else-if="mode === 'click'"
             :key="`click-${refreshKey}`"
             :api="opts.api"
             :width="opts.width"
             :height="opts.height"
             :prompt-prefix="opts.promptPrefix"
             :mark-min-distance="opts.markMinDistance"
+            :debug="opts.debug"
+            :auto-reload="opts.autoReload"
+            :loading-text="opts.loadingText"
+            :image-alt="opts.imageAlt"
+            @success="onCaptchaSuccess"
+          />
+          <RotateCaptcha
+            v-if="mode === 'rotate'"
+            :key="`rotate-${refreshKey}`"
+            :api="opts.api"
+            :width="opts.width"
+            :height="opts.height"
+            :rotate-tip="opts.rotateTip"
+            :handle-width="opts.handleWidth"
             :debug="opts.debug"
             :auto-reload="opts.autoReload"
             :loading-text="opts.loadingText"
@@ -103,6 +117,7 @@
 import { ref, watch } from 'vue'
 import SliderCaptcha from './SliderCaptcha.vue'
 import ClickCaptcha from './ClickCaptcha.vue'
+import RotateCaptcha from './RotateCaptcha.vue'
 import { useCaptchaOptions } from './options'
 
 const props = defineProps({
@@ -144,6 +159,8 @@ const props = defineProps({
   randomLabel: { type: String, default: null },
   /** 拖拽提示文案 */
   sliderTip: { type: String, default: null },
+  /** 旋转提示文案 */
+  rotateTip: { type: String, default: null },
   /** 加载提示文案 */
   loadingText: { type: String, default: null },
   /** 图片 alt 文案 */

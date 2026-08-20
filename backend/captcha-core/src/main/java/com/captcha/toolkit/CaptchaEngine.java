@@ -116,6 +116,8 @@ public class CaptchaEngine {
                 new SliderCaptchaFactory(sliderBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.CLICK,
                 new ClickCaptchaFactory(clickBackgroundProvider, wordFactory).create(config));
+        map.putIfAbsent(CaptchaType.ROTATE,
+                new RotateCaptchaFactory(sliderBackgroundProvider).create(config));
         return new CaptchaEngine(map, store, ticketStore, codec,
                 config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000);
     }
@@ -144,6 +146,7 @@ public class CaptchaEngine {
         }
         map.putIfAbsent(CaptchaType.SLIDER, new SliderCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.CLICK, new ClickCaptchaFactory().create(config));
+        map.putIfAbsent(CaptchaType.ROTATE, new RotateCaptchaFactory().create(config));
         return map;
     }
 
@@ -181,6 +184,7 @@ public class CaptchaEngine {
             challenge.setDebugX(generated.getDebugX());
             challenge.setDebugTargets(generated.getDebugTargets());
             challenge.setDebugFakeTargets(generated.getDebugFakeTargets());
+            challenge.setDebugAngle(generated.getDebugAngle());
         }
         return challenge;
     }

@@ -3,6 +3,7 @@
 import CaptchaModal from './CaptchaModal.vue'
 import SliderCaptcha from './SliderCaptcha.vue'
 import ClickCaptcha from './ClickCaptcha.vue'
+import RotateCaptcha from './RotateCaptcha.vue'
 import { createCaptchaApi, defaultRequest } from './api'
 import { PUZZLE_SHAPES, getShapeOptions, registerShape } from './shapes'
 import {
@@ -16,6 +17,7 @@ export {
   CaptchaModal,
   SliderCaptcha,
   ClickCaptcha,
+  RotateCaptcha,
   createCaptchaApi,
   defaultRequest,
   PUZZLE_SHAPES,

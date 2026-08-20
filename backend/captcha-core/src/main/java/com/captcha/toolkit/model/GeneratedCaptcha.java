@@ -47,6 +47,9 @@ public class GeneratedCaptcha {
     /** 调试：滑块假目标坐标 */
     private List<PointVo> debugFakeTargets;
 
+    /** 调试：旋转验证码正确答案角度（度） */
+    private Double debugAngle;
+
     /** 扩展元数据：自定义验证码可携带任意附加信息 */
     private final Map<String, Object> metadata = new HashMap<>();
 

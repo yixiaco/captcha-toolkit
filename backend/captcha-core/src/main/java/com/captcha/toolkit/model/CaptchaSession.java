@@ -26,6 +26,9 @@ public class CaptchaSession {
     /** 滑块正确答案 y（点选为 0） */
     private final int y;
 
+    /** 旋转验证码正确答案角度（度），其他类型为 0 */
+    private final double rotation;
+
     /** 服务端图片宽度，用于前端位移比例换算 */
     private final int width;
 
@@ -46,12 +49,13 @@ public class CaptchaSession {
 
     private CaptchaSession(String id, CaptchaType type, String shape, int x, int y,
                            int width, int height, List<PointVo> targets, List<String> prompt,
-                           long ttlMillis) {
+                           double rotation, long ttlMillis) {
         this.id = id;
         this.type = type;
         this.shape = shape;
         this.x = x;
         this.y = y;
+        this.rotation = rotation;
         this.width = width;
         this.height = height;
         this.targets = targets;
@@ -64,13 +68,19 @@ public class CaptchaSession {
     public static CaptchaSession slider(String id, String shape, int x, int y,
                                         int width, int height, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.SLIDER, shape, x, y, width, height,
-                null, null, ttlMillis);
+                null, null, 0, ttlMillis);
     }
 
     public static CaptchaSession click(String id, int width, int height,
                                        List<PointVo> targets, List<String> prompt, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.CLICK, null, 0, 0, width, height,
-                targets, prompt, ttlMillis);
+                targets, prompt, 0, ttlMillis);
+    }
+
+    public static CaptchaSession rotate(String id, int width, int height,
+                                        double rotation, long ttlMillis) {
+        return new CaptchaSession(id, CaptchaType.ROTATE, null, 0, 0, width, height,
+                null, null, rotation, ttlMillis);
     }
 
     public boolean isExpired() {

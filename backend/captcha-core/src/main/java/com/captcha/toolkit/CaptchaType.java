@@ -9,7 +9,8 @@ package com.captcha.toolkit;
 public enum CaptchaType {
 
     SLIDER("slider"),
-    CLICK("click");
+    CLICK("click"),
+    ROTATE("rotate");
 
     private final String code;
 

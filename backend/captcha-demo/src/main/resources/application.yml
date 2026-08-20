@@ -84,3 +84,14 @@ captcha:
     dash-count: 12
     dot-count: 160
     occlusion-probability: 0.6
+  rotate:
+    width: 340
+    height: 190
+    # 角度容差（度）
+    tolerance: 3
+    min-elapsed-ms: 800
+    expire-seconds: 300
+    # 错位角度范围，避开接近 0/360 的“几乎对齐”
+    min-angle: 20
+    max-angle: 340
+    render-scale: 2

@@ -38,6 +38,7 @@ class CaptchaEngineTest {
         config.setDebugEnabled(true);
         config.getSlider().setMinElapsedMs(0);
         config.getClick().setMinElapsedMs(0);
+        config.getRotate().setMinElapsedMs(0);
         CaptchaImageCodec codec = new DataUriImageCodec();
         FallbackBackgroundProvider background = new FallbackBackgroundProvider(
                 List.of(new SceneBackgroundProvider()));
@@ -197,5 +198,25 @@ class CaptchaEngineTest {
             shapes.add(challenge.getShape());
         }
         assertTrue(shapes.size() > 1, "shape=random 应出现多种形状: " + shapes);
+    }
+
+    @Test
+    void rotateGeneratesAndVerifies() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.ROTATE, Map.of(), true);
+
+        assertNotNull(challenge.getImage1());
+        assertNotNull(challenge.getImage2());
+        assertNotNull(challenge.getDebugAngle());
+
+        VerifyResult ok = engine.verify(challenge.getId(),
+                CaptchaAnswer.rotate(challenge.getDebugAngle()));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+
+        // 错误角度应失败
+        CaptchaChallenge wrongChallenge = engine.create(CaptchaType.ROTATE, Map.of(), true);
+        VerifyResult wrong = engine.verify(wrongChallenge.getId(),
+                CaptchaAnswer.rotate(wrongChallenge.getDebugAngle() + 30));
+        assertFalse(wrong.isSuccess());
     }
 }

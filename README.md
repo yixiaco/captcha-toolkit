@@ -47,7 +47,7 @@ frontend/
 
 3. 启动后自动注册接口（前缀、参数全部可配）：
 
-   - `GET {prefix}?type=slider|click&shape=classic&debug=1` 下发验证码
+   - `GET {prefix}?type=slider|click|rotate&shape=classic&debug=1` 下发验证码
    - `POST {prefix}/verify` 校验答案（滑块 `{id,type,x,width}`；点选 `{id,type,points:[{x,y}...]}`）
    - `GET/POST {prefix}/ticket/verify?ticket=...` 业务接口校验一次性票据
    - `GET {prefix}/types` 查询后端支持的类型与形状（通用前端可动态渲染）
@@ -142,6 +142,7 @@ import { CaptchaModal } from 'captcha-toolkit-vue'
 | `autoReload` | 验证失败后自动换一张 | `true` |
 | `handleWidth` | 滑块手柄宽度 | `44` |
 | `shapeLabel` / `randomLabel` / `sliderTip` | 滑块选择器与拖拽提示文案 | 中文默认 |
+| `rotateTip` | 旋转模式拖拽提示文案 | 中文默认 |
 | `promptPrefix` | 点选提示文案 | `请依次点选` |
 | `loadingText` / `imageAlt` | 加载提示与图片 alt | 中文默认 |
 | `title` / `brandText` / `sloganText` | 弹窗标题/品牌/标语文案 | 品牌与标语默认隐藏 |
@@ -198,6 +199,9 @@ npm run dev
 | `click.lightness-delta-min/max` | 字形与背景明度差 | `0.12/0.18` |
 | `click.hue-shift-max` | 字形色相偏移上限 | `5` |
 | `click.curve-count` / `dash-count` / `dot-count` | 干扰线/噪点数量 | `24/12/160` |
+| `rotate.width/height` | 旋转验证图片尺寸 | `340/190` |
+| `rotate.tolerance` | 旋转角度容差（度） | `3` |
+| `rotate.min-angle/max-angle` | 错位角度范围（度） | `20/340` |
 
 滑块可配置多个假目标凹槽（`slider.fake-target-count`）。假目标允许与真目标/彼此落在
 同一 y 轴，但同 y 轴时**大小和旋转必须不同**（大小 0.72–1.28 倍、旋转 ±28° 随机生成），
