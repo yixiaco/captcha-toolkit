@@ -17,7 +17,7 @@
         </svg>
         <h1>行为验证 · 原型</h1>
       </div>
-      <p class="demo-subtitle">模仿极验第四代自适应验证码的 Vue 3 组件库演示</p>
+      <p class="demo-subtitle">通用行为验证组件库演示 · 滑块拼图 / 文字点选</p>
 
       <form class="demo-form" @submit.prevent="onLogin">
         <label>
@@ -100,6 +100,8 @@
       :mode="captchaMode"
       :shape="shapeFromUrl"
       :debug="isDev"
+      :brand-text="'Captcha Toolkit'"
+      :slogan-text="'通用行为验证组件'"
       @close="captchaVisible = false"
       @success="onVerified"
     />

@@ -26,12 +26,12 @@ export const defaultCaptchaOptions = {
   autoReload: true,
   closeOnSuccess: true,
   successDelay: 750,
-  // 文案
+  // 文案（默认不展示品牌；需要时通过 brandText/sloganText 配置）
   title: '安全验证',
   refreshTitle: '换一张',
   closeTitle: '关闭',
-  brandText: 'GeeTest 极验',
-  sloganText: '安全、智能、高效',
+  brandText: '',
+  sloganText: '',
 }
 
 /** 在组件树中提供全局配置 */

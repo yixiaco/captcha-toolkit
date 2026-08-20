@@ -80,11 +80,11 @@
           />
         </div>
 
-        <div class="modal-foot">
-          <span class="geetest-logo">
-            <span class="gt-name">{{ opts.brandText }}</span>
+        <div v-if="opts.brandText || opts.sloganText" class="modal-foot">
+          <span v-if="opts.brandText" class="brand-logo">
+            <span class="brand-name">{{ opts.brandText }}</span>
           </span>
-          <span class="geetest-slogan">{{ opts.sloganText }}</span>
+          <span v-if="opts.sloganText" class="brand-slogan">{{ opts.sloganText }}</span>
         </div>
       </div>
     </div>

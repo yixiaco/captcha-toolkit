@@ -141,7 +141,7 @@ import { CaptchaModal } from 'captcha-toolkit-vue'
 | `autoReload` | 验证失败后自动换一张 | `true` |
 | `handleWidth` | 滑块手柄宽度 | `44` |
 | `promptPrefix` | 点选提示文案 | `请依次点击` |
-| `title` / `brandText` / `sloganText` | 弹窗文案 | 极验风格默认 |
+| `title` / `brandText` / `sloganText` | 弹窗标题/品牌/标语文案 | 品牌与标语默认隐藏 |
 
 ## 运行演示
 

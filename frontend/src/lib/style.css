@@ -162,23 +162,19 @@
   color: #9aa1ab;
 }
 
-.geetest-logo {
+.brand-logo {
   display: flex;
   align-items: baseline;
   gap: 6px;
 }
 
-.gt-name {
+.brand-name {
   font-weight: 700;
   color: var(--gt-blue);
   letter-spacing: 0.2px;
 }
 
-.gt-cn {
-  color: #5b6470;
-}
-
-.geetest-slogan {
+.brand-slogan {
   color: #9aa1ab;
 }
 
