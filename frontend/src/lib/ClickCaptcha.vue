@@ -20,7 +20,10 @@
         v-for="mark in marks"
         :key="mark.index"
         class="click-mark"
-        :style="{ left: mark.x + 'px', top: mark.y + 'px' }"
+        :style="{
+          left: (mark.x / opts.width) * 100 + '%',
+          top: (mark.y / opts.height) * 100 + '%',
+        }"
       >
         {{ mark.index }}
       </div>
