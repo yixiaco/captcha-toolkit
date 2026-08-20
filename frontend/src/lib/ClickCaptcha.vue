@@ -11,7 +11,7 @@
         ref="imageRef"
         :src="image1"
         class="click-canvas"
-        alt="验证图片"
+        :alt="opts.imageAlt"
         draggable="false"
         @click="onClick"
       />
@@ -27,7 +27,7 @@
 
       <div v-if="status === 'loading'" class="loading-mask">
         <div class="spinner"></div>
-        <span>图片加载中...</span>
+        <span>{{ opts.loadingText }}</span>
       </div>
 
       <transition name="fade">
@@ -44,15 +44,28 @@ import { nextTick, onMounted, ref } from 'vue'
 import { useCaptchaOptions } from './options'
 
 const props = defineProps({
+  /** 自定义 API 客户端 */
   api: { type: Object, default: null },
+  /** 后端接口前缀 */
   baseUrl: { type: String, default: null },
+  /** 自定义请求函数 */
   request: { type: Function, default: null },
+  /** 验证图片宽度（px） */
   width: { type: Number, default: null },
+  /** 验证图片高度（px） */
   height: { type: Number, default: null },
+  /** 点选提示前缀文案 */
   promptPrefix: { type: String, default: null },
+  /** 点选去重最小间距（px） */
   markMinDistance: { type: Number, default: null },
+  /** 是否请求调试答案 */
   debug: { type: Boolean, default: null },
+  /** 失败后自动刷新 */
   autoReload: { type: Boolean, default: null },
+  /** 加载提示文案 */
+  loadingText: { type: String, default: null },
+  /** 图片 alt 文案 */
+  imageAlt: { type: String, default: null },
 })
 
 const emit = defineEmits(['success', 'fail', 'error'])

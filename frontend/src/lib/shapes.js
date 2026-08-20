@@ -15,10 +15,13 @@ export function registerShape(key, config) {
   PUZZLE_SHAPES[key] = config
 }
 
-/** 把形状列表转成选择器需要的选项数组 */
-export function getShapeOptions(shapes) {
+/** 把形状列表转成选择器需要的选项数组，支持用 shapeLabels 覆盖显示名 */
+export function getShapeOptions(shapes, shapeLabels = {}) {
   const keys = Array.isArray(shapes) ? shapes : Object.keys(PUZZLE_SHAPES)
   return keys
     .filter((key) => PUZZLE_SHAPES[key])
-    .map((key) => ({ key, label: PUZZLE_SHAPES[key].label }))
+    .map((key) => ({
+      key,
+      label: shapeLabels[key] || PUZZLE_SHAPES[key].label,
+    }))
 }

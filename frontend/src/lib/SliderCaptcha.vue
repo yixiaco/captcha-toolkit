@@ -6,7 +6,7 @@
     :style="{ width: opts.width + 'px', maxWidth: '100%' }"
   >
     <div v-if="opts.showShapePicker" class="shape-picker">
-      <span class="shape-label">拼图形状</span>
+      <span class="shape-label">{{ opts.shapeLabel }}</span>
       <button
         v-for="option in shapeOptions"
         :key="option.key"
@@ -23,12 +23,18 @@
         data-shape="random"
         @click="selectShape('')"
       >
-        随机
+        {{ opts.randomLabel }}
       </button>
     </div>
 
     <div class="img-wrap" :style="{ width: opts.width + 'px', height: opts.height + 'px' }">
-      <img v-if="image1" :src="image1" class="captcha-img" alt="验证图片" draggable="false" />
+      <img
+        v-if="image1"
+        :src="image1"
+        class="captcha-img"
+        :alt="opts.imageAlt"
+        draggable="false"
+      />
 
       <img
         v-if="image2"
@@ -44,7 +50,7 @@
 
       <div v-if="status === 'loading'" class="loading-mask">
         <div class="spinner"></div>
-        <span>图片加载中...</span>
+        <span>{{ opts.loadingText }}</span>
       </div>
 
       <transition name="fade">
@@ -58,7 +64,7 @@
       <div class="slider-progress" :style="{ width: pieceLeft + 'px' }"></div>
 
       <div v-if="status === 'idle' && !dragging" class="slider-tip">
-        按住滑块，拖动完成拼图
+        {{ opts.sliderTip }}
       </div>
 
       <div
@@ -104,17 +110,40 @@ import { getShapeOptions, PUZZLE_SHAPES } from './shapes'
 import { useCaptchaOptions } from './options'
 
 const props = defineProps({
+  /** 自定义 API 客户端 */
   api: { type: Object, default: null },
+  /** 后端接口前缀 */
   baseUrl: { type: String, default: null },
+  /** 自定义请求函数 */
   request: { type: Function, default: null },
+  /** 验证图片宽度（px） */
   width: { type: Number, default: null },
+  /** 验证图片高度（px） */
   height: { type: Number, default: null },
+  /** 初始形状，空串随机 */
   shape: { type: String, default: null },
+  /** 形状选择器白名单 */
   shapes: { type: Array, default: null },
+  /** 形状显示名覆盖 */
+  shapeLabels: { type: Object, default: null },
+  /** 是否显示形状选择器 */
   showShapePicker: { type: Boolean, default: null },
+  /** 是否请求调试答案 */
   debug: { type: Boolean, default: null },
+  /** 失败后自动刷新 */
   autoReload: { type: Boolean, default: null },
+  /** 滑块手柄宽度（px） */
   handleWidth: { type: Number, default: null },
+  /** 形状选择器标题文案 */
+  shapeLabel: { type: String, default: null },
+  /** 随机按钮文案 */
+  randomLabel: { type: String, default: null },
+  /** 拖拽提示文案 */
+  sliderTip: { type: String, default: null },
+  /** 加载提示文案 */
+  loadingText: { type: String, default: null },
+  /** 图片 alt 文案 */
+  imageAlt: { type: String, default: null },
 })
 
 const emit = defineEmits(['success', 'fail', 'error'])
@@ -137,7 +166,7 @@ let trackWidth = 0
 let startClientX = 0
 let startLeft = 0
 
-const shapeOptions = computed(() => getShapeOptions(opts.shapes))
+const shapeOptions = computed(() => getShapeOptions(opts.shapes, opts.shapeLabels))
 
 function maxLeft() {
   return Math.max(0, trackWidth - opts.handleWidth)

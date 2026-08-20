@@ -60,10 +60,16 @@
             :height="opts.height"
             :shape="opts.shape"
             :shapes="opts.shapes"
+            :shape-labels="opts.shapeLabels"
             :show-shape-picker="opts.showShapePicker"
             :debug="opts.debug"
             :auto-reload="opts.autoReload"
             :handle-width="opts.handleWidth"
+            :shape-label="opts.shapeLabel"
+            :random-label="opts.randomLabel"
+            :slider-tip="opts.sliderTip"
+            :loading-text="opts.loadingText"
+            :image-alt="opts.imageAlt"
             @success="onCaptchaSuccess"
           />
           <ClickCaptcha
@@ -76,6 +82,8 @@
             :mark-min-distance="opts.markMinDistance"
             :debug="opts.debug"
             :auto-reload="opts.autoReload"
+            :loading-text="opts.loadingText"
+            :image-alt="opts.imageAlt"
             @success="onCaptchaSuccess"
           />
         </div>
@@ -98,24 +106,61 @@ import ClickCaptcha from './ClickCaptcha.vue'
 import { useCaptchaOptions } from './options'
 
 const props = defineProps({
+  /** 是否显示弹窗 */
   visible: { type: Boolean, default: false },
+  /** 验证模式：slider / click */
   mode: { type: String, default: 'slider' },
+  /** 自定义 API 客户端 */
   api: { type: Object, default: null },
+  /** 后端接口前缀 */
   baseUrl: { type: String, default: null },
+  /** 自定义请求函数 */
   request: { type: Function, default: null },
+  /** 验证图片宽度（px） */
   width: { type: Number, default: null },
+  /** 验证图片高度（px） */
   height: { type: Number, default: null },
+  /** 滑块初始形状 */
   shape: { type: String, default: null },
+  /** 形状选择器白名单 */
   shapes: { type: Array, default: null },
+  /** 形状显示名覆盖 */
+  shapeLabels: { type: Object, default: null },
+  /** 是否显示形状选择器 */
   showShapePicker: { type: Boolean, default: null },
+  /** 是否请求调试答案 */
   debug: { type: Boolean, default: null },
+  /** 失败后自动刷新 */
   autoReload: { type: Boolean, default: null },
+  /** 滑块手柄宽度（px） */
+  handleWidth: { type: Number, default: null },
+  /** 点选提示前缀文案 */
+  promptPrefix: { type: String, default: null },
+  /** 点选去重最小间距（px） */
+  markMinDistance: { type: Number, default: null },
+  /** 形状选择器标题文案 */
+  shapeLabel: { type: String, default: null },
+  /** 随机按钮文案 */
+  randomLabel: { type: String, default: null },
+  /** 拖拽提示文案 */
+  sliderTip: { type: String, default: null },
+  /** 加载提示文案 */
+  loadingText: { type: String, default: null },
+  /** 图片 alt 文案 */
+  imageAlt: { type: String, default: null },
+  /** 验证成功后弹窗是否自动关闭 */
   closeOnSuccess: { type: Boolean, default: null },
+  /** 验证成功后自动关闭/回调延迟（ms） */
   successDelay: { type: Number, default: null },
+  /** 弹窗标题文案 */
   title: { type: String, default: null },
+  /** 刷新按钮 title 文案 */
   refreshTitle: { type: String, default: null },
+  /** 关闭按钮 title 文案 */
   closeTitle: { type: String, default: null },
+  /** 左下角品牌文案，空串隐藏 */
   brandText: { type: String, default: null },
+  /** 左下角标语文案，空串隐藏 */
   sloganText: { type: String, default: null },
 })
 

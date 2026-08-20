@@ -136,12 +136,18 @@ import { CaptchaModal } from 'captcha-toolkit-vue'
 | `width` / `height` | 图片尺寸 | `340` / `190` |
 | `shape` | 滑块初始形状，空串表示随机 | `''` |
 | `shapes` | 形状选择器白名单 | 内置 7 种 |
+| `shapeLabels` | 形状显示名覆盖（如 `{ classic: 'Classic' }`） | 内置中文名 |
 | `showShapePicker` | 是否显示形状选择器 | `true` |
 | `debug` | 是否请求调试答案（仅联调用） | `false` |
 | `autoReload` | 验证失败后自动换一张 | `true` |
 | `handleWidth` | 滑块手柄宽度 | `44` |
-| `promptPrefix` | 点选提示文案 | `请依次点击` |
+| `shapeLabel` / `randomLabel` / `sliderTip` | 滑块选择器与拖拽提示文案 | 中文默认 |
+| `promptPrefix` | 点选提示文案 | `请依次点选` |
+| `loadingText` / `imageAlt` | 加载提示与图片 alt | 中文默认 |
 | `title` / `brandText` / `sloganText` | 弹窗标题/品牌/标语文案 | 品牌与标语默认隐藏 |
+
+所有界面文案都支持配置：插件级 `app.use(CaptchaToolkit, { loadingText: 'Loading...' })`
+或组件级 `:loading-text="'Loading...'"`，未配置时使用内置中文默认值。
 
 ## 运行演示
 
