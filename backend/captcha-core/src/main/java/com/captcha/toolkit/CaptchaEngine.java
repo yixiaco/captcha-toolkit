@@ -162,7 +162,15 @@ public class CaptchaEngine {
         if (generator == null) {
             throw new CaptchaException("不支持的验证码类型: " + type);
         }
-        GenerateRequest request = new GenerateRequest(UUID.randomUUID().toString(), params, debug);
+        // 拼图形状只在前后端都处于 debug 模式时允许显式指定，否则由后端随机决定
+        Map<String, String> effectiveParams = params == null
+                ? new java.util.LinkedHashMap<>()
+                : new java.util.LinkedHashMap<>(params);
+        if (!(debug && debugEnabled)) {
+            effectiveParams.remove("shape");
+        }
+        GenerateRequest request = new GenerateRequest(
+                UUID.randomUUID().toString(), effectiveParams, debug);
         GeneratedCaptcha generated = generator.generate(request);
         store.put(generated.getSession());
 

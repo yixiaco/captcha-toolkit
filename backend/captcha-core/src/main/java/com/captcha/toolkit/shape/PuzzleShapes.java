@@ -109,8 +109,8 @@ public final class PuzzleShapes {
             double r = size * 0.5;
             // 标准月牙：左凸缘 + 右凹缘，两端在上下顶点闭合
             path.moveTo(cx, cy - r);
-            path.quadTo(cx - size * 0.58, cy, cx, cy + r);
-            path.quadTo(cx - size * 0.18, cy, cx, cy - r);
+            path.quadTo(cx - size * 0.62, cy, cx, cy + r);
+            path.quadTo(cx - size * 0.02, cy, cx, cy - r);
             path.closePath();
             return path;
         });

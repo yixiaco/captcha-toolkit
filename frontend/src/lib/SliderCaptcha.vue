@@ -5,7 +5,8 @@
     :class="{ 'is-success': status === 'success' }"
     :style="{ width: opts.width + 'px', maxWidth: '100%' }"
   >
-    <div v-if="opts.showShapePicker" class="shape-picker">
+    <!-- 形状选择器仅在 debug 模式（前后端都开启）下显示，正常模式由后端决定形状 -->
+    <div v-if="opts.debug && opts.showShapePicker" class="shape-picker">
       <span class="shape-label">{{ opts.shapeLabel }}</span>
       <button
         v-for="option in shapeOptions"
@@ -182,8 +183,8 @@ async function loadCaptcha() {
   try {
     const res = await opts.api.getCaptcha({
       type: 'slider',
-      // 空串表示随机：显式传 random，让后端从启用形状里随机选择
-      shape: selectedShape.value || 'random',
+      // 正常模式不传 shape，由后端随机决定；debug 模式才允许前端指定
+      shape: opts.debug ? selectedShape.value || 'random' : undefined,
       debug: opts.debug ? '1' : undefined,
     })
     captchaId.value = res.id

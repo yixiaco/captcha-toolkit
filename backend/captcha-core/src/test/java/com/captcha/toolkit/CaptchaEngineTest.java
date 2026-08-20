@@ -260,6 +260,33 @@ class CaptchaEngineTest {
     }
 
     @Test
+    void sliderShapeRequiresBothDebugModes() {
+        // 前后端都 debug：允许显式指定形状
+        CaptchaEngine debugEngine = newEngine();
+        CaptchaChallenge explicit = debugEngine.create(CaptchaType.SLIDER,
+                Map.of("shape", "classic"), true);
+        assertEquals("classic", explicit.getShape());
+
+        // 仅前端 debug、后端未开启 debug：形状由后端随机决定，忽略前端指定
+        CaptchaConfig config = new CaptchaConfig();
+        config.setDebugEnabled(false);
+        config.getSlider().setMinElapsedMs(0);
+        BackgroundProvider background = new FallbackBackgroundProvider(
+                List.of(new SceneBackgroundProvider()));
+        CaptchaEngine nonDebugEngine = CaptchaEngine.of(config,
+                new InMemoryCaptchaSessionStore(), new DataUriImageCodec(),
+                List.of(), background);
+        Set<String> shapes = new HashSet<>();
+        for (int i = 0; i < 12; i++) {
+            CaptchaChallenge challenge = nonDebugEngine.create(CaptchaType.SLIDER,
+                    Map.of("shape", "classic"), true);
+            shapes.add(challenge.getShape());
+        }
+        assertTrue(shapes.size() > 1,
+                "后端非 debug 时应忽略前端指定形状: " + shapes);
+    }
+
+    @Test
     void rotateGeneratesAndVerifies() {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.ROTATE, Map.of(), true);

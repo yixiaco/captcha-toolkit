@@ -56,6 +56,9 @@ frontend/
 登录等业务接口拿到 `ticket` 后调用 `POST {prefix}/ticket/verify`（请求体 `{"ticket":"..."}`）校验；
 校验成功即消费，同一票据不能重复使用。
 
+滑块拼图形状默认由**后端随机决定**（从 `slider.enabled-shapes` 中选择）；
+只有前后端都处于 debug 模式（前端 `debug` + 后端 `debug-enabled`）时，前端传的 `shape` 参数才会生效。
+
 ### 程序化调用（不经过 HTTP）
 
 ```java
@@ -168,7 +171,7 @@ import { CaptchaModal } from 'captcha-toolkit-vue'
 | `api` | 自定义 API 客户端（`createCaptchaApi` 返回值） | 自动创建 |
 | `request` | 自定义请求函数，兼容 `fetch` 签名 | 内置 fetch |
 | `width` / `height` | 图片尺寸 | `340` / `190` |
-| `shape` | 滑块初始形状，空串表示随机 | `''` |
+| `shape` | 滑块初始形状（仅 debug 模式生效，正常模式由后端决定） | `''` |
 | `shapes` | 形状选择器白名单 | 内置 9 种 |
 | `shapeLabels` | 形状显示名覆盖（如 `{ classic: 'Classic' }`） | 内置中文名 |
 | `showShapePicker` | 是否显示形状选择器 | `true` |

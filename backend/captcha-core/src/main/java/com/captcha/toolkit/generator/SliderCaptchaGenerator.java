@@ -39,7 +39,11 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
 
     @Override
     protected GeneratedCaptcha doGenerate(GenerateRequest request) {
-        String shape = resolveShape(request.getParams().get("shape"));
+        // 拼图形状默认由后端随机决定；只有 debug 模式下前端才能显式指定
+        String requested = request.getParams().get("shape");
+        String shape = request.isDebug() && requested != null && !requested.isBlank()
+                ? resolveShape(requested)
+                : resolveShape(null);
         SliderRenderer renderer = new SliderRenderer(options, backgroundProvider, shapeRegistry);
         renderer.setShape(shape);
         renderer.run();
@@ -90,8 +94,8 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
     }
 
     private String resolveShape(String requested) {
-        // shape=random：从启用形状里随机挑一个
-        if ("random".equalsIgnoreCase(requested)) {
+        // 未指定或 shape=random：从启用形状里随机挑一个（后端决定）
+        if (requested == null || requested.isBlank() || "random".equalsIgnoreCase(requested)) {
             List<String> candidates = options.getEnabledShapes().stream()
                     .filter(shapeRegistry::contains)
                     .toList();
