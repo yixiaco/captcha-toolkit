@@ -179,26 +179,54 @@
 
       <div class="embed-actions">
         <button
-          v-for="item in embedModes"
+          v-for="item in embedDisplayModes"
           :key="item.key"
           class="embed-btn"
-          :class="{ active: inlineMode === item.key }"
-          @click="inlineMode = item.key"
+          :class="{ active: embedDisplay === item.key }"
+          @click="embedDisplay = item.key"
         >
           {{ item.label }}
         </button>
       </div>
 
-      <div class="embed-panel">
-        <Captcha
-          display="inline"
-          :mode="inlineMode"
-          :width="300"
-          :height="170"
-          :debug="isDev"
-          @success="onVerified"
-          @fail="onFail"
-        />
+      <template v-if="embedDisplay === 'inline'">
+        <div class="embed-type-actions">
+          <button
+            v-for="item in embedModes"
+            :key="item.key"
+            class="embed-type-btn"
+            :class="{ active: inlineMode === item.key }"
+            @click="inlineMode = item.key"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+        <div class="embed-panel">
+          <Captcha
+            display="inline"
+            :mode="inlineMode"
+            :width="300"
+            :height="170"
+            :debug="isDev"
+            @success="onVerified"
+            @fail="onFail"
+          />
+        </div>
+      </template>
+
+      <div
+        v-else
+        class="embed-panel modal-demo-panel"
+      >
+        <button
+          class="open-modal-btn"
+          @click="open(captchaMode)"
+        >
+          打开验证弹窗
+        </button>
+        <p class="modal-demo-tip">
+          弹窗内可通过右上角按钮刷新换一张
+        </p>
       </div>
 
       <transition name="fade">
@@ -248,6 +276,11 @@ const shapeFromUrl = ref('');
 const verified = ref(false);
 const verifiedTicket = ref('');
 const inlineMode = ref<'slider' | 'click' | 'rotate' | 'curve'>('slider');
+const embedDisplay = ref<'inline' | 'modal'>('inline');
+const embedDisplayModes: Array<{ key: 'inline' | 'modal'; label: string }> = [
+  { key: 'inline', label: '内嵌' },
+  { key: 'modal', label: '弹窗' },
+];
 const embedModes: Array<{ key: 'slider' | 'click' | 'rotate' | 'curve'; label: string }> = [
   { key: 'slider', label: '滑块' },
   { key: 'click', label: '点选' },
