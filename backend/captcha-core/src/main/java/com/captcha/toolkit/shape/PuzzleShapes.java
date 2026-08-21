@@ -4,7 +4,6 @@ import com.captcha.toolkit.util.SvgPathParser;
 
 import java.awt.geom.Arc2D;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
@@ -136,28 +135,28 @@ public final class PuzzleShapes {
         });
     }
 
-    /** 月亮（外圆减内圆后旋转） */
+    /** 月亮（参考 月亮_moon.svg 的月牙轮廓） */
     public static PuzzleShape moon() {
         return named("moon", "月亮", (x, y, size) -> {
-            double cx = x + size * 0.5;
-            double cy = y + size * 0.5;
-            double r = size * 0.5;
-            // 外圆减内圆得到月牙：内圆向左上偏移 0.7r/1.4r，半径 0.9r
-            Ellipse2D outer = new Ellipse2D.Double(cx - r, cy - r, 2 * r, 2 * r);
-            Ellipse2D inner = new Ellipse2D.Double(cx - r * 0.7, cy - r * 1.4,
-                    2 * r * 0.9, 2 * r * 0.9);
-            Area moon = new Area(outer);
-            moon.subtract(new Area(inner));
-            // 顺时针倾斜 30°，更接近 🌙 的姿势
-            moon.transform(AffineTransform.getRotateInstance(Math.toRadians(30), cx, cy));
-
             Path2D path = new Path2D.Double();
-            path.append(moon.getPathIterator(null), false);
-            // 等比缩放并居中到 (x, y, size, size)
+            path.append(MOON_TEMPLATE.getPathIterator(null), false);
             fitToBox(path, x, y, size);
             return path;
         });
     }
+
+    /** 参考 月亮_moon.svg 的月牙路径（viewBox 48×48） */
+    private static final Path2D MOON_TEMPLATE = SvgPathParser.parse(
+            "M28.0527 4.41085 "
+                    + "C22.5828 5.83695 18.5455 10.8106 18.5455 16.7273 "
+                    + "C18.5455 23.7564 24.2436 29.4545 31.2727 29.4545 "
+                    + "C37.1894 29.4545 42.1631 25.4172 43.5891 19.9473 "
+                    + "C43.8585 21.256 44 22.6115 44 24 "
+                    + "C44 35.0457 35.0457 44 24 44 "
+                    + "C12.9543 44 4 35.0457 4 24 "
+                    + "C4 12.9543 12.9543 4 24 4 "
+                    + "C25.3885 4 26.744 4.14149 28.0527 4.41085 "
+                    + "z");
 
     /** 六边形 */
     public static PuzzleShape hexagon() {

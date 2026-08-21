@@ -58,6 +58,17 @@ class SvgPathParserTest {
                 "树叶路径不应是空或退化路径: " + bounds);
     }
 
+    @Test
+    void parsesMoonReferencePath() {
+        Path2D path = SvgPathParser.parse(MoonPath.REFERENCE);
+        Rectangle2D bounds = path.getBounds2D();
+        assertTrue(bounds.getMinX() >= 0 && bounds.getMinY() >= 0
+                && bounds.getMaxX() <= 48 && bounds.getMaxY() <= 48,
+                "月亮路径应落在 viewBox 内: " + bounds);
+        assertTrue(bounds.getWidth() > 20 && bounds.getHeight() > 20,
+                "月亮路径不应是空或退化路径: " + bounds);
+    }
+
     /** 与 Leaf.svg 一致的路径数据（供解析回归测试复用） */
     static final class LeafPath {
         static final String REFERENCE =
@@ -75,6 +86,24 @@ class SvgPathParserTest {
                         + "z";
 
         private LeafPath() {
+        }
+    }
+
+    /** 与 月亮_moon.svg 一致的路径数据 */
+    static final class MoonPath {
+        static final String REFERENCE =
+                "M28.0527 4.41085 "
+                        + "C22.5828 5.83695 18.5455 10.8106 18.5455 16.7273 "
+                        + "C18.5455 23.7564 24.2436 29.4545 31.2727 29.4545 "
+                        + "C37.1894 29.4545 42.1631 25.4172 43.5891 19.9473 "
+                        + "C43.8585 21.256 44 22.6115 44 24 "
+                        + "C44 35.0457 35.0457 44 24 44 "
+                        + "C12.9543 44 4 35.0457 4 24 "
+                        + "C4 12.9543 12.9543 4 24 4 "
+                        + "C25.3885 4 26.744 4.14149 28.0527 4.41085 "
+                        + "z";
+
+        private MoonPath() {
         }
     }
 }

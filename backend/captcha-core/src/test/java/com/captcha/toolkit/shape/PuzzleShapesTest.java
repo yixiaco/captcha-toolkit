@@ -60,9 +60,9 @@ class PuzzleShapesTest {
                 }
             }
         }
-        // 外圆减内圆的面积约 34% 方块：既不是半圆也不是细条
+        // 参考月亮_moon.svg 的月牙：面积约占方块一半，既不是满圆也不是细条
         double ratio = filled / 10000.0;
-        assertTrue(ratio > 0.25 && ratio < 0.45,
+        assertTrue(ratio > 0.3 && ratio < 0.6,
                 "月亮面积占比应在饱满月牙范围，实际 ratio=" + ratio);
 
         // 内凹缺口在顶部：最顶行宽度应明显小于最宽行
