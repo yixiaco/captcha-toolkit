@@ -83,6 +83,7 @@
             :loading-text="opts.loadingText"
             :image-alt="opts.imageAlt"
             @success="onCaptchaSuccess"
+            @fail="onCaptchaFail"
           />
           <ClickCaptcha
             v-else-if="mode === 'click'"
@@ -97,6 +98,7 @@
             :loading-text="opts.loadingText"
             :image-alt="opts.imageAlt"
             @success="onCaptchaSuccess"
+            @fail="onCaptchaFail"
           />
           <RotateCaptcha
             v-if="mode === 'rotate'"
@@ -111,6 +113,7 @@
             :loading-text="opts.loadingText"
             :image-alt="opts.imageAlt"
             @success="onCaptchaSuccess"
+            @fail="onCaptchaFail"
           />
         </div>
 
@@ -217,6 +220,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'success', result: VerifyResult): void
+  (e: 'fail', result: VerifyResult): void
 }>();
 
 const opts = useCaptchaOptions(props);
@@ -245,5 +249,10 @@ function onCaptchaSuccess(result: VerifyResult) {
       emit('close');
     }
   }, opts.successDelay);
+}
+
+/** 把验证失败结果转发给宿主，便于清理上一次的成功状态 */
+function onCaptchaFail(result: VerifyResult) {
+  emit('fail', result);
 }
 </script>

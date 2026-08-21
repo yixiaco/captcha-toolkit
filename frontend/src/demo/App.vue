@@ -167,6 +167,7 @@
           :height="170"
           :debug="isDev"
           @success="onVerified"
+          @fail="onFail"
         />
       </div>
 
@@ -198,6 +199,7 @@
       :slogan-text="'通用行为验证组件'"
       @close="captchaVisible = false"
       @success="onVerified"
+      @fail="onFail"
     />
   </div>
 </template>
@@ -223,6 +225,7 @@ const embedModes: Array<{ key: 'slider' | 'click' | 'rotate'; label: string }> =
 ];
 
 function open(mode: 'slider' | 'click' | 'rotate') {
+  resetVerified();
   captchaMode.value = mode;
   captchaVisible.value = true;
 }
@@ -239,6 +242,16 @@ function onLogin() {
 function onVerified(result: VerifyResult) {
   verified.value = true;
   verifiedTicket.value = result?.ticket || '';
+}
+
+/** 验证失败时清除上一次的成功结果，避免旧票据/成功提示残留 */
+function onFail() {
+  resetVerified();
+}
+
+function resetVerified() {
+  verified.value = false;
+  verifiedTicket.value = '';
 }
 
 // 支持 URL 参数直接打开指定验证方式：?captcha=slider|click|random，滑块可追加 &shape=...
