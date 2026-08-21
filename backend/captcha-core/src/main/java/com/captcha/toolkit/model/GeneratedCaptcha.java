@@ -53,6 +53,7 @@ public class GeneratedCaptcha {
     /** 扩展元数据：自定义验证码可携带任意附加信息 */
     private final Map<String, Object> metadata = new HashMap<>();
 
+    /** 写入一条扩展元数据 */
     public void putMetadata(String key, Object value) {
         metadata.put(key, value);
     }

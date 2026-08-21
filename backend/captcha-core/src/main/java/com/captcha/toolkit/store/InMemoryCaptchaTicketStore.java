@@ -13,13 +13,20 @@ import java.util.concurrent.TimeUnit;
  */
 public class InMemoryCaptchaTicketStore implements CaptchaTicketStore {
 
+    /** 票据值 → 票据 映射 */
     private final Map<String, CaptchaTicket> tickets = new ConcurrentHashMap<>();
+
+    /** 定期清理过期票据的后台线程 */
     private final ScheduledExecutorService cleaner;
 
+    /** 使用默认清理间隔（60 秒） */
     public InMemoryCaptchaTicketStore() {
         this(60_000);
     }
 
+    /**
+     * @param cleanupIntervalMillis 过期票据清理间隔（毫秒）
+     */
     public InMemoryCaptchaTicketStore(long cleanupIntervalMillis) {
         cleaner = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "captcha-ticket-cleaner");

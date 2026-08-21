@@ -13,17 +13,28 @@ import com.captcha.toolkit.word.WordFactory;
  */
 public class ClickCaptchaFactory implements CaptchaFactory {
 
+    /** 点选背景图提供者 */
     private final BackgroundProvider backgroundProvider;
+
+    /** 点选目标词组工厂 */
     private final WordFactory wordFactory;
 
+    /** 使用程序生成背景与默认词组来源 */
     public ClickCaptchaFactory() {
         this(new SceneBackgroundProvider(), null);
     }
 
+    /**
+     * @param backgroundProvider 背景图提供者
+     */
     public ClickCaptchaFactory(BackgroundProvider backgroundProvider) {
         this(backgroundProvider, null);
     }
 
+    /**
+     * @param backgroundProvider 背景图提供者
+     * @param wordFactory        目标词组工厂
+     */
     public ClickCaptchaFactory(BackgroundProvider backgroundProvider, WordFactory wordFactory) {
         this.backgroundProvider = backgroundProvider;
         this.wordFactory = wordFactory;

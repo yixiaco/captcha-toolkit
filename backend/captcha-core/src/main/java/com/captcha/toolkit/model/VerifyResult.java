@@ -23,6 +23,7 @@ public class VerifyResult {
     /** 验证通过后发放的一次性票据，供登录等业务接口校验 */
     private String ticket;
 
+    /** 构造成功结果 */
     public static VerifyResult ok(String message) {
         VerifyResult result = new VerifyResult();
         result.success = true;
@@ -32,6 +33,12 @@ public class VerifyResult {
         return result;
     }
 
+    /**
+     * 构造失败结果。
+     *
+     * @param message 面向用户的提示
+     * @param code    业务码（WRONG / TOO_FAST / EXPIRED / BAD_REQUEST / BEHAVIOR 等）
+     */
     public static VerifyResult fail(String message, String code) {
         VerifyResult result = new VerifyResult();
         result.success = false;
@@ -41,14 +48,17 @@ public class VerifyResult {
         return result;
     }
 
+    /** 构造已过期结果 */
     public static VerifyResult expired(String message) {
         return fail(message, "EXPIRED");
     }
 
+    /** 构造验证过快结果 */
     public static VerifyResult tooFast(String message) {
         return fail(message, "TOO_FAST");
     }
 
+    /** 构造参数错误结果 */
     public static VerifyResult badRequest(String message) {
         return fail(message, "BAD_REQUEST");
     }

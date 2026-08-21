@@ -10,11 +10,13 @@ import com.captcha.toolkit.model.CaptchaSession;
  */
 public interface CaptchaSessionStore {
 
+    /** 保存会话 */
     void put(CaptchaSession session);
 
     /** 获取会话；已过期时返回 null 并顺手清理 */
     CaptchaSession get(String id);
 
+    /** 移除会话（验证完成后调用，保证一次性使用） */
     void remove(String id);
 
     /** 清理所有过期会话 */

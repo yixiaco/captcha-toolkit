@@ -19,14 +19,24 @@ import java.util.Random;
  */
 public class ResourceBackgroundProvider implements BackgroundProvider {
 
+    /** 背景图来源列表（classpath / 文件路径） */
     private final List<String> sources;
+
+    /** 加载 classpath 资源使用的类加载器 */
     private final ClassLoader classLoader;
+
+    /** 随机数源（用于打乱素材顺序） */
     private final Random random = new Random();
 
+    /** 使用当前线程上下文类加载器构造 */
     public ResourceBackgroundProvider(List<String> sources) {
         this(sources, Thread.currentThread().getContextClassLoader());
     }
 
+    /**
+     * @param sources     背景图来源列表
+     * @param classLoader classpath 资源加载器
+     */
     public ResourceBackgroundProvider(List<String> sources, ClassLoader classLoader) {
         this.sources = sources == null ? List.of() : new ArrayList<>(sources);
         this.classLoader = classLoader == null
@@ -47,6 +57,7 @@ public class ResourceBackgroundProvider implements BackgroundProvider {
         return Optional.empty();
     }
 
+    /** 尝试按单个来源读取图片；失败返回 null，不影响其他素材 */
     private BufferedImage read(String source) {
         if (source == null || source.isBlank()) {
             return null;

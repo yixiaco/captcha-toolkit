@@ -10,12 +10,23 @@ import java.util.Optional;
  */
 public class FallbackBackgroundProvider implements BackgroundProvider {
 
+    /** 回退链：按顺序尝试每个提供者 */
     private final List<BackgroundProvider> delegates;
 
+    /**
+     * @param delegates 回退提供者列表
+     */
     public FallbackBackgroundProvider(List<BackgroundProvider> delegates) {
         this.delegates = delegates == null ? List.of() : new ArrayList<>(delegates);
     }
 
+    /**
+     * 便捷构造：素材提供者 + 可选程序生成兜底。
+     *
+     * @param sources          素材来源列表
+     * @param generateFallback 素材全部失败时是否使用程序生成
+     * @return 组装好的回退提供者
+     */
     public static FallbackBackgroundProvider of(List<String> sources, boolean generateFallback) {
         List<BackgroundProvider> providers = new ArrayList<>();
         if (sources != null && !sources.isEmpty()) {

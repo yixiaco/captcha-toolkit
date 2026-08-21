@@ -10,11 +10,13 @@ import com.captcha.toolkit.model.CaptchaTicket;
  */
 public interface CaptchaTicketStore {
 
+    /** 保存票据 */
     void put(CaptchaTicket ticket);
 
     /** 获取票据；已过期时返回 null 并顺手清理 */
     CaptchaTicket get(String ticket);
 
+    /** 移除票据（校验后调用，保证一次性使用） */
     void remove(String ticket);
 
     void clearExpired();

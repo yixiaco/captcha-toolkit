@@ -30,10 +30,15 @@ import java.util.Random;
  */
 public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
 
+    /** 旋转配置 */
     private final RotateConfig options;
+
+    /** 背景图提供者 */
     private final BackgroundProvider backgroundProvider;
     /** 旋转行为轨迹校验器 */
     private final BehaviorValidator behaviorValidator;
+
+    /** 随机数源 */
     private final Random random = new Random();
 
     /** 使用默认（关闭）行为校验构造生成器 */
@@ -140,7 +145,7 @@ public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
         return options.getMinElapsedMs();
     }
 
-    /** 归一化到 [-180, 180) */
+    /** 把角度归一化到 [-180, 180) */
     private static double normalize(double degrees) {
         double value = degrees % 360;
         if (value > 180) {
@@ -151,6 +156,7 @@ public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
         return value;
     }
 
+    /** 返回 [min, max] 区间内的随机浮点数 */
     private double rand(double min, double max) {
         return min + random.nextDouble() * (max - min);
     }

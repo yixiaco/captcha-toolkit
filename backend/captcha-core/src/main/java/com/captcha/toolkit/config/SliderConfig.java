@@ -12,7 +12,10 @@ import java.util.List;
 @Data
 public class SliderConfig {
 
+    /** 图片宽度 */
     private int width = 340;
+
+    /** 图片高度 */
     private int height = 190;
     /** 像素容差（服务端图片坐标系） */
     private double tolerance = 8;
@@ -28,9 +31,17 @@ public class SliderConfig {
     private int renderScale = 2;
     /** 缺口白色蒙版 alpha（0-255） */
     private int holeAlpha = 204;
+
+    /** 缺口内阴影模糊半径 */
     private float shadowRadius = 6f;
+
+    /** 缺口内阴影透明度 */
     private float shadowOpacity = 0.8f;
+
+    /** 缺口内阴影水平偏移 */
     private float shadowOffsetX = 2f;
+
+    /** 缺口内阴影垂直偏移 */
     private float shadowOffsetY = -1f;
     /** 默认形状；shape 参数非法或未启用时回退到它 */
     private String defaultShape = "classic";

@@ -14,9 +14,12 @@ import com.captcha.toolkit.model.VerifyResult;
  */
 public interface CaptchaGenerator {
 
+    /** 返回该生成器对应的验证码类型 */
     CaptchaType type();
 
+    /** 生成一张验证码挑战 */
     GeneratedCaptcha generate(GenerateRequest request);
 
+    /** 校验用户提交的答案 */
     VerifyResult verify(CaptchaSession session, CaptchaAnswer answer);
 }

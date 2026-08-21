@@ -37,18 +37,35 @@ import java.util.UUID;
  */
 public class CaptchaEngine {
 
+    /** 验证码类型 → 生成器映射 */
     private final Map<CaptchaType, CaptchaGenerator> generators;
+
+    /** 验证码会话存储 */
     private final CaptchaSessionStore store;
+
+    /** 验证通过后的票据存储 */
     private final CaptchaTicketStore ticketStore;
+
+    /** 图片编码器（输出 data URI 等格式） */
     private final CaptchaImageCodec codec;
+
+    /** 是否允许 debug 模式返回答案（受配置控制） */
     private final boolean debugEnabled;
+
+    /** 票据有效期（毫秒） */
     private final long ticketTtlMillis;
 
+    /**
+     * 使用默认内存票据存储构造引擎。
+     */
     public CaptchaEngine(List<CaptchaFactory> factories, CaptchaConfig config,
                          CaptchaSessionStore store, CaptchaImageCodec codec) {
         this(factories, config, store, new InMemoryCaptchaTicketStore(), codec);
     }
 
+    /**
+     * 完整构造：自定义工厂优先，缺失类型用内置工厂补齐。
+     */
     public CaptchaEngine(List<CaptchaFactory> factories, CaptchaConfig config,
                          CaptchaSessionStore store, CaptchaTicketStore ticketStore,
                          CaptchaImageCodec codec) {
@@ -123,6 +140,7 @@ public class CaptchaEngine {
                 config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000);
     }
 
+    /** 私有构造：统一接收已组装好的生成器映射与依赖 */
     private CaptchaEngine(Map<CaptchaType, CaptchaGenerator> generators,
                           CaptchaSessionStore store,
                           CaptchaTicketStore ticketStore,
@@ -137,6 +155,7 @@ public class CaptchaEngine {
         this.ticketTtlMillis = ticketTtlMillis;
     }
 
+    /** 构建生成器映射：用户工厂优先，缺失类型用内置工厂补齐 */
     private static Map<CaptchaType, CaptchaGenerator> buildGenerators(List<CaptchaFactory> factories,
                                                                       CaptchaConfig config) {
         Map<CaptchaType, CaptchaGenerator> map = new EnumMap<>(CaptchaType.class);
@@ -232,6 +251,7 @@ public class CaptchaEngine {
         return VerifyResult.ok("票据有效");
     }
 
+    /** 返回引擎支持的所有验证码类型编码（升序） */
     public List<String> supportedTypes() {
         return generators.keySet().stream()
                 .map(CaptchaType::getCode)
@@ -239,6 +259,7 @@ public class CaptchaEngine {
                 .toList();
     }
 
+    /** 返回滑块支持的拼图形状名称列表 */
     public List<String> supportedShapes() {
         CaptchaGenerator generator = generators.get(CaptchaType.SLIDER);
         if (generator instanceof SliderCaptchaGenerator slider) {
@@ -247,6 +268,7 @@ public class CaptchaEngine {
         return List.of();
     }
 
+    /** 手动移除一个未使用/异常的验证码会话 */
     public boolean remove(String id) {
         if (id == null) {
             return false;

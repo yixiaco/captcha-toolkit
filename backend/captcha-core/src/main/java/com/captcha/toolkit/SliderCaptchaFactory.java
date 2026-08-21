@@ -16,17 +16,28 @@ import java.util.List;
  */
 public class SliderCaptchaFactory implements CaptchaFactory {
 
+    /** 滑块背景图提供者 */
     private final BackgroundProvider backgroundProvider;
+
+    /** 拼图形状注册表 */
     private final PuzzleShapeRegistry shapeRegistry;
 
+    /** 使用程序生成背景与默认形状注册表 */
     public SliderCaptchaFactory() {
         this(new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())));
     }
 
+    /**
+     * @param backgroundProvider 背景图提供者
+     */
     public SliderCaptchaFactory(BackgroundProvider backgroundProvider) {
         this(backgroundProvider, new PuzzleShapeRegistry());
     }
 
+    /**
+     * @param backgroundProvider 背景图提供者
+     * @param shapeRegistry      拼图形状注册表
+     */
     public SliderCaptchaFactory(BackgroundProvider backgroundProvider, PuzzleShapeRegistry shapeRegistry) {
         this.backgroundProvider = backgroundProvider;
         this.shapeRegistry = shapeRegistry;

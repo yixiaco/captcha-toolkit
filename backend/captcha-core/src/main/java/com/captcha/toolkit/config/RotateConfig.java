@@ -8,7 +8,10 @@ import lombok.Data;
 @Data
 public class RotateConfig {
 
+    /** 图片宽度 */
     private int width = 340;
+
+    /** 图片高度 */
     private int height = 190;
     /** 角度容差（度） */
     private double tolerance = 3;
@@ -18,6 +21,8 @@ public class RotateConfig {
     private long expireSeconds = 300;
     /** 错位角度范围（度），避开接近 0/360 的“几乎对齐” */
     private double minAngle = 20;
+
+    /** 错位角度上限（度） */
     private double maxAngle = 340;
     /** 抗锯齿超采样倍数 */
     private int renderScale = 2;

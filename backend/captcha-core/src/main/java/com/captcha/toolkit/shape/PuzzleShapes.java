@@ -15,13 +15,16 @@ import java.util.List;
  */
 public final class PuzzleShapes {
 
+    /** 工具类不可实例化 */
     private PuzzleShapes() {
     }
 
+    /** 经典 3x3 拼图块 */
     public static PuzzleShape classic() {
         return named("classic", "经典", PuzzleShapes::createClassic);
     }
 
+    /** 叶子形状 */
     public static PuzzleShape leaf() {
         return named("leaf", "叶子", (x, y, size) -> {
             Path2D path = new Path2D.Double();
@@ -35,6 +38,7 @@ public final class PuzzleShapes {
         });
     }
 
+    /** 三角形 */
     public static PuzzleShape triangle() {
         return named("triangle", "三角", (x, y, size) -> {
             Path2D path = new Path2D.Double();
@@ -46,11 +50,13 @@ public final class PuzzleShapes {
         });
     }
 
+    /** 圆形 */
     public static PuzzleShape circle() {
         return named("circle", "圆形", (x, y, size) ->
                 new Path2D.Double(new Ellipse2D.Double(x, y, size, size)));
     }
 
+    /** 菱形 */
     public static PuzzleShape diamond() {
         return named("diamond", "菱形", (x, y, size) -> {
             Path2D path = new Path2D.Double();
@@ -63,6 +69,7 @@ public final class PuzzleShapes {
         });
     }
 
+    /** 五角星 */
     public static PuzzleShape star() {
         return named("star", "星星", (x, y, size) -> {
             double cx = x + size * 0.5;
@@ -86,6 +93,7 @@ public final class PuzzleShapes {
         });
     }
 
+    /** 爱心（参数方程生成后居中缩放） */
     public static PuzzleShape heart() {
         return named("heart", "爱心", (x, y, size) -> {
             Path2D path = new Path2D.Double();
@@ -115,6 +123,7 @@ public final class PuzzleShapes {
         });
     }
 
+    /** 月亮（外圆减内圆后旋转） */
     public static PuzzleShape moon() {
         return named("moon", "月亮", (x, y, size) -> {
             double cx = x + size * 0.5;
@@ -137,6 +146,7 @@ public final class PuzzleShapes {
         });
     }
 
+    /** 六边形 */
     public static PuzzleShape hexagon() {
         return named("hexagon", "六边形", (x, y, size) -> {
             Path2D path = new Path2D.Double();
@@ -158,11 +168,13 @@ public final class PuzzleShapes {
         });
     }
 
+    /** 返回全部内置形状 */
     public static List<PuzzleShape> all() {
         return List.of(classic(), leaf(), triangle(), circle(), diamond(), star(), heart(),
                 moon(), hexagon());
     }
 
+    /** 包装名称、标签与绘制工厂为一个不可变形状 */
     private static PuzzleShape named(String name, String label, ShapeFactory factory) {
         return new PuzzleShape() {
             @Override
@@ -221,6 +233,8 @@ public final class PuzzleShapes {
 
     @FunctionalInterface
     private interface ShapeFactory {
+
+        /** 在 (x, y) 处绘制边长为 size 的形状路径 */
         Path2D create(double x, double y, double size);
     }
 }

@@ -21,6 +21,7 @@ import java.util.Optional;
  */
 public abstract class AbstractBehaviorValidator implements BehaviorValidator {
 
+    /** 行为校验配置（含分端画像） */
     private final BehaviorConfig config;
 
     /**

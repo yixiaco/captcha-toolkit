@@ -15,12 +15,17 @@ import java.util.List;
  */
 public class RotateCaptchaFactory implements CaptchaFactory {
 
+    /** 旋转背景图提供者 */
     private final BackgroundProvider backgroundProvider;
 
+    /** 使用程序生成背景 */
     public RotateCaptchaFactory() {
         this(new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())));
     }
 
+    /**
+     * @param backgroundProvider 背景图提供者
+     */
     public RotateCaptchaFactory(BackgroundProvider backgroundProvider) {
         this.backgroundProvider = backgroundProvider;
     }

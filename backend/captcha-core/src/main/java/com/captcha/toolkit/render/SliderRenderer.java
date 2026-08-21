@@ -29,22 +29,52 @@ import java.util.Random;
  */
 public class SliderRenderer {
 
+    /** 滑块配置 */
     private final SliderConfig options;
+
+    /** 背景图提供者 */
     private final BackgroundProvider backgroundProvider;
+
+    /** 拼图形状注册表 */
     private final PuzzleShapeRegistry shapeRegistry;
+
+    /** 随机数源 */
     private final Random random = new Random();
+
+    /** alpha 反转滤镜（用于生成缺口内阴影） */
     private final InvertAlphaFilter alphaFilter = new InvertAlphaFilter();
 
+    /** 目标图片宽度 */
     private int width;
+
+    /** 目标图片高度 */
     private int height;
+
+    /** 真目标缺口 x（服务端像素坐标系） */
     private int x;
+
+    /** 真目标缺口 y（服务端像素坐标系） */
     private int y;
+
+    /** 拼图块边长 */
     private int vwh;
+
+    /** 当前使用的形状名 */
     private String shapeName;
+
+    /** 背景原图（任意尺寸） */
     private BufferedImage source;
+
+    /** 大图（带缺口） */
     private BufferedImage artwork;
+
+    /** 小图（拼图块竖条） */
     private BufferedImage vacancy;
+
+    /** 小图内部左侧留白 */
     private int pieceOffsetX;
+
+    /** 已放置的假目标列表 */
     private final List<FakeTarget> fakeTargets = new ArrayList<>();
 
     /**
@@ -52,11 +82,25 @@ public class SliderRenderer {
      * 允许与真目标/其他假目标在同一 y 轴，但同 y 时大小和旋转必须不同。
      */
     public static class FakeTarget {
+
+        /** 假目标中心 x（服务端像素坐标系） */
         private final int x;
+
+        /** 假目标中心 y（服务端像素坐标系） */
         private final int y;
+
+        /** 假目标边长（同 y 轴时允许与真目标不同） */
         private final int size;
+
+        /** 假目标旋转角度（同 y 轴时允许与真目标不同） */
         private final double rotation;
 
+        /**
+         * @param x        中心 x
+         * @param y        中心 y
+         * @param size     边长
+         * @param rotation 旋转角度（度）
+         */
         public FakeTarget(int x, int y, int size, double rotation) {
             this.x = x;
             this.y = y;
@@ -64,23 +108,32 @@ public class SliderRenderer {
             this.rotation = rotation;
         }
 
+        /** 返回中心 x */
         public int getX() {
             return x;
         }
 
+        /** 返回中心 y */
         public int getY() {
             return y;
         }
 
+        /** 返回边长 */
         public int getSize() {
             return size;
         }
 
+        /** 返回旋转角度（度） */
         public double getRotation() {
             return rotation;
         }
     }
 
+    /**
+     * @param options            滑块配置
+     * @param backgroundProvider 背景图提供者
+     * @param shapeRegistry      拼图形状注册表
+     */
     public SliderRenderer(SliderConfig options,
                           BackgroundProvider backgroundProvider,
                           PuzzleShapeRegistry shapeRegistry) {
@@ -92,6 +145,7 @@ public class SliderRenderer {
         this.shapeName = options.getDefaultShape();
     }
 
+    /** 执行一次完整渲染：生成大图、小图与假目标 */
     public void run() {
         source = backgroundProvider.provide(width, height)
                 .orElseThrow(() -> new CaptchaException("没有可用的背景图，请配置 captcha.background.sources 或开启 generate-fallback"));
@@ -186,10 +240,12 @@ public class SliderRenderer {
         pieceOffsetX = x - cropX / renderScale;
     }
 
+    /** 创建透明画布 */
     private BufferedImage transparent(int w, int h) {
         return new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
     }
 
+    /** 返回 [min, max] 闭区间内的随机整数 */
     private int random(int min, int max) {
         return min + random.nextInt(Math.max(1, max - min + 1));
     }
@@ -265,54 +321,67 @@ public class SliderRenderer {
         return null;
     }
 
+    /** 返回 [min, max] 区间内的随机浮点数 */
     private double rand(double min, double max) {
         return min + random.nextDouble() * (max - min);
     }
 
+    /** 把 alpha 限制在 0~255 */
     private static int clampAlpha(int alpha) {
         return Math.max(0, Math.min(255, alpha));
     }
 
+    /** 返回图片宽度 */
     public int getWidth() {
         return width;
     }
 
+    /** 返回图片高度 */
     public int getHeight() {
         return height;
     }
 
+    /** 返回真目标 x（服务端像素坐标系） */
     public int getX() {
         return x;
     }
 
+    /** 返回真目标 y（服务端像素坐标系） */
     public int getY() {
         return y;
     }
 
+    /** 返回拼图块边长 */
     public int getPieceSize() {
         return vwh;
     }
 
+    /** 返回当前形状名 */
     public String getShape() {
         return shapeName;
     }
 
+    /** 设置本次渲染使用的形状名 */
     public void setShape(String shapeName) {
         this.shapeName = shapeName;
     }
 
+    /** 返回大图（带缺口） */
     public BufferedImage getArtwork() {
         return artwork;
     }
 
+    /** 返回小图（拼图块竖条） */
     public BufferedImage getVacancy() {
         return vacancy;
     }
 
+    /** 返回小图内部左侧留白 */
     public int getPieceOffsetX() {
         return pieceOffsetX;
     }
 
+    /** 返回假目标列表（只读副本） */
     public List<FakeTarget> getFakeTargets() {
         return new ArrayList<>(fakeTargets);
     }

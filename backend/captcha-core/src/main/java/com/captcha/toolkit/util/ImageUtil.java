@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
  */
 public final class ImageUtil {
 
+    /** 工具类不可实例化 */
     private ImageUtil() {
     }
 

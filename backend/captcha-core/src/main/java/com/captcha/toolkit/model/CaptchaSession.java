@@ -47,6 +47,7 @@ public class CaptchaSession {
     /** 会话过期时间戳（毫秒） */
     private final long expiresAt;
 
+    /** 私有构造：所有会话统一从这里创建 */
     private CaptchaSession(String id, CaptchaType type, String shape, int x, int y,
                            int width, int height, List<PointVo> targets, List<String> prompt,
                            double rotation, long ttlMillis) {
@@ -65,24 +66,28 @@ public class CaptchaSession {
         this.expiresAt = now + ttlMillis;
     }
 
+    /** 创建滑块会话 */
     public static CaptchaSession slider(String id, String shape, int x, int y,
                                         int width, int height, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.SLIDER, shape, x, y, width, height,
                 null, null, 0, ttlMillis);
     }
 
+    /** 创建点选会话 */
     public static CaptchaSession click(String id, int width, int height,
                                        List<PointVo> targets, List<String> prompt, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.CLICK, null, 0, 0, width, height,
                 targets, prompt, 0, ttlMillis);
     }
 
+    /** 创建旋转会话 */
     public static CaptchaSession rotate(String id, int width, int height,
                                         double rotation, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.ROTATE, null, 0, 0, width, height,
                 null, null, rotation, ttlMillis);
     }
 
+    /** 会话是否已过期 */
     public boolean isExpired() {
         return System.currentTimeMillis() > expiresAt;
     }

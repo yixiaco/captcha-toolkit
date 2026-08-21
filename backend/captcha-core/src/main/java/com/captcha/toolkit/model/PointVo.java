@@ -14,9 +14,14 @@ public class PointVo {
     /** 纵坐标（图片内部像素坐标） */
     private int y;
 
+    /** 无参构造（反序列化用） */
     public PointVo() {
     }
 
+    /**
+     * @param x 横坐标
+     * @param y 纵坐标
+     */
     public PointVo(int x, int y) {
         this.x = x;
         this.y = y;

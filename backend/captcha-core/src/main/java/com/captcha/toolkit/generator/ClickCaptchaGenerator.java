@@ -52,38 +52,76 @@ import java.util.Random;
  */
 public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
 
+    /** 点选配置 */
     private final ClickConfig options;
+
+    /** 背景图提供者 */
     private final BackgroundProvider backgroundProvider;
+
+    /** 目标词组工厂 */
     private final WordFactory wordFactory;
     /** 点选行为轨迹校验器 */
     private final BehaviorValidator behaviorValidator;
+
+    /** 随机数源 */
     private final Random random = new Random();
 
+    /** 合成完成的点选图片 */
     private BufferedImage image;
     /** 文字图层：字形/遮挡线先画在这一层，形变后再与背景合成，保证背景不被整图 warp 影响 */
     private BufferedImage textLayer;
+
+    /** 目标文字坐标（按点击顺序） */
     private final List<PointVo> targets = new ArrayList<>();
+
+    /** 点选提示文字 */
     private final List<String> prompt = new ArrayList<>();
+
+    /** 全部待绘制的文字单元（目标字 + 干扰字） */
     private final List<Chip> chips = new ArrayList<>();
 
     /**
      * 单个待绘制的字。
      */
     private static class Chip {
+        /** 文字内容 */
         String ch;
+
+        /** 是否为目标字（干扰字为 false） */
         boolean target;
+
+        /** 中心 x（服务端像素坐标系） */
         double x;
+
+        /** 中心 y（服务端像素坐标系） */
         double y;
+
+        /** 字号 */
         int size;
+
+        /** 旋转角度（度） */
         double rotation;
+
+        /** 斜切系数 */
         double shear;
+
+        /** 透明度 */
         double alpha;
+
+        /** 字体名称 */
         String font;
+
+        /** 文字渐变上端颜色 */
         Color textColor;
+
+        /** 文字渐变下端颜色 */
         Color lightColor;
+
+        /** 是否深色字（决定用 multiply 还是 screen 混合） */
         boolean dark;
     }
 
+    /** 使用默认词组来源与默认（关闭）行为校验构造生成器 */
     public ClickCaptchaGenerator(ClickConfig options, BackgroundProvider backgroundProvider) {
         this(options, backgroundProvider, null);
     }
@@ -246,6 +284,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         noise.dispose();
     }
 
+    /** 绘制单个文字：采样背景色、渲染字形、加投影并混合进文字图层 */
     private void drawChip(Chip chip) {
         // 采样字形上下两片区域的背景平均色，让字形颜色跟随照片本身的明暗/色相变化
         int radius = chip.size / 2 + 4;
@@ -294,6 +333,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         return glyph;
     }
 
+    /** 对单个字形做正弦形变，破坏笔画直线 */
     private BufferedImage warpGlyph(BufferedImage src, int scale) {
         int w = src.getWidth();
         int h = src.getHeight();
@@ -315,6 +355,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         return out;
     }
 
+    /** 在字形笔画内部随机挖洞，模拟手写断笔 */
     private void punchHoles(BufferedImage mask) {
         int w = mask.getWidth();
         int h = mask.getHeight();
@@ -340,6 +381,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         g.dispose();
     }
 
+    /** 按上下渐变颜色为字形蒙版着色 */
     private BufferedImage colorize(BufferedImage mask, Color c1, Color c2) {
         int w = mask.getWidth();
         int h = mask.getHeight();
@@ -353,6 +395,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         return glyph;
     }
 
+    /** 在字形内部叠加黑白噪点纹理，干扰 OCR 色块分割 */
     private void addGlyphTexture(BufferedImage glyph) {
         int w = glyph.getWidth();
         int h = glyph.getHeight();
@@ -372,6 +415,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         g.dispose();
     }
 
+    /** 为字形绘制柔光投影 */
     private void drawShadow(BufferedImage glyph, int dx, int dy) {
         int w = glyph.getWidth();
         int h = glyph.getHeight();
@@ -390,6 +434,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         g.dispose();
     }
 
+    /** 盒式模糊：生成柔光投影 */
     private BufferedImage blur(BufferedImage src, int radius) {
         int size = radius * 2 + 1;
         float[] data = new float[size * size];
@@ -485,6 +530,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         return out;
     }
 
+    /** 在目标字上绘制接近背景色的遮挡曲线 */
     private void drawOcclusion(Graphics2D g) {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         for (Chip chip : chips) {
@@ -516,6 +562,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         }
     }
 
+    /** 尝试在空白位置放置文字；放不下返回 null */
     private Chip tryPlace(String ch, boolean target, List<Chip> placed, int maxAttempts) {
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
             int size = randomSize();
@@ -535,6 +582,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         return null;
     }
 
+    /** 强制放置文字（目标字兜底，允许与已有文字重叠） */
     private Chip forcePlace(String ch, boolean target) {
         int size = randomSize();
         return chip(ch, target,
@@ -543,6 +591,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
                 size);
     }
 
+    /** 创建文字单元并随机化旋转、斜切、透明度与字体 */
     private Chip chip(String ch, boolean target, double x, double y, int size) {
         List<String> fonts = options.getFonts().isEmpty() ? List.of("SansSerif") : options.getFonts();
         Chip chip = new Chip();
@@ -558,12 +607,14 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         return chip;
     }
 
+    /** 返回 [fontSizeMin, fontSizeMax] 区间内的随机字号 */
     private int randomSize() {
         int min = options.getFontSizeMin();
         int max = Math.max(min, options.getFontSizeMax());
         return min + random.nextInt(max - min + 1);
     }
 
+    /** 采样图片局部区域的平均颜色 */
     private Color sampleArea(double cx, double cy, int radius) {
         long r = 0;
         long g = 0;
@@ -664,10 +715,12 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         }
     }
 
+    /** 返回 [min, max] 区间内的随机浮点数 */
     private double rand(double min, double max) {
         return min + random.nextDouble() * (max - min);
     }
 
+    /** 把整数限制在 [min, max] */
     private static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
     }

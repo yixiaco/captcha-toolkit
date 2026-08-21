@@ -10,8 +10,10 @@ import java.awt.geom.Path2D;
  */
 public interface PuzzleShape {
 
+    /** 形状唯一名称（如 classic / leaf） */
     String getName();
 
+    /** 形状展示名称（中文标签） */
     String getLabel();
 
     /** 在 (x, y) 处生成边长为 size 的闭合路径 */

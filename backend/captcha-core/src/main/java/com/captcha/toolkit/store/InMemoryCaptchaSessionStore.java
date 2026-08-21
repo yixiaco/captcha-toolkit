@@ -13,13 +13,20 @@ import java.util.concurrent.TimeUnit;
  */
 public class InMemoryCaptchaSessionStore implements CaptchaSessionStore {
 
+    /** 会话 ID → 会话 映射 */
     private final Map<String, CaptchaSession> sessions = new ConcurrentHashMap<>();
+
+    /** 定期清理过期会话的后台线程 */
     private final ScheduledExecutorService cleaner;
 
+    /** 使用默认清理间隔（60 秒） */
     public InMemoryCaptchaSessionStore() {
         this(60_000);
     }
 
+    /**
+     * @param cleanupIntervalMillis 过期会话清理间隔（毫秒）
+     */
     public InMemoryCaptchaSessionStore(long cleanupIntervalMillis) {
         cleaner = Executors.newSingleThreadScheduledExecutor(runnable -> {
             Thread thread = new Thread(runnable, "captcha-session-cleaner");

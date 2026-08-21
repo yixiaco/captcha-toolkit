@@ -24,6 +24,7 @@ public class SceneBackgroundProvider implements BackgroundProvider {
     /** 超采样倍数：先画高清再缩小，等效于全局抗锯齿 */
     private static final int RENDER_SCALE = 2;
 
+    /** 随机数源 */
     private final Random random = new Random();
 
     @Override
@@ -35,6 +36,7 @@ public class SceneBackgroundProvider implements BackgroundProvider {
         return Optional.of(ImageUtil.scaleDown(hi, width, height));
     }
 
+    /** 在指定画布上绘制一幅随机风景 */
     public void draw(Graphics2D g, int width, int height) {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -171,6 +173,7 @@ public class SceneBackgroundProvider implements BackgroundProvider {
                 (int) (size * 0.82), hue);
     }
 
+    /** 绘制单个树冠：径向渐变，中心亮、边缘深 */
     private void drawCanopy(Graphics2D g, int cx, int cy, int size, int hue) {
         float[] fractions = {0f, 0.65f, 1f};
         Color[] colors = {

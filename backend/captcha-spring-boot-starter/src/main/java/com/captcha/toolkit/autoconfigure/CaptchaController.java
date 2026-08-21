@@ -33,14 +33,22 @@ import java.util.Map;
 @Validated
 public class CaptchaController {
 
+    /** 验证码引擎 */
     private final CaptchaEngine engine;
+
+    /** 验证码配置（读取 debug 开关等） */
     private final CaptchaProperties properties;
 
+    /**
+     * @param engine     验证码引擎
+     * @param properties 验证码配置
+     */
     public CaptchaController(CaptchaEngine engine, CaptchaProperties properties) {
         this.engine = engine;
         this.properties = properties;
     }
 
+    /** 下发一张验证码：type 指定类型，shape 指定滑块形状，debug 请求调试答案 */
     @GetMapping
     public CaptchaChallenge create(@RequestParam(defaultValue = "slider") String type,
                                    @RequestParam(required = false) String shape,
@@ -53,6 +61,7 @@ public class CaptchaController {
                 debug && properties.isDebugEnabled());
     }
 
+    /** 校验前端提交的答案 */
     @PostMapping("/verify")
     public VerifyResult verify(@Valid @RequestBody CaptchaAnswer answer) {
         if (answer == null || answer.getId() == null) {
@@ -77,6 +86,7 @@ public class CaptchaController {
         return engine.consumeTicket(request.getTicket());
     }
 
+    /** 查询后端支持的类型与滑块形状 */
     @GetMapping("/types")
     public Map<String, Object> types() {
         Map<String, Object> body = new LinkedHashMap<>();

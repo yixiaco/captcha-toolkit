@@ -8,8 +8,12 @@ import java.util.List;
  */
 public class ConfigWordFactory implements WordFactory {
 
+    /** 配置的静态词组列表 */
     private final List<String> words;
 
+    /**
+     * @param words 词组列表；为 null 时使用空列表
+     */
     public ConfigWordFactory(List<String> words) {
         this.words = words == null ? List.of() : new ArrayList<>(words);
     }

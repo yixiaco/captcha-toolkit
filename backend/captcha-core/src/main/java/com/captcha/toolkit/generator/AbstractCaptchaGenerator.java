@@ -17,11 +17,13 @@ import com.captcha.toolkit.model.VerifyResult;
  */
 public abstract class AbstractCaptchaGenerator implements CaptchaGenerator {
 
+    /** 生成阶段：固定调用子类实现，不对外暴露模板细节 */
     @Override
     public final GeneratedCaptcha generate(GenerateRequest request) {
         return doGenerate(request);
     }
 
+    /** 校验阶段：统一做类型、过期、最短耗时检查后再交给子类 */
     @Override
     public final VerifyResult verify(CaptchaSession session, CaptchaAnswer answer) {
         if (session == null || session.getType() != type()) {
@@ -37,8 +39,10 @@ public abstract class AbstractCaptchaGenerator implements CaptchaGenerator {
         return doVerify(session, answer);
     }
 
+    /** 子类实现具体的挑战生成逻辑 */
     protected abstract GeneratedCaptcha doGenerate(GenerateRequest request);
 
+    /** 子类实现具体的答案校验逻辑 */
     protected abstract VerifyResult doVerify(CaptchaSession session, CaptchaAnswer answer);
 
     /** 该类型允许的最短验证耗时（毫秒） */

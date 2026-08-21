@@ -7,13 +7,28 @@ import java.awt.Color;
  */
 public final class ColorUtil {
 
+    /** 工具类不可实例化 */
     private ColorUtil() {
     }
 
+    /**
+     * 计算颜色明度（HSB 的 Brightness，0~1）。
+     *
+     * @param c 颜色
+     * @return 明度值
+     */
     public static float brightness(Color c) {
         return Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), null)[2];
     }
 
+    /**
+     * RGB 转 HSL。
+     *
+     * @param r 红（0~255）
+     * @param g 绿（0~255）
+     * @param b 蓝（0~255）
+     * @return [h(0~360), s(0~1), l(0~1)]
+     */
     public static float[] rgbToHsl(int r, int g, int b) {
         float rf = r / 255f;
         float gf = g / 255f;
@@ -41,10 +56,12 @@ public final class ColorUtil {
         return new float[]{h, s, l};
     }
 
+    /** 整数 clamp：把 value 限制在 [min, max] */
     public static int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
     }
 
+    /** 浮点 clamp：把 value 限制在 [min, max] */
     public static float clamp(float value, float min, float max) {
         return Math.max(min, Math.min(max, value));
     }

@@ -24,6 +24,11 @@ public class CaptchaTicket {
     /** 票据过期时间戳（毫秒） */
     private final long expiresAt;
 
+    /**
+     * @param ticket   票据唯一标识
+     * @param type     发放票据的验证码类型
+     * @param ttlMillis 票据有效期（毫秒）
+     */
     public CaptchaTicket(String ticket, CaptchaType type, long ttlMillis) {
         this.ticket = ticket;
         this.type = type;
@@ -32,6 +37,7 @@ public class CaptchaTicket {
         this.expiresAt = now + ttlMillis;
     }
 
+    /** 票据是否已过期 */
     public boolean isExpired() {
         return System.currentTimeMillis() > expiresAt;
     }

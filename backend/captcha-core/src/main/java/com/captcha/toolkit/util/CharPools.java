@@ -15,8 +15,10 @@ public final class CharPools {
     /** CJK 统一汉字区终点：龟（U+9FA5），覆盖绝大多数常用汉字 */
     private static final int CJK_END = 0x9FA5;
 
+    /** 预生成的常用汉字只读列表 */
     private static final List<String> COMMON_CHINESE = buildCommonChinese();
 
+    /** 工具类不可实例化 */
     private CharPools() {
     }
 
@@ -28,6 +30,7 @@ public final class CharPools {
         return COMMON_CHINESE;
     }
 
+    /** 构建 U+4E00–U+9FA5 的汉字列表并包装为只读列表 */
     private static List<String> buildCommonChinese() {
         List<String> chars = new ArrayList<>(CJK_END - CJK_START + 1);
         for (int codePoint = CJK_START; codePoint <= CJK_END; codePoint++) {

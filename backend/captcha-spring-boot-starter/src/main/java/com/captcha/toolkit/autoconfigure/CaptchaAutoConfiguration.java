@@ -40,12 +40,14 @@ import java.util.List;
 @ConditionalOnClass(CaptchaEngine.class)
 public class CaptchaAutoConfiguration {
 
+    /** 默认图片编码器：Base64 Data URI */
     @Bean
     @ConditionalOnMissingBean
     public CaptchaImageCodec captchaImageCodec() {
         return new DataUriImageCodec();
     }
 
+    /** 默认背景提供者：配置素材 + 程序生成兜底 */
     @Bean
     @ConditionalOnMissingBean
     public BackgroundProvider captchaBackgroundProvider(CaptchaProperties properties) {
@@ -54,6 +56,7 @@ public class CaptchaAutoConfiguration {
                 properties.getBackground().isGenerateFallback());
     }
 
+    /** 默认词组工厂：读取 click.target-text 配置 */
     @Bean
     @ConditionalOnMissingBean
     public WordFactory captchaWordFactory(CaptchaProperties properties) {
@@ -61,24 +64,28 @@ public class CaptchaAutoConfiguration {
         return new ConfigWordFactory(new ArrayList<>(properties.getClick().getTargetText()));
     }
 
+    /** 默认会话存储：内存实现 */
     @Bean
     @ConditionalOnMissingBean
     public CaptchaSessionStore captchaSessionStore() {
         return new InMemoryCaptchaSessionStore();
     }
 
+    /** 默认票据存储：内存实现 */
     @Bean
     @ConditionalOnMissingBean
     public CaptchaTicketStore captchaTicketStore() {
         return new InMemoryCaptchaTicketStore();
     }
 
+    /** 把 Spring 配置属性转换为核心引擎配置 */
     @Bean
     @ConditionalOnMissingBean
     public CaptchaConfig captchaConfig(CaptchaProperties properties) {
         return properties.toConfig();
     }
 
+    /** 组装验证码引擎：宿主自定义任意依赖 Bean 后自动替换对应策略 */
     @Bean
     @ConditionalOnMissingBean
     public CaptchaEngine captchaEngine(CaptchaConfig config,
@@ -99,6 +106,7 @@ public class CaptchaAutoConfiguration {
                 backgroundProvider, clickBackgroundProvider, wordFactory, ticketStore);
     }
 
+    /** 注册验证码 HTTP 控制器 */
     @Bean
     @ConditionalOnWebApplication
     @ConditionalOnProperty(prefix = "captcha", name = "enabled", havingValue = "true", matchIfMissing = true)
