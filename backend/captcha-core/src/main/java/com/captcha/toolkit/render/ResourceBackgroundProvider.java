@@ -65,7 +65,9 @@ public class ResourceBackgroundProvider implements BackgroundProvider {
             if (path.startsWith("classpath:")) {
                 path = path.substring("classpath:".length());
             }
-            try (InputStream in = classLoader.getResourceAsStream(path)) {
+            // ClassLoader#getResourceAsStream 不接收前导 "/"，统一去掉后从 classpath 根目录解析
+            String resourcePath = path.startsWith("/") ? path.substring(1) : path;
+            try (InputStream in = classLoader.getResourceAsStream(resourcePath)) {
                 if (in != null) {
                     return ImageIO.read(in);
                 }
