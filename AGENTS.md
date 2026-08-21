@@ -23,8 +23,11 @@ Backend (JDK 21; Maven uses `D:\Maven\.m2` per `conf/settings.xml`):
 ```powershell
 $env:JAVA_HOME='D:\jdks\openjdk-21.0.2'
 D:\software\apache-maven-3.9.11\bin\mvn.cmd clean install   # build + test + install
-D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo spring-boot:run
+D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo -am spring-boot:run
 ```
+
+Run the demo with `-am` so captcha-core / starter changes are rebuilt in the same reactor;
+without it, the demo resolves stale artifacts from the local Maven repo.
 
 Frontend:
 
@@ -35,6 +38,10 @@ npm run dev          # dev server on :5173, proxies /api to :18080
 npm run build:lib    # publishable component bundle
 npm run build:demo   # demo site
 ```
+
+Frontend requires Node 18+ (Vite 6). The default system Node on this machine is 16 and will fail
+with `crypto$2.getRandomValues is not a function`; use Node 18+ (e.g. the Codex bundled Node 24)
+and run `node_modules\vite\bin\vite.js` directly if `npm run dev` cannot pick a newer Node.
 
 ## Coding Style & Naming Conventions
 
