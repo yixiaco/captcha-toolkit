@@ -112,6 +112,9 @@ export default defineConfig({
       themeConfig: {
         nav: zhNav,
         sidebar: zhSidebar,
+        socialLinks: [
+          { icon: 'github', link: 'https://github.com/yixiaco/captcha-toolkit' },
+        ],
         outline: { label: '本页导航' },
         docFooter: { prev: '上一页', next: '下一页' },
         lastUpdated: { text: '最后更新于' },
@@ -133,6 +136,9 @@ export default defineConfig({
       themeConfig: {
         nav: enNav,
         sidebar: enSidebar,
+        socialLinks: [
+          { icon: 'github', link: 'https://github.com/yixiaco/captcha-toolkit' },
+        ],
         outline: { label: 'On this page' },
         docFooter: { prev: 'Previous', next: 'Next' },
         lastUpdated: { text: 'Last updated' },
