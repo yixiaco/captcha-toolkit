@@ -13,6 +13,7 @@ import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.PointVo;
 import com.captcha.toolkit.model.RotateChallengeData;
 import com.captcha.toolkit.model.SliderChallengeData;
+import com.captcha.toolkit.model.SlideCurveChallengeData;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.render.SceneBackgroundProvider;
@@ -269,6 +270,32 @@ class BehaviorValidationTest {
         assertEquals("BEHAVIOR", result.getCode());
     }
 
+    @Test
+    void slideCurvePassesWithMatchingTrace() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SLIDE_CURVE, Map.of(), true);
+        double endX = slideCurveData(challenge).debugSwing();
+
+        CaptchaAnswer answer = CaptchaAnswer.slider(endX);
+        answer.setTd(sliderTrace(endX));
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertTrue(result.isSuccess(), result.getMessage());
+    }
+
+    @Test
+    void slideCurveRejectsMissingTraceWhenEnabled() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SLIDE_CURVE, Map.of(), true);
+        double endX = slideCurveData(challenge).debugSwing();
+
+        CaptchaAnswer answer = CaptchaAnswer.slider(endX);
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertFalse(result.isSuccess());
+        assertEquals("BEHAVIOR", result.getCode());
+    }
+
     private CaptchaEngine newEngine() {
         return newEngine(false);
     }
@@ -287,6 +314,7 @@ class BehaviorValidationTest {
         config.getClick().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
         config.getCurve().setMinElapsedMs(0);
+        config.getSlideCurve().setMinElapsedMs(0);
         FallbackBackgroundProvider background = new FallbackBackgroundProvider(
                 List.of(new SceneBackgroundProvider()));
         return CaptchaEngine.of(config, new InMemoryCaptchaSessionStore(),
@@ -511,5 +539,10 @@ class BehaviorValidationTest {
     /** 读取曲线类型特定化载荷 */
     private static CurveChallengeData curveData(CaptchaChallenge<?> challenge) {
         return (CurveChallengeData) challenge.getData();
+    }
+
+    /** 读取滑动曲线类型特定化载荷 */
+    private static SlideCurveChallengeData slideCurveData(CaptchaChallenge<?> challenge) {
+        return (SlideCurveChallengeData) challenge.getData();
     }
 }

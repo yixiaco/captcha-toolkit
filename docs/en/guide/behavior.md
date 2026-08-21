@@ -49,6 +49,7 @@ The frontend compresses `td` with gzip + base64url (`H4sI...`). The backend auto
 | `ClickBehaviorValidator` | DOWN/UP pairs, count, order, coordinates, click duration |
 | `RotateBehaviorValidator` | Drag event sequence (angle checked by the generator) |
 | `CurveBehaviorValidator` | START → MOVE → UP, no clicks; trace ends match the answer curve ends |
+| `SlideCurveBehaviorValidator` | START → MOVE → UP; final x matches the curve swing `xNorm` |
 
 The curve generator also checks geometry: the drawn start/end must land near the
 guide curve markers, and the coverage of the expected curve must reach the
@@ -62,7 +63,7 @@ scoring: `DragBehaviorRiskScorer` / `ClickBehaviorRiskScorer` combine weak
 signals into a normalized 0~1 score and only reject when the score exceeds the
 profile threshold, reducing false positives.
 
-Drag (slider / rotate / curve) features:
+Drag (slider / rotate / curve / slide-curve) features:
 
 | Feature | Meaning | Bot signature |
 | --- | --- | --- |

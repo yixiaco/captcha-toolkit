@@ -154,6 +154,25 @@
           曲线绘制
         </button>
         <button
+          class="mode-btn slide-curve"
+          @click="open('slide-curve')"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 8c4-5 7 3 10-1s4 5 8 1" />
+            <path d="M16 14h5M18.5 11.5L21 14l-2.5 2.5" />
+          </svg>
+          滑动曲线
+        </button>
+        <button
           class="mode-btn random"
           @click="openRandom"
         >
@@ -215,19 +234,19 @@ const isDev = import.meta.env.DEV;
 const account = ref('');
 const password = ref('');
 const captchaVisible = ref(false);
-const captchaMode = ref<'slider' | 'click' | 'rotate' | 'curve'>('slider');
+const captchaMode = ref<'slider' | 'click' | 'rotate' | 'curve' | 'slide-curve'>('slider');
 const shapeFromUrl = ref('');
 const verified = ref(false);
 const verifiedTicket = ref('');
 
-function open(mode: 'slider' | 'click' | 'rotate' | 'curve') {
+function open(mode: 'slider' | 'click' | 'rotate' | 'curve' | 'slide-curve') {
   resetVerified();
   captchaMode.value = mode;
   captchaVisible.value = true;
 }
 
 function openRandom() {
-  const modes = ['slider', 'click', 'rotate', 'curve'] as const;
+  const modes = ['slider', 'click', 'rotate', 'curve', 'slide-curve'] as const;
   open(modes[Math.floor(Math.random() * modes.length)]);
 }
 
@@ -259,7 +278,8 @@ onMounted(() => {
     shapeFromUrl.value = shapeParam;
   }
   if (modeParam === 'slider' || modeParam === 'click'
-    || modeParam === 'rotate' || modeParam === 'curve') {
+    || modeParam === 'rotate' || modeParam === 'curve'
+    || modeParam === 'slide-curve') {
     open(modeParam);
   } else if (modeParam === 'random') {
     openRandom();

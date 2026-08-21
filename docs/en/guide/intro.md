@@ -6,6 +6,7 @@ Captcha Toolkit is a reusable behavior captcha toolkit:
 - Click characters: click target characters in order
 - Rotate: drag the slider to align a rotated disc
 - Curve drawing: trace the guide curve from the green start to the red end
+- Slide curve: the curve is anchored at both ends; drag the slider to swing it into the real groove (with fake grooves)
 
 Answers are only stored server-side. A one-time ticket is issued after verification, and the session is destroyed on success or failure.
 
@@ -29,7 +30,7 @@ docs/                            VitePress documentation (this site)
 
 ## Key Features
 
-- Unified template + type-specific validators (slider / click / rotate / curve) for behavior checks
+- Unified template + type-specific validators (slider / click / rotate / curve / slide-curve) for behavior checks
 - Compressed trajectory payload (`td`, gzip + base64url)
 - Per-client profiles: web / H5 / mini program
 - Normalized coordinates (0~1) independent of screen size

@@ -122,6 +122,23 @@
 | `curve.min-coverage` | 最小覆盖率（0~1） | `0.6` |
 | `curve.min-drawn-points` | 绘制答案最少点数 | `5` |
 
+## 滑动曲线
+
+滑动曲线复用 `background.sources` 主背景图：大图上绘制两端固定的曲线与多个凹槽，
+拖动滑块改变曲线的摆动量（0~1），只有摆动到真凹槽对应的位置时曲线才与其重合；
+假凹槽与真曲线共用两端固定点，但形状/振幅不同，任何摆动都无法对准。
+
+| 配置 | 说明 | 默认值 |
+| --- | --- | --- |
+| `slide-curve.width` / `height` | 图片尺寸 | `340` / `190` |
+| `slide-curve.tolerance` | 摆动量校验容差（归一化 0~1） | `0.035` |
+| `slide-curve.min-elapsed-ms` | 最短验证耗时 | `800` |
+| `slide-curve.expire-seconds` | 会话有效期 | `300` |
+| `slide-curve.fake-target-count` | 假凹槽数量 | `2` |
+| `slide-curve.amplitude-min/max` | 曲线振幅范围（像素，会按画布高度收敛） | `28` / `48` |
+| `slide-curve.sample-count` | 摆动曲线采样点数量 | `24` |
+| `slide-curve.swing-min/max` | 真凹槽摆动答案范围 | `0.1` / `0.8` |
+
 ## 安全说明
 
 - `debug-enabled` 生产环境必须关闭

@@ -126,6 +126,25 @@ guide curve plus start/end markers on top of it.
 | `curve.min-coverage` | Min coverage (0~1) | `0.6` |
 | `curve.min-drawn-points` | Min drawn answer points | `5` |
 
+## Slide Curve
+
+Slide curve reuses the `background.sources` main background: a curve anchored at
+both ends plus several grooves are drawn; dragging the slider changes the swing
+(0~1), and the curve aligns with the real groove only at the answer swing.
+Fake grooves share the same fixed endpoints but use different shapes/amplitudes,
+so no swing can align the curve with them.
+
+| Setting | Description | Default |
+| --- | --- | --- |
+| `slide-curve.width` / `height` | Image size | `340` / `190` |
+| `slide-curve.tolerance` | Swing tolerance (normalized 0~1) | `0.035` |
+| `slide-curve.min-elapsed-ms` | Min elapsed time | `800` |
+| `slide-curve.expire-seconds` | Session TTL | `300` |
+| `slide-curve.fake-target-count` | Fake grooves | `2` |
+| `slide-curve.amplitude-min/max` | Curve amplitude range (px, clamped to canvas height) | `28` / `48` |
+| `slide-curve.sample-count` | Swing curve sample points | `24` |
+| `slide-curve.swing-min/max` | Answer swing range | `0.1` / `0.8` |
+
 ## Security
 
 - Keep `debug-enabled` off in production

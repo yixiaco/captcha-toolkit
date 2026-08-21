@@ -18,7 +18,10 @@ public enum CaptchaType {
     ROTATE("rotate"),
 
     /** 曲线绘制 */
-    CURVE("curve");
+    CURVE("curve"),
+
+    /** 滑动曲线 */
+    SLIDE_CURVE("slide-curve");
 
     /** 对外使用的类型编码 */
     private final String code;

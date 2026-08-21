@@ -35,6 +35,10 @@ export interface CaptchaOptions {
   sliderTip: string
   /** 旋转提示文案 */
   rotateTip: string
+  /** 滑动曲线提示文案 */
+  slideCurveTip: string
+  /** 滑动曲线摆动曲线颜色 */
+  slideCurveColor: string
   /** 曲线绘制提示文案 */
   curveTip: string
   /** 用户绘制笔迹颜色 */
@@ -107,6 +111,8 @@ export const defaultCaptchaOptions: CaptchaOptions = {
   randomLabel: '随机',
   sliderTip: '按住滑块，拖动完成拼图',
   rotateTip: '拖动滑块旋转图片，使其对齐',
+  slideCurveTip: '按住滑块，将曲线滑入对应凹槽',
+  slideCurveColor: '#3b7cff',
   curveTip: '请按住并沿虚线从绿色起点描绘到红色终点',
   curveColor: '#3b7cff',
   curveWidth: 3,

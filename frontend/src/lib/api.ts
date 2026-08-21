@@ -51,6 +51,20 @@ export interface CurveChallengeData {
   debugCurve?: ChallengePoint[]
 }
 
+/** 滑动曲线类型特定化载荷 */
+export interface SlideCurveChallengeData {
+  /** 曲线两端固定点（像素坐标） */
+  endpoints?: ChallengePoint[]
+  /** 曲线振幅（像素） */
+  amplitude?: number
+  /** 归一化形状采样（首尾为 0，其余在 [-1, 1]） */
+  shape?: number[]
+  /** 调试：真凹槽对应的摆动答案（0~1） */
+  debugSwing?: number
+  /** 调试：假凹槽左端坐标（像素） */
+  debugFakeTargets?: ChallengePoint[]
+}
+
 /**
  * 验证码下发载荷：类型特定化属性统一放在泛型 {@code data} 中，
  * 新增验证码类型时只需定义自己的 data 接口，无需扩展本接口。

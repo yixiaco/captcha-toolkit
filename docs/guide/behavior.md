@@ -60,6 +60,7 @@ H4sI...
 | `ClickBehaviorValidator` | 按下/松开成对、点击次数与顺序、坐标、单次点击时长 |
 | `RotateBehaviorValidator` | 按下 → 移动 → 松开事件序列（角度由生成器校验） |
 | `CurveBehaviorValidator` | 按下 → 移动 → 松开，禁止点击事件；轨迹首尾与答案曲线首尾一致 |
+| `SlideCurveBehaviorValidator` | 按下 → 移动 → 松开，终点归一化 x 与曲线摆动量 `xNorm` 一致 |
 
 曲线绘制额外由生成器做几何校验：起点/终点必须落在引导曲线首尾标记附近，
 且绘制点对期望曲线的覆盖率（默认 60%）达到阈值才通过。
@@ -70,7 +71,7 @@ H4sI...
 还需要第二层统计评分：`DragBehaviorRiskScorer` / `ClickBehaviorRiskScorer`
 把多个弱信号加权汇总成 0~1 综合分，超过画像阈值才判定异常，避免单特征误伤。
 
-拖拽（滑块/旋转/曲线）特征：
+拖拽（滑块/旋转/曲线/滑动曲线）特征：
 
 | 特征 | 含义 | 机器表现 |
 | --- | --- | --- |

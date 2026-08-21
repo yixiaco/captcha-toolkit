@@ -11,6 +11,7 @@ import com.captcha.toolkit.model.CurveChallengeData;
 import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.RotateChallengeData;
 import com.captcha.toolkit.model.SliderChallengeData;
+import com.captcha.toolkit.model.SlideCurveChallengeData;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.SliderRenderer;
 import com.captcha.toolkit.render.BackgroundProvider;
@@ -46,6 +47,7 @@ class CaptchaEngineTest {
         config.getClick().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
         config.getCurve().setMinElapsedMs(0);
+        config.getSlideCurve().setMinElapsedMs(0);
         CaptchaImageCodec codec = new DataUriImageCodec();
         FallbackBackgroundProvider background = new FallbackBackgroundProvider(
                 List.of(new SceneBackgroundProvider()));
@@ -61,6 +63,7 @@ class CaptchaEngineTest {
         config.getClick().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
         config.getCurve().setMinElapsedMs(0);
+        config.getSlideCurve().setMinElapsedMs(0);
         config.getRateLimit().setEnabled(true);
         config.getRateLimit().setMaxRequests(maxRequests);
         config.getRateLimit().setWindowSeconds(windowSeconds);
@@ -469,6 +472,35 @@ class CaptchaEngineTest {
         assertEquals("WRONG", result.getCode());
     }
 
+    @Test
+    void slideCurveGeneratesAndVerifiesWithDebugX() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SLIDE_CURVE, Map.of(), true);
+
+        assertNotNull(challenge.getImage1());
+        assertNotNull(slideCurveData(challenge).debugSwing());
+        assertEquals("slide-curve", challenge.getType());
+
+        double xNorm = slideCurveData(challenge).debugSwing();
+        VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.slider(xNorm));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+
+        // 会话一次性：同一 id 再次提交失败
+        VerifyResult again = engine.verify(challenge.getId(), CaptchaAnswer.slider(xNorm));
+        assertFalse(again.isSuccess());
+    }
+
+    @Test
+    void slideCurveRejectsWrongDisplacement() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SLIDE_CURVE, Map.of(), true);
+        double wrongX = slideCurveData(challenge).debugSwing() + 0.2;
+
+        VerifyResult result = engine.verify(challenge.getId(), CaptchaAnswer.slider(wrongX));
+        assertFalse(result.isSuccess());
+        assertEquals("WRONG", result.getCode());
+    }
+
     /** 读取滑块类型特定化载荷 */
     private static SliderChallengeData sliderData(CaptchaChallenge<?> challenge) {
         return (SliderChallengeData) challenge.getData();
@@ -487,5 +519,10 @@ class CaptchaEngineTest {
     /** 读取曲线类型特定化载荷 */
     private static CurveChallengeData curveData(CaptchaChallenge<?> challenge) {
         return (CurveChallengeData) challenge.getData();
+    }
+
+    /** 读取滑动曲线类型特定化载荷 */
+    private static SlideCurveChallengeData slideCurveData(CaptchaChallenge<?> challenge) {
+        return (SlideCurveChallengeData) challenge.getData();
     }
 }

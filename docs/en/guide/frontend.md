@@ -62,7 +62,7 @@ Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `Cu
 | `api` | Custom API client | auto |
 | `request` | Custom request function | fetch |
 | `width` / `height` | Image size | `340` / `190` |
-| `mode` | slider / click / rotate / curve | `slider` |
+| `mode` | slider / click / rotate / curve / slide-curve | `slider` |
 | `shape` | Initial slider shape (debug only) | `''` |
 | `debug` | Request debug answers | `false` |
 | `autoReload` | Reload after failure | `true` |
@@ -72,6 +72,8 @@ Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `Cu
 | `curveTip` | Curve drawing hint | Chinese default |
 | `curveColor` | Stroke color | `#3b7cff` |
 | `curveWidth` | Stroke width (px) | `3` |
+| `slideCurveTip` | Slide curve hint | Chinese default |
+| `slideCurveColor` | Swing curve color | `#3b7cff` |
 | `floatingText` | Floating button text | `安全验证` |
 | `floatingPosition` | bottom-right / bottom-left | `bottom-right` |
 

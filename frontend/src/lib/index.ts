@@ -8,6 +8,7 @@ import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
 import CurveCaptcha from './CurveCaptcha.vue';
+import SlideCurveCaptcha from './SlideCurveCaptcha.vue';
 import { createCaptchaApi, defaultRequest } from './api';
 import type {
   CaptchaApi,
@@ -18,6 +19,7 @@ import type {
   ClickChallengeData,
   RotateChallengeData,
   CurveChallengeData,
+  SlideCurveChallengeData,
   RequestFunction,
   RequestOptions,
   VerifyResult,
@@ -41,6 +43,7 @@ export {
   ClickCaptcha,
   RotateCaptcha,
   CurveCaptcha,
+  SlideCurveCaptcha,
   createCaptchaApi,
   defaultRequest,
   PUZZLE_SHAPES,
@@ -60,6 +63,7 @@ export type {
   ClickChallengeData,
   RotateChallengeData,
   CurveChallengeData,
+  SlideCurveChallengeData,
   RequestFunction,
   RequestOptions,
   VerifyResult,

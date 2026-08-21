@@ -98,6 +98,17 @@ public class CaptchaSession {
                 null, null, 0, curve, ttlMillis);
     }
 
+    /**
+     * 创建滑动曲线会话。
+     *
+     * @param x 摆动答案放大 10000 倍后的整数（0~1 摆动量），避免改动会话模型
+     */
+    public static CaptchaSession slideCurve(String id, int width, int height,
+                                            int x, long ttlMillis) {
+        return new CaptchaSession(id, CaptchaType.SLIDE_CURVE, null, x, 0, width, height,
+                null, null, 0, null, ttlMillis);
+    }
+
     /** 会话是否已过期 */
     public boolean isExpired() {
         return System.currentTimeMillis() > expiresAt;

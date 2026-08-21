@@ -33,6 +33,9 @@ public class CaptchaConfig {
     /** 曲线绘制验证码配置 */
     private CurveConfig curve = new CurveConfig();
 
+    /** 滑动曲线验证码配置 */
+    private SlideCurveConfig slideCurve = new SlideCurveConfig();
+
     /** 行为轨迹校验配置（滑块/点选/旋转共用） */
     private BehaviorConfig behavior = new BehaviorConfig();
 

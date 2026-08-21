@@ -18,7 +18,7 @@ The default prefix is `/api/captcha`, configurable via `captcha.api-prefix`.
 
 | Method | Path | Description |
 | --- | --- | --- |
-| GET | `{prefix}?type=slider\|click\|rotate\|curve` | Create a challenge |
+| GET | `{prefix}?type=slider\|click\|rotate\|curve\|slide-curve` | Create a challenge |
 | POST | `{prefix}/verify` | Verify the answer |
 | GET/POST | `{prefix}/ticket/verify` | Verify a one-time ticket |
 | GET | `{prefix}/types` | List supported types and shapes |
@@ -57,6 +57,7 @@ challenge model:
 | `click` | `prompt` / `debugTargets` | Prompt text, debug target coordinates |
 | `rotate` | `debugAngle` | Debug answer angle (degrees) |
 | `curve` | `debugCurve` | Debug expected curve sample points (pixels) |
+| `slide-curve` | `endpoints` / `amplitude` / `shape`, debug `debugSwing` / `debugFakeTargets` | Swing curve rendering params, debug swing answer and fake grooves |
 
 Debug fields are only returned when `debug=1` and `debug-enabled` is on.
 

@@ -194,6 +194,10 @@ button {
   color: #00a8a8;
 }
 
+.mode-btn.slide-curve svg {
+  color: #0ea5e9;
+}
+
 .mode-btn.random svg {
   color: var(--gt-green);
 }
