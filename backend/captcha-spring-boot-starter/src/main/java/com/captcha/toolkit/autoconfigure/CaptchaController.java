@@ -1,7 +1,7 @@
 package com.captcha.toolkit.autoconfigure;
 
 import com.captcha.toolkit.CaptchaEngine;
-import com.captcha.toolkit.CaptchaType;
+import com.captcha.toolkit.type.CaptchaType;
 import com.captcha.toolkit.exception.RateLimitExceededException;
 import com.captcha.toolkit.i18n.CaptchaMessages;
 import com.captcha.toolkit.i18n.MessageProvider;

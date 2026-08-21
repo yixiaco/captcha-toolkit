@@ -18,6 +18,7 @@ import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.render.SceneBackgroundProvider;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
 import com.captcha.toolkit.store.InMemoryCaptchaSessionStore;
+import com.captcha.toolkit.type.CaptchaType;
 import com.captcha.toolkit.word.WordFactory;
 import org.junit.jupiter.api.Test;
 

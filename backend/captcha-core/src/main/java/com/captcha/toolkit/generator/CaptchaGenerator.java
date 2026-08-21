@@ -1,6 +1,6 @@
 package com.captcha.toolkit.generator;
 
-import com.captcha.toolkit.CaptchaType;
+import com.captcha.toolkit.type.CaptchaType;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.GeneratedCaptcha;

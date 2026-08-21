@@ -1,4 +1,4 @@
-package com.captcha.toolkit;
+package com.captcha.toolkit.factory;
 
 import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.behavior.ClickBehaviorValidator;
@@ -6,6 +6,7 @@ import com.captcha.toolkit.generator.CaptchaGenerator;
 import com.captcha.toolkit.generator.ClickCaptchaGenerator;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.SceneBackgroundProvider;
+import com.captcha.toolkit.type.CaptchaType;
 import com.captcha.toolkit.word.WordFactory;
 
 /**

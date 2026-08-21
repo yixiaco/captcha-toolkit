@@ -1,7 +1,8 @@
-package com.captcha.toolkit;
+package com.captcha.toolkit.factory;
 
 import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.generator.CaptchaGenerator;
+import com.captcha.toolkit.type.CaptchaType;
 
 /**
  * 验证码工厂（工厂模式）。

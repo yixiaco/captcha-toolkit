@@ -1,8 +1,8 @@
 package com.captcha.toolkit.autoconfigure;
 
 import com.captcha.toolkit.CaptchaEngine;
-import com.captcha.toolkit.CaptchaFactory;
 import com.captcha.toolkit.config.CaptchaConfig;
+import com.captcha.toolkit.factory.CaptchaFactory;
 import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.image.DataUriImageCodec;
 import com.captcha.toolkit.i18n.MessageProvider;

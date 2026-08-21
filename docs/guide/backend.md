@@ -150,7 +150,7 @@ VerifyResult result = engine.verify(challenge.getId(),
 
 ## 自定义扩展
 
-- 新增验证码类型：实现 `CaptchaFactory` + `AbstractCaptchaGenerator`
+- 新增验证码类型：实现 `com.captcha.toolkit.factory.CaptchaFactory` + `AbstractCaptchaGenerator`，并新增 `CaptchaType` 枚举值
 - 换背景：实现 `BackgroundProvider`（classpath / 文件 / 程序生成均可）
 - 换存储：实现 `CaptchaSessionStore`（生产环境建议 Redis 等共享存储）
 - 换词组来源：实现 `WordFactory`

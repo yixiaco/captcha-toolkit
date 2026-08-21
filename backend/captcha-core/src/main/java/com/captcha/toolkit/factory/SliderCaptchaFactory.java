@@ -1,4 +1,4 @@
-package com.captcha.toolkit;
+package com.captcha.toolkit.factory;
 
 import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.behavior.SliderBehaviorValidator;
@@ -8,6 +8,7 @@ import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.render.SceneBackgroundProvider;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
+import com.captcha.toolkit.type.CaptchaType;
 
 import java.util.List;
 

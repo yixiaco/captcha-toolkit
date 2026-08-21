@@ -1,4 +1,4 @@
-package com.captcha.toolkit;
+package com.captcha.toolkit.type;
 
 /**
  * 验证码类型。

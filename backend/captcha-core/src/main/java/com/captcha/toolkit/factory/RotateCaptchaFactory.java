@@ -1,43 +1,44 @@
-package com.captcha.toolkit;
+package com.captcha.toolkit.factory;
 
-import com.captcha.toolkit.behavior.CurveBehaviorValidator;
 import com.captcha.toolkit.config.CaptchaConfig;
+import com.captcha.toolkit.behavior.RotateBehaviorValidator;
 import com.captcha.toolkit.generator.CaptchaGenerator;
-import com.captcha.toolkit.generator.CurveCaptchaGenerator;
+import com.captcha.toolkit.generator.RotateCaptchaGenerator;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.render.SceneBackgroundProvider;
+import com.captcha.toolkit.type.CaptchaType;
 
 import java.util.List;
 
 /**
- * 曲线绘制验证码工厂。
+ * 图片旋转验证码工厂。
  */
-public class CurveCaptchaFactory implements CaptchaFactory {
+public class RotateCaptchaFactory implements CaptchaFactory {
 
-    /** 曲线背景图提供者 */
+    /** 旋转背景图提供者 */
     private final BackgroundProvider backgroundProvider;
 
     /** 使用程序生成背景 */
-    public CurveCaptchaFactory() {
+    public RotateCaptchaFactory() {
         this(new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())));
     }
 
     /**
      * @param backgroundProvider 背景图提供者
      */
-    public CurveCaptchaFactory(BackgroundProvider backgroundProvider) {
+    public RotateCaptchaFactory(BackgroundProvider backgroundProvider) {
         this.backgroundProvider = backgroundProvider;
     }
 
     @Override
     public CaptchaType type() {
-        return CaptchaType.CURVE;
+        return CaptchaType.ROTATE;
     }
 
     @Override
     public CaptchaGenerator<?> create(CaptchaConfig config) {
-        return new CurveCaptchaGenerator(config.getCurve(), backgroundProvider,
-                new CurveBehaviorValidator(config.getBehavior()), config.getMessageProvider());
+        return new RotateCaptchaGenerator(config.getRotate(), backgroundProvider,
+                new RotateBehaviorValidator(config.getBehavior()), config.getMessageProvider());
     }
 }

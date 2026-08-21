@@ -1,6 +1,6 @@
 package com.captcha.toolkit.model;
 
-import com.captcha.toolkit.CaptchaType;
+import com.captcha.toolkit.type.CaptchaType;
 import lombok.Data;
 
 /**
