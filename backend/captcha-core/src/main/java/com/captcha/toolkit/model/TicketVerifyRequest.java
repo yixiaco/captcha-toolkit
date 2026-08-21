@@ -12,4 +12,7 @@ public class TicketVerifyRequest {
     /** 验证通过后发放的一次性票据，必填 */
     @NotBlank(message = "缺少票据 ticket")
     private String ticket;
+
+    /** 提示语言（如 zh / en），可选；缺省时使用 Accept-Language 或服务端默认语言 */
+    private String lang;
 }

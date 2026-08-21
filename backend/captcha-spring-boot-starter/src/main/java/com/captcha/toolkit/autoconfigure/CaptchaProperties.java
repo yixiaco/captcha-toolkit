@@ -6,9 +6,13 @@ import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.config.ClickConfig;
 import com.captcha.toolkit.config.RotateConfig;
 import com.captcha.toolkit.config.SliderConfig;
+import com.captcha.toolkit.i18n.MessageProvider;
+import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.Locale;
 
 /**
  * captcha.* 配置项。
@@ -67,6 +71,9 @@ public class CaptchaProperties {
     /** 行为轨迹校验配置 */
     private BehaviorConfig behavior = new BehaviorConfig();
 
+    /** 默认提示语言（如 zh_CN / en），用于解析用户提示消息资源 */
+    private String locale = "zh_CN";
+
     /**
      * 转换成核心引擎配置。滑块/点选直接复用同一套配置对象，
      * 通过属性拷贝避免两处配置实例互相共享可变引用。
@@ -79,6 +86,15 @@ public class CaptchaProperties {
         BeanUtils.copyProperties(click, config.getClick());
         BeanUtils.copyProperties(rotate, config.getRotate());
         BeanUtils.copyProperties(behavior, config.getBehavior());
+        config.setMessageProvider(new ResourceBundleMessageProvider(parseLocale(locale)));
         return config;
+    }
+
+    /** 把配置的 locale 字符串解析为 Locale；非法/为空时回退中文 */
+    private static Locale parseLocale(String value) {
+        if (value == null || value.isBlank()) {
+            return Locale.SIMPLIFIED_CHINESE;
+        }
+        return Locale.forLanguageTag(value.trim().replace('_', '-'));
     }
 }

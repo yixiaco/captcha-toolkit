@@ -5,6 +5,9 @@ import com.captcha.toolkit.behavior.BehaviorValidator;
 import com.captcha.toolkit.behavior.RotateBehaviorValidator;
 import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.RotateConfig;
+import com.captcha.toolkit.i18n.CaptchaMessages;
+import com.captcha.toolkit.i18n.MessageProvider;
+import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
 import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
@@ -43,7 +46,9 @@ public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
 
     /** 使用默认（关闭）行为校验构造生成器 */
     public RotateCaptchaGenerator(RotateConfig options, BackgroundProvider backgroundProvider) {
-        this(options, backgroundProvider, new RotateBehaviorValidator(new BehaviorConfig()));
+        this(options, backgroundProvider,
+                new RotateBehaviorValidator(new BehaviorConfig()),
+                new ResourceBundleMessageProvider());
     }
 
     /**
@@ -54,6 +59,21 @@ public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
     public RotateCaptchaGenerator(RotateConfig options,
                                   BackgroundProvider backgroundProvider,
                                   BehaviorValidator behaviorValidator) {
+        this(options, backgroundProvider, behaviorValidator,
+                new ResourceBundleMessageProvider());
+    }
+
+    /**
+     * @param options           旋转配置
+     * @param backgroundProvider 背景图提供者
+     * @param behaviorValidator  行为轨迹校验器
+     * @param messages           用户提示消息提供者
+     */
+    public RotateCaptchaGenerator(RotateConfig options,
+                                  BackgroundProvider backgroundProvider,
+                                  BehaviorValidator behaviorValidator,
+                                  MessageProvider messages) {
+        super(messages);
         this.options = options;
         this.backgroundProvider = backgroundProvider;
         this.behaviorValidator = behaviorValidator;
@@ -126,18 +146,18 @@ public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
     @Override
     protected VerifyResult doVerify(CaptchaSession session, CaptchaAnswer answer) {
         if (answer == null || answer.getAngle() == null) {
-            return VerifyResult.badRequest("缺少旋转角度 angle");
+            return VerifyResult.badRequest(CaptchaMessages.ROTATE_MISSING_ANGLE, messages);
         }
         Optional<String> behaviorError = behaviorValidator.validate(
                 answer.getTd(), answer, session);
         if (behaviorError.isPresent()) {
-            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR");
+            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR", messages);
         }
         double diff = normalize(answer.getAngle() - session.getRotation());
         if (Math.abs(diff) <= options.getTolerance()) {
-            return VerifyResult.ok("验证通过");
+            return VerifyResult.ok(CaptchaMessages.VERIFY_OK, messages);
         }
-        return VerifyResult.fail("验证失败，请重试", "WRONG");
+        return VerifyResult.fail(CaptchaMessages.VERIFY_WRONG, "WRONG", messages);
     }
 
     @Override

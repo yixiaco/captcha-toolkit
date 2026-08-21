@@ -51,6 +51,6 @@ public class SliderCaptchaFactory implements CaptchaFactory {
     @Override
     public CaptchaGenerator create(CaptchaConfig config) {
         return new SliderCaptchaGenerator(config.getSlider(), backgroundProvider, shapeRegistry,
-                new SliderBehaviorValidator(config.getBehavior()));
+                new SliderBehaviorValidator(config.getBehavior()), config.getMessageProvider());
     }
 }

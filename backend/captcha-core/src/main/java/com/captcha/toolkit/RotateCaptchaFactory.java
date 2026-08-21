@@ -38,6 +38,6 @@ public class RotateCaptchaFactory implements CaptchaFactory {
     @Override
     public CaptchaGenerator create(CaptchaConfig config) {
         return new RotateCaptchaGenerator(config.getRotate(), backgroundProvider,
-                new RotateBehaviorValidator(config.getBehavior()));
+                new RotateBehaviorValidator(config.getBehavior()), config.getMessageProvider());
     }
 }

@@ -2,6 +2,7 @@ package com.captcha.toolkit.behavior;
 
 import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.ClientBehaviorConfig;
+import com.captcha.toolkit.i18n.CaptchaMessages;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.NormalizedPoint;
@@ -28,21 +29,21 @@ public class ClickBehaviorValidator extends AbstractBehaviorValidator {
     protected Optional<String> validateEvents(BehaviorTrace trace) {
         List<BehaviorPoint> points = trace.points();
         if (points.getFirst().type() != BehaviorEventType.START) {
-            return Optional.of("点选轨迹应以按下开始");
+            return Optional.of(CaptchaMessages.CLICK_EXPECTED_START);
         }
         if (points.getLast().type() != BehaviorEventType.UP) {
-            return Optional.of("点选轨迹应以松开结束");
+            return Optional.of(CaptchaMessages.CLICK_EXPECTED_RELEASE);
         }
         boolean pendingDown = false;
         for (BehaviorPoint point : points) {
             if (point.type() == BehaviorEventType.DOWN) {
                 if (pendingDown) {
-                    return Optional.of("点选轨迹存在未松开的点击");
+                    return Optional.of(CaptchaMessages.CLICK_UNRELEASED);
                 }
                 pendingDown = true;
             } else if (point.type() == BehaviorEventType.UP) {
                 if (!pendingDown) {
-                    return Optional.of("点选轨迹点击顺序异常");
+                    return Optional.of(CaptchaMessages.CLICK_ORDER_INVALID);
                 }
                 pendingDown = false;
             }
@@ -57,7 +58,7 @@ public class ClickBehaviorValidator extends AbstractBehaviorValidator {
             ClientBehaviorConfig profile) {
         List<NormalizedPoint> points = answer == null ? null : answer.getPoints();
         if (points == null || points.isEmpty()) {
-            return Optional.of("缺少点选坐标");
+            return Optional.of(CaptchaMessages.CLICK_MISSING_POINTS);
         }
         List<BehaviorPoint> downs = new ArrayList<>();
         for (BehaviorPoint point : trace.points()) {
@@ -66,21 +67,21 @@ public class ClickBehaviorValidator extends AbstractBehaviorValidator {
             }
         }
         if (downs.size() != points.size()) {
-            return Optional.of("点选次数与轨迹不一致");
+            return Optional.of(CaptchaMessages.CLICK_COUNT_MISMATCH);
         }
         for (int i = 0; i < points.size(); i++) {
             NormalizedPoint submitted = points.get(i);
             BehaviorPoint down = downs.get(i);
             if (Math.hypot(down.x() - submitted.x(), down.y() - submitted.y())
                     > profile.getPointTolerance()) {
-                return Optional.of("点击位置与轨迹不一致");
+                return Optional.of(CaptchaMessages.CLICK_POSITION_MISMATCH);
             }
         }
         for (long[] pair : pressReleasePairs(trace.points())) {
             long dwell = pair[1] - pair[0];
             if (dwell < profile.getMinClickDurationMs()
                     || dwell > profile.getMaxClickDurationMs()) {
-                return Optional.of("点击时长异常");
+                return Optional.of(CaptchaMessages.CLICK_DURATION_INVALID);
             }
         }
         return Optional.empty();

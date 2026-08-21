@@ -10,6 +10,20 @@ All settings live under `captcha.*` and are bound by Spring Boot.
 | `api-prefix` | API prefix | `/api/captcha` |
 | `debug-enabled` | Allow debug answers | `false` |
 | `ticket-expire-seconds` | Ticket TTL (s) | `120` |
+| `locale` | Default message language (e.g. `zh_CN` / `en`) | `zh_CN` |
+
+## Localized Messages
+
+All user-facing messages (verified, captcha expired, behavior risk too high,
+etc.) are no longer hardcoded. They use message codes loaded from
+`captcha-messages*.properties` in the core module (Chinese and English included):
+
+- HTTP requests can switch the language with the `Accept-Language` header (e.g. `en-US`);
+- verify endpoints can also carry a `lang` field (e.g. `en`) in the answer or ticket body, which takes priority;
+- `captcha.locale` controls the server default language; missing codes fall back to the code itself;
+- hosts can provide a custom `MessageProvider` bean backed by Spring MessageSource or their own dictionary.
+
+See `CaptchaMessages` and `captcha-messages*.properties` for the full list of codes.
 
 ## Backgrounds
 

@@ -2,6 +2,7 @@ package com.captcha.toolkit.behavior;
 
 import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.ClientBehaviorConfig;
+import com.captcha.toolkit.i18n.CaptchaMessages;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
 
@@ -47,13 +48,13 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
             return Optional.empty();
         }
         if (td == null || td.isBlank()) {
-            return Optional.of("缺少行为轨迹 td");
+            return Optional.of(CaptchaMessages.BEHAVIOR_MISSING_TD);
         }
         BehaviorTrace trace;
         try {
             trace = BehaviorTraceCodec.decode(td);
         } catch (IllegalArgumentException e) {
-            return Optional.of("行为轨迹格式错误");
+            return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_FORMAT);
         }
         ClientBehaviorConfig profile = config.profileFor(
                 answer == null ? null : answer.getClientType());
@@ -91,42 +92,42 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
      */
     private Optional<String> validateCommon(BehaviorTrace trace, ClientBehaviorConfig profile) {
         if (trace.protocol() != config.getProtocol()) {
-            return Optional.of("行为轨迹协议版本不支持");
+            return Optional.of(CaptchaMessages.BEHAVIOR_PROTOCOL_UNSUPPORTED);
         }
         if (trace.viewportWidth() <= 0 || trace.viewportHeight() <= 0) {
-            return Optional.of("行为轨迹视口尺寸不合法");
+            return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_VIEWPORT);
         }
         if (trace.startTime() >= trace.endTime()) {
-            return Optional.of("行为轨迹时间戳不合法");
+            return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_TIMESTAMP);
         }
         long duration = trace.durationMillis();
         if (duration < profile.getMinDurationMs()) {
-            return Optional.of("行为耗时过短");
+            return Optional.of(CaptchaMessages.BEHAVIOR_TOO_SHORT);
         }
         if (duration > profile.getMaxDurationMs()) {
-            return Optional.of("行为耗时过长");
+            return Optional.of(CaptchaMessages.BEHAVIOR_TOO_LONG);
         }
         List<BehaviorPoint> points = trace.points();
         if (points.isEmpty() || points.size() < profile.getMinPoints()) {
-            return Optional.of("行为轨迹点数不足");
+            return Optional.of(CaptchaMessages.BEHAVIOR_NOT_ENOUGH_POINTS);
         }
         if (points.getFirst().timeMs() < 0 || points.getFirst().timeMs() > 100) {
-            return Optional.of("行为轨迹起始时间不合法");
+            return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_START_TIME);
         }
         for (int i = 1; i < points.size(); i++) {
             BehaviorPoint prev = points.get(i - 1);
             BehaviorPoint current = points.get(i);
             if (current.timeMs() < prev.timeMs()) {
-                return Optional.of("行为轨迹时间乱序");
+                return Optional.of(CaptchaMessages.BEHAVIOR_TIME_OUT_OF_ORDER);
             }
             if (current.x() < 0 || current.x() > 1 || current.y() < 0 || current.y() > 1) {
-                return Optional.of("行为轨迹坐标越界");
+                return Optional.of(CaptchaMessages.BEHAVIOR_COORDINATE_OUT_OF_RANGE);
             }
             long dt = current.timeMs() - prev.timeMs();
             if (dt > 0) {
                 double distance = Math.hypot(current.x() - prev.x(), current.y() - prev.y());
                 if (distance > profile.getMaxJumpRatio()) {
-                    return Optional.of("行为轨迹跳跃异常");
+                    return Optional.of(CaptchaMessages.BEHAVIOR_JUMP_TOO_LARGE);
                 }
             }
         }
@@ -144,7 +145,7 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
         BehaviorRiskScorer scorer = isClickTrace(trace) ? clickRiskScorer : dragRiskScorer;
         BehaviorRiskResult risk = scorer.score(trace, profile);
         if (risk.score() > profile.getRiskThreshold()) {
-            return Optional.of("行为轨迹风险过高");
+            return Optional.of(CaptchaMessages.BEHAVIOR_RISK_TOO_HIGH);
         }
         return Optional.empty();
     }

@@ -1,5 +1,7 @@
 package com.captcha.toolkit.config;
 
+import com.captcha.toolkit.i18n.MessageProvider;
+import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
 import lombok.Data;
 
 /**
@@ -29,4 +31,7 @@ public class CaptchaConfig {
 
     /** 行为轨迹校验配置（滑块/点选/旋转共用） */
     private BehaviorConfig behavior = new BehaviorConfig();
+
+    /** 用户提示消息提供者（多语言资源加载，默认中文） */
+    private MessageProvider messageProvider = new ResourceBundleMessageProvider();
 }

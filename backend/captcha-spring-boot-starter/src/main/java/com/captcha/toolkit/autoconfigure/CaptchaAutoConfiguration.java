@@ -5,6 +5,8 @@ import com.captcha.toolkit.CaptchaFactory;
 import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.image.DataUriImageCodec;
+import com.captcha.toolkit.i18n.MessageProvider;
+import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.store.CaptchaSessionStore;
@@ -23,6 +25,7 @@ import org.springframework.context.annotation.Bean;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * 验证码自动配置：
@@ -78,11 +81,20 @@ public class CaptchaAutoConfiguration {
         return new InMemoryCaptchaTicketStore();
     }
 
+    /** 默认消息提供者：加载 captcha-messages*.properties，语言由 captcha.locale 控制 */
+    @Bean
+    @ConditionalOnMissingBean
+    public MessageProvider captchaMessageProvider(CaptchaProperties properties) {
+        return new ResourceBundleMessageProvider(parseLocale(properties.getLocale()));
+    }
+
     /** 把 Spring 配置属性转换为核心引擎配置 */
     @Bean
     @ConditionalOnMissingBean
-    public CaptchaConfig captchaConfig(CaptchaProperties properties) {
-        return properties.toConfig();
+    public CaptchaConfig captchaConfig(CaptchaProperties properties, MessageProvider messageProvider) {
+        CaptchaConfig config = properties.toConfig();
+        config.setMessageProvider(messageProvider);
+        return config;
     }
 
     /** 组装验证码引擎：宿主自定义任意依赖 Bean 后自动替换对应策略 */
@@ -110,7 +122,17 @@ public class CaptchaAutoConfiguration {
     @Bean
     @ConditionalOnWebApplication
     @ConditionalOnProperty(prefix = "captcha", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public CaptchaController captchaController(CaptchaEngine engine, CaptchaProperties properties) {
-        return new CaptchaController(engine, properties);
+    public CaptchaController captchaController(CaptchaEngine engine,
+                                               CaptchaProperties properties,
+                                               MessageProvider messageProvider) {
+        return new CaptchaController(engine, properties, messageProvider);
+    }
+
+    /** 把配置的 locale 字符串解析为 Locale；非法/为空时回退中文 */
+    private static Locale parseLocale(String value) {
+        if (value == null || value.isBlank()) {
+            return Locale.SIMPLIFIED_CHINESE;
+        }
+        return Locale.forLanguageTag(value.trim().replace('_', '-'));
     }
 }

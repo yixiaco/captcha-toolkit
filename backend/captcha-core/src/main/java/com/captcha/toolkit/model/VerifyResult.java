@@ -1,6 +1,9 @@
 package com.captcha.toolkit.model;
 
+import com.captcha.toolkit.i18n.MessageProvider;
 import lombok.Data;
+
+import java.util.Locale;
 
 /**
  * 验证结果（面向调用方/前端的响应模型）。
@@ -16,6 +19,9 @@ public class VerifyResult {
 
     /** 面向用户的提示信息 */
     private String message;
+
+    /** 消息编码（用于按请求语言重新本地化）；null 表示 message 为原始文本 */
+    private String messageCode;
 
     /** 业务码：OK / WRONG / TOO_FAST / EXPIRED / BAD_REQUEST */
     private String code = "OK";
@@ -61,5 +67,48 @@ public class VerifyResult {
     /** 构造参数错误结果 */
     public static VerifyResult badRequest(String message) {
         return fail(message, "BAD_REQUEST");
+    }
+
+    /** 按消息编码 + 默认语言构造成功结果 */
+    public static VerifyResult ok(String code, MessageProvider provider) {
+        VerifyResult result = ok(provider.get(code));
+        result.messageCode = code;
+        return result;
+    }
+
+    /** 按消息编码 + 默认语言构造失败结果 */
+    public static VerifyResult fail(String code, String businessCode, MessageProvider provider) {
+        VerifyResult result = fail(provider.get(code), businessCode);
+        result.messageCode = code;
+        return result;
+    }
+
+    /** 按消息编码 + 默认语言构造已过期结果 */
+    public static VerifyResult expired(String code, MessageProvider provider) {
+        return fail(code, "EXPIRED", provider);
+    }
+
+    /** 按消息编码 + 默认语言构造验证过快结果 */
+    public static VerifyResult tooFast(String code, MessageProvider provider) {
+        return fail(code, "TOO_FAST", provider);
+    }
+
+    /** 按消息编码 + 默认语言构造参数错误结果 */
+    public static VerifyResult badRequest(String code, MessageProvider provider) {
+        return fail(code, "BAD_REQUEST", provider);
+    }
+
+    /**
+     * 按请求语言重新渲染消息；没有消息编码时保持原文不变。
+     *
+     * @param locale   请求语言
+     * @param provider 消息提供者
+     * @return 当前结果（便于链式调用）
+     */
+    public VerifyResult localize(Locale locale, MessageProvider provider) {
+        if (messageCode != null) {
+            this.message = provider.get(locale, messageCode);
+        }
+        return this;
     }
 }

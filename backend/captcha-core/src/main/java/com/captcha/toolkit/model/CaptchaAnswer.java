@@ -35,6 +35,9 @@ public class CaptchaAnswer {
     /** 客户端类型：web / h5 / mini_program，用于选择对应的行为校验画像 */
     private String clientType;
 
+    /** 提示语言（如 zh / en），可选；缺省时使用 Accept-Language 或服务端默认语言 */
+    private String lang;
+
     /**
      * 构造滑块答案。
      *

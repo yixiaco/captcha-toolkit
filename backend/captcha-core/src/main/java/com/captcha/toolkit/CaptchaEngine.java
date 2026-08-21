@@ -5,6 +5,8 @@ import com.captcha.toolkit.generator.GenerateRequest;
 import com.captcha.toolkit.generator.SliderCaptchaGenerator;
 import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.config.CaptchaConfig;
+import com.captcha.toolkit.i18n.CaptchaMessages;
+import com.captcha.toolkit.i18n.MessageProvider;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
 import com.captcha.toolkit.exception.CaptchaException;
@@ -55,6 +57,9 @@ public class CaptchaEngine {
     /** 票据有效期（毫秒） */
     private final long ticketTtlMillis;
 
+    /** 用户提示消息提供者（多语言资源加载） */
+    private final MessageProvider messages;
+
     /**
      * 使用默认内存票据存储构造引擎。
      */
@@ -70,7 +75,8 @@ public class CaptchaEngine {
                          CaptchaSessionStore store, CaptchaTicketStore ticketStore,
                          CaptchaImageCodec codec) {
         this(buildGenerators(factories, config), store, ticketStore, codec,
-                config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000);
+                config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000,
+                config.getMessageProvider());
     }
 
     /**
@@ -137,7 +143,8 @@ public class CaptchaEngine {
         map.putIfAbsent(CaptchaType.ROTATE,
                 new RotateCaptchaFactory(sliderBackgroundProvider).create(config));
         return new CaptchaEngine(map, store, ticketStore, codec,
-                config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000);
+                config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000,
+                config.getMessageProvider());
     }
 
     /** 私有构造：统一接收已组装好的生成器映射与依赖 */
@@ -146,13 +153,15 @@ public class CaptchaEngine {
                           CaptchaTicketStore ticketStore,
                           CaptchaImageCodec codec,
                           boolean debugEnabled,
-                          long ticketTtlMillis) {
+                          long ticketTtlMillis,
+                          MessageProvider messages) {
         this.generators = generators;
         this.store = store;
         this.ticketStore = ticketStore;
         this.codec = codec;
         this.debugEnabled = debugEnabled;
         this.ticketTtlMillis = ticketTtlMillis;
+        this.messages = messages;
     }
 
     /** 构建生成器映射：用户工厂优先，缺失类型用内置工厂补齐 */
@@ -223,11 +232,11 @@ public class CaptchaEngine {
     public VerifyResult verify(String id, CaptchaAnswer answer) {
         CaptchaSession session = store.get(id);
         if (session == null) {
-            return VerifyResult.expired("验证码已过期，请刷新重试");
+            return VerifyResult.expired(CaptchaMessages.VERIFY_EXPIRED, messages);
         }
         CaptchaGenerator generator = generators.get(session.getType());
         if (generator == null) {
-            return VerifyResult.badRequest("不支持的验证码类型");
+            return VerifyResult.badRequest(CaptchaMessages.VERIFY_UNSUPPORTED_TYPE, messages);
         }
         VerifyResult result = generator.verify(session, answer);
         store.remove(id);
@@ -245,10 +254,10 @@ public class CaptchaEngine {
     public VerifyResult consumeTicket(String ticket) {
         CaptchaTicket stored = ticketStore.get(ticket);
         if (stored == null) {
-            return VerifyResult.fail("票据无效或已过期", "INVALID_TICKET");
+            return VerifyResult.fail(CaptchaMessages.TICKET_INVALID, "INVALID_TICKET", messages);
         }
         ticketStore.remove(ticket);
-        return VerifyResult.ok("票据有效");
+        return VerifyResult.ok(CaptchaMessages.TICKET_VALID, messages);
     }
 
     /** 返回引擎支持的所有验证码类型编码（升序） */

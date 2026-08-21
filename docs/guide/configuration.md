@@ -10,6 +10,19 @@
 | `api-prefix` | 接口前缀 | `/api/captcha` |
 | `debug-enabled` | 是否允许 debug 返回答案 | `false` |
 | `ticket-expire-seconds` | 票据有效期（秒） | `120` |
+| `locale` | 默认提示语言（如 `zh_CN` / `en`） | `zh_CN` |
+
+## 多语言提示
+
+所有面向用户的提示（验证通过、验证码已过期、行为轨迹风险过高等）不再硬编码，
+统一使用消息编码，从核心模块的 `captcha-messages*.properties` 加载，内置中文与英文：
+
+- HTTP 请求可通过 `Accept-Language` 请求头（如 `en-US`）切换提示语言；
+- 校验接口也可在答案或票据请求体中携带 `lang` 字段（如 `en`），优先级高于请求头；
+- `captcha.locale` 控制服务端默认语言，编码缺失时原样返回编码；
+- 业务代码可自定义 `MessageProvider` Bean，对接 Spring MessageSource 或自建字典。
+
+完整消息编码见 `CaptchaMessages` 与 `captcha-messages*.properties`。
 
 ## 背景图
 

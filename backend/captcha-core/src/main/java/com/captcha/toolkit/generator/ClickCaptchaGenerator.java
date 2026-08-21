@@ -5,6 +5,9 @@ import com.captcha.toolkit.behavior.BehaviorValidator;
 import com.captcha.toolkit.behavior.ClickBehaviorValidator;
 import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.ClickConfig;
+import com.captcha.toolkit.i18n.CaptchaMessages;
+import com.captcha.toolkit.i18n.MessageProvider;
+import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.model.CaptchaSession;
@@ -131,7 +134,8 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
                                  BackgroundProvider backgroundProvider,
                                  WordFactory wordFactory) {
         this(options, backgroundProvider, wordFactory,
-                new ClickBehaviorValidator(new BehaviorConfig()));
+                new ClickBehaviorValidator(new BehaviorConfig()),
+                new ResourceBundleMessageProvider());
     }
 
     /**
@@ -144,6 +148,23 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
                                  BackgroundProvider backgroundProvider,
                                  WordFactory wordFactory,
                                  BehaviorValidator behaviorValidator) {
+        this(options, backgroundProvider, wordFactory, behaviorValidator,
+                new ResourceBundleMessageProvider());
+    }
+
+    /**
+     * @param options            点选配置
+     * @param backgroundProvider 背景图提供者
+     * @param wordFactory        目标词组工厂
+     * @param behaviorValidator  行为轨迹校验器
+     * @param messages           用户提示消息提供者
+     */
+    public ClickCaptchaGenerator(ClickConfig options,
+                                 BackgroundProvider backgroundProvider,
+                                 WordFactory wordFactory,
+                                 BehaviorValidator behaviorValidator,
+                                 MessageProvider messages) {
+        super(messages);
         this.options = options;
         this.backgroundProvider = backgroundProvider;
         this.wordFactory = wordFactory;
@@ -179,12 +200,12 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
     protected VerifyResult doVerify(CaptchaSession session, CaptchaAnswer answer) {
         List<NormalizedPoint> points = answer == null ? null : answer.getPoints();
         if (points == null || points.size() != session.getTargets().size()) {
-            return VerifyResult.badRequest("参数错误");
+            return VerifyResult.badRequest(CaptchaMessages.VERIFY_BAD_PARAM, messages);
         }
         Optional<String> behaviorError = behaviorValidator.validate(
                 answer.getTd(), answer, session);
         if (behaviorError.isPresent()) {
-            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR");
+            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR", messages);
         }
         // 点选答案是归一化坐标；先换算回服务端像素再做距离校验，保持容差语义不变
         for (int i = 0; i < points.size(); i++) {
@@ -194,10 +215,10 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
             double actualY = actual.y() * session.getHeight();
             if (Math.hypot(actualX - expected.getX(), actualY - expected.getY())
                     > options.getTolerance()) {
-                return VerifyResult.fail("点击错误，请重试", "WRONG");
+                return VerifyResult.fail(CaptchaMessages.CLICK_WRONG, "WRONG", messages);
             }
         }
-        return VerifyResult.ok("验证通过");
+        return VerifyResult.ok(CaptchaMessages.VERIFY_OK, messages);
     }
 
     @Override

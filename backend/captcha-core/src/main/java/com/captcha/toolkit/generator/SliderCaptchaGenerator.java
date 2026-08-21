@@ -5,6 +5,9 @@ import com.captcha.toolkit.behavior.BehaviorValidator;
 import com.captcha.toolkit.behavior.SliderBehaviorValidator;
 import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.SliderConfig;
+import com.captcha.toolkit.i18n.CaptchaMessages;
+import com.captcha.toolkit.i18n.MessageProvider;
+import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.GeneratedCaptcha;
@@ -42,7 +45,8 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
                                   BackgroundProvider backgroundProvider,
                                   PuzzleShapeRegistry shapeRegistry) {
         this(options, backgroundProvider, shapeRegistry,
-                new SliderBehaviorValidator(new BehaviorConfig()));
+                new SliderBehaviorValidator(new BehaviorConfig()),
+                new ResourceBundleMessageProvider());
     }
 
     /**
@@ -55,6 +59,23 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
                                   BackgroundProvider backgroundProvider,
                                   PuzzleShapeRegistry shapeRegistry,
                                   BehaviorValidator behaviorValidator) {
+        this(options, backgroundProvider, shapeRegistry, behaviorValidator,
+                new ResourceBundleMessageProvider());
+    }
+
+    /**
+     * @param options            滑块配置
+     * @param backgroundProvider 背景图提供者
+     * @param shapeRegistry      拼图形状注册表
+     * @param behaviorValidator  行为轨迹校验器
+     * @param messages           用户提示消息提供者
+     */
+    public SliderCaptchaGenerator(SliderConfig options,
+                                  BackgroundProvider backgroundProvider,
+                                  PuzzleShapeRegistry shapeRegistry,
+                                  BehaviorValidator behaviorValidator,
+                                  MessageProvider messages) {
+        super(messages);
         this.options = options;
         this.backgroundProvider = backgroundProvider;
         this.shapeRegistry = shapeRegistry;
@@ -101,20 +122,20 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
     @Override
     protected VerifyResult doVerify(CaptchaSession session, CaptchaAnswer answer) {
         if (answer == null || answer.getXNorm() == null) {
-            return VerifyResult.badRequest("缺少滑块位移 xNorm");
+            return VerifyResult.badRequest(CaptchaMessages.SLIDER_MISSING_X_NORM, messages);
         }
         Optional<String> behaviorError = behaviorValidator.validate(
                 answer.getTd(), answer, session);
         if (behaviorError.isPresent()) {
-            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR");
+            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR", messages);
         }
         // 答案是归一化位移，直接与服务端答案的归一化坐标对比，与渲染尺寸无关
         double expected = (double) session.getX() / session.getWidth();
         double tolerance = (double) options.getTolerance() / session.getWidth();
         if (Math.abs(answer.getXNorm() - expected) <= tolerance) {
-            return VerifyResult.ok("验证通过");
+            return VerifyResult.ok(CaptchaMessages.VERIFY_OK, messages);
         }
-        return VerifyResult.fail("验证失败，请重试", "WRONG");
+        return VerifyResult.fail(CaptchaMessages.VERIFY_WRONG, "WRONG", messages);
     }
 
     @Override

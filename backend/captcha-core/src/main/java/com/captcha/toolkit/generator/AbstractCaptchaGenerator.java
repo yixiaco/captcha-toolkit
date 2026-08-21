@@ -4,6 +4,9 @@ import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.GeneratedCaptcha;
 import com.captcha.toolkit.model.VerifyResult;
+import com.captcha.toolkit.i18n.CaptchaMessages;
+import com.captcha.toolkit.i18n.MessageProvider;
+import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
 
 /**
  * 生成/校验的模板方法骨架：
@@ -17,6 +20,21 @@ import com.captcha.toolkit.model.VerifyResult;
  */
 public abstract class AbstractCaptchaGenerator implements CaptchaGenerator {
 
+    /** 用户提示消息提供者（多语言资源加载） */
+    protected final MessageProvider messages;
+
+    /**
+     * @param messages 用户提示消息提供者
+     */
+    protected AbstractCaptchaGenerator(MessageProvider messages) {
+        this.messages = messages;
+    }
+
+    /** 使用默认中文消息提供者构造 */
+    protected AbstractCaptchaGenerator() {
+        this(new ResourceBundleMessageProvider());
+    }
+
     /** 生成阶段：固定调用子类实现，不对外暴露模板细节 */
     @Override
     public final GeneratedCaptcha generate(GenerateRequest request) {
@@ -27,14 +45,14 @@ public abstract class AbstractCaptchaGenerator implements CaptchaGenerator {
     @Override
     public final VerifyResult verify(CaptchaSession session, CaptchaAnswer answer) {
         if (session == null || session.getType() != type()) {
-            return VerifyResult.badRequest("验证码类型不匹配");
+            return VerifyResult.badRequest(CaptchaMessages.VERIFY_TYPE_MISMATCH, messages);
         }
         if (session.isExpired()) {
-            return VerifyResult.expired("验证码已过期，请刷新重试");
+            return VerifyResult.expired(CaptchaMessages.VERIFY_EXPIRED, messages);
         }
         long elapsed = System.currentTimeMillis() - session.getCreatedAt();
         if (elapsed < minElapsedMs()) {
-            return VerifyResult.tooFast("验证速度异常");
+            return VerifyResult.tooFast(CaptchaMessages.VERIFY_TOO_FAST, messages);
         }
         return doVerify(session, answer);
     }
