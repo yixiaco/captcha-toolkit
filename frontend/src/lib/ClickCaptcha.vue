@@ -13,7 +13,7 @@
         class="click-canvas"
         :alt="opts.imageAlt"
         draggable="false"
-        @click="onClick"
+        @pointerdown="onPointerDown"
       />
 
       <div
@@ -43,8 +43,9 @@
 </template>
 
 <script setup>
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useCaptchaOptions } from './options'
+import { createTrace, pushPoint, buildCompressedTrace, removeLastEvent } from './trace'
 
 const props = defineProps({
   /** 自定义 API 客户端 */
@@ -69,6 +70,8 @@ const props = defineProps({
   loadingText: { type: String, default: null },
   /** 图片 alt 文案 */
   imageAlt: { type: String, default: null },
+  /** 客户端类型：web / h5 / mini_program */
+  clientType: { type: String, default: null },
 })
 
 const emit = defineEmits(['success', 'fail', 'error'])
@@ -84,11 +87,36 @@ const marks = ref([])
 const shaking = ref(false)
 const submitting = ref(false)
 const imgHeight = ref(opts.height)
+/** 当前点选的行为轨迹 */
+let trace = null
+/** 是否正处于一次未完成的按下（用于与松开事件配对） */
+let pressAccepted = false
+/** 是否已挂载窗口级 pointermove 监听（避免重复挂载） */
+let moveListening = false
+
+/** 挂载窗口级移动监听，记录点击之间的接近轨迹 */
+function startMoveListening() {
+  if (!moveListening) {
+    window.addEventListener('pointermove', onPointerMove)
+    moveListening = true
+  }
+}
+
+/** 卸载窗口级移动监听（提交或组件销毁时调用） */
+function stopMoveListening() {
+  if (moveListening) {
+    window.removeEventListener('pointermove', onPointerMove)
+    moveListening = false
+  }
+}
 
 async function loadCaptcha() {
   status.value = 'loading'
   image1.value = ''
   marks.value = []
+  stopMoveListening()
+  trace = null
+  pressAccepted = false
   try {
     const res = await opts.api.getCaptcha({
       type: 'click',
@@ -100,6 +128,7 @@ async function loadCaptcha() {
     // 以后端实际图片高度为准（宽度由父容器 100% 决定）
     imgHeight.value = res.height || opts.height
     status.value = 'idle'
+    startMoveListening()
     await nextTick()
     if (opts.debug && imageRef.value) {
       imageRef.value.dataset.captchaId = res.id
@@ -116,28 +145,76 @@ async function loadCaptcha() {
   }
 }
 
-/**
- * 点击图片：本地先标记，点满目标字数量后一次性提交后端校验。
- */
-async function onClick(event) {
+/** 首次交互时创建轨迹，并把当前指针位置记为起点 */
+function ensureTrace(event) {
+  if (!trace) {
+    trace = createTrace(imageRef.value)
+    pushPoint(trace, event.clientX, event.clientY, 0, imageRef.value)
+  }
+}
+
+/** 记录指针移动（点击之间的接近轨迹） */
+function onPointerMove(event) {
+  if (status.value !== 'idle' || submitting.value) return
+  ensureTrace(event)
+  pushPoint(trace, event.clientX, event.clientY, 1, imageRef.value)
+}
+
+/** 按下：去重通过后才记录点击事件，并监听松开 */
+function onPointerDown(event) {
   if (status.value !== 'idle' || submitting.value) return
   const rect = imageRef.value.getBoundingClientRect()
-  // 保存相对于图片元素的实际渲染像素坐标，由后端按 clientWidth/clientHeight 换算
   const x = event.clientX - rect.left
   const y = event.clientY - rect.top
-
   if (marks.value.some((m) => Math.hypot(m.x - x, m.y - y) < opts.markMinDistance)) return
+
+  ensureTrace(event)
+  pushPoint(trace, event.clientX, event.clientY, 3, imageRef.value)
+  pressAccepted = true
+  window.addEventListener('pointerup', onPointerUp)
+  window.addEventListener('pointercancel', onPointerUp)
+}
+
+/** 松开：在图片内才算一次有效点击，点满目标数后提交 */
+function onPointerUp(event) {
+  if (!pressAccepted) return
+  pressAccepted = false
+  window.removeEventListener('pointerup', onPointerUp)
+  window.removeEventListener('pointercancel', onPointerUp)
+
+  const rect = imageRef.value.getBoundingClientRect()
+  const x = event.clientX - rect.left
+  const y = event.clientY - rect.top
+  if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+    // 松手在图片外：撤销这次未完成的按下，不污染轨迹
+    removeLastEvent(trace, 3)
+    return
+  }
+  pushPoint(trace, event.clientX, event.clientY, 2, imageRef.value)
   marks.value.push({ x, y, index: marks.value.length + 1 })
 
-  if (marks.value.length < prompt.value.length) return
+  if (marks.value.length >= prompt.value.length) {
+    submit()
+  }
+}
+
+/** 点满目标字后一次性提交后端校验 */
+async function submit() {
   submitting.value = true
+  stopMoveListening()
+  const td = await buildCompressedTrace(trace)
+  trace = null
   try {
+    const rect = imageRef.value.getBoundingClientRect()
     const res = await opts.api.verify({
       id: captchaId.value,
       type: 'click',
-      points: marks.value.map((m) => ({ x: m.x, y: m.y })),
-      clientWidth: Math.round(rect.width),
-      clientHeight: Math.round(rect.height),
+      points: marks.value.map((m) => ({
+        x: m.x / rect.width,
+        y: m.y / rect.height,
+      })),
+      clientType: opts.clientType,
+      td,
     })
     if (res.success) {
       status.value = 'success'
@@ -163,6 +240,12 @@ async function onClick(event) {
 
 onMounted(() => {
   loadCaptcha()
+})
+
+onBeforeUnmount(() => {
+  stopMoveListening()
+  window.removeEventListener('pointerup', onPointerUp)
+  window.removeEventListener('pointercancel', onPointerUp)
 })
 
 defineExpose({ reload: loadCaptcha })

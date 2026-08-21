@@ -31,7 +31,8 @@ import java.util.UUID;
  * <pre>
  * CaptchaEngine engine = CaptchaEngine.of(config, store, codec, List.of(), backgroundProvider);
  * CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER, Map.of("shape", "classic"), false);
- * VerifyResult result = engine.verify(challenge.getId(), "slider", CaptchaAnswer.slider(100.0, 340));
+ * VerifyResult result = engine.verify(challenge.getId(),
+ *         CaptchaAnswer.slider(100.0 / challenge.getWidth()));
  * </pre>
  */
 public class CaptchaEngine {

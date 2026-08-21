@@ -113,6 +113,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { getShapeOptions, PUZZLE_SHAPES } from './shapes'
 import { useCaptchaOptions } from './options'
+import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace'
 
 const props = defineProps({
   /** 自定义 API 客户端 */
@@ -149,6 +150,8 @@ const props = defineProps({
   loadingText: { type: String, default: null },
   /** 图片 alt 文案 */
   imageAlt: { type: String, default: null },
+  /** 客户端类型：web / h5 / mini_program */
+  clientType: { type: String, default: null },
 })
 
 const emit = defineEmits(['success', 'fail', 'error'])
@@ -173,11 +176,29 @@ const imgHeight = ref(opts.height)
 let trackWidth = 0
 let startClientX = 0
 let startLeft = 0
+/** 当前拖拽的行为轨迹 */
+let trace = null
+/** 按下时缓存的容器矩形，避免移动中反复读取布局 */
+let dragRect = null
+/** 上次轨迹采样时间（用于 16ms 节流） */
+let lastTraceAt = 0
 
 const shapeOptions = computed(() => getShapeOptions(opts.shapes, opts.shapeLabels))
 
 function maxLeft() {
   return Math.max(0, trackWidth - opts.handleWidth)
+}
+
+/** 记录滑块当前位置（而不是指针位置，避免手柄偏移导致终点对不上） */
+function trackPoint(event, type) {
+  // 移动事件只按 16ms（约 60fps）采样一次，避免轨迹无限膨胀
+  const now = Date.now()
+  if (type === 1 && lastTraceAt > 0 && now - lastTraceAt < 16) return
+  lastTraceAt = now
+  const rootRect = dragRect || rootRef.value.getBoundingClientRect()
+  const y = Math.min(1, Math.max(0, (event.clientY - rootRect.top) / rootRect.height))
+  const x = trackWidth > 0 ? pieceLeft.value / trackWidth : 0
+  pushNormalizedPoint(trace, x, y, type)
 }
 
 /**
@@ -187,6 +208,7 @@ async function loadCaptcha() {
   status.value = 'loading'
   image1.value = ''
   image2.value = ''
+  trace = null
   try {
     const res = await opts.api.getCaptcha({
       type: 'slider',
@@ -228,38 +250,42 @@ function selectShape(key) {
 function onPointerDown(event) {
   if (status.value !== 'idle') return
   dragging.value = true
+  trace = createTrace(rootRef.value)
+  dragRect = rootRef.value.getBoundingClientRect()
+  lastTraceAt = 0
+  trackPoint(event, 0)
   startClientX = event.clientX
   startLeft = pieceLeft.value
   window.addEventListener('pointermove', onPointerMove)
   window.addEventListener('pointerup', onPointerUp)
+  window.addEventListener('pointercancel', onPointerUp)
 }
 
 function onPointerMove(event) {
   if (!dragging.value) return
   const next = startLeft + event.clientX - startClientX
   pieceLeft.value = Math.min(maxLeft(), Math.max(0, next))
+  trackPoint(event, 1)
 }
 
-async function onPointerUp() {
+async function onPointerUp(event) {
   if (!dragging.value) return
   dragging.value = false
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
+  window.removeEventListener('pointercancel', onPointerUp)
+  trackPoint(event, 2)
+  const td = await buildCompressedTrace(trace)
+  trace = null
+  dragRect = null
 
   try {
-    const track = trackRef.value
-    const actualWidth = Math.round(
-      track ? track.clientWidth : imgWrapRef.value ? imgWrapRef.value.clientWidth : imgWidth.value
-    )
-    const actualHeight = Math.round(
-      imgWrapRef.value ? imgWrapRef.value.clientHeight : imgHeight.value
-    )
     const res = await opts.api.verify({
       id: captchaId.value,
       type: 'slider',
-      x: Math.round(pieceLeft.value),
-      clientWidth: actualWidth,
-      clientHeight: actualHeight,
+      xNorm: trackWidth > 0 ? pieceLeft.value / trackWidth : 0,
+      clientType: opts.clientType,
+      td,
     })
     if (res.success) {
       status.value = 'success'
@@ -298,6 +324,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
+  window.removeEventListener('pointercancel', onPointerUp)
 })
 
 defineExpose({ reload: loadCaptcha })

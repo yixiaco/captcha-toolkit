@@ -1,11 +1,15 @@
 package com.captcha.toolkit.generator;
 
 import com.captcha.toolkit.CaptchaType;
+import com.captcha.toolkit.behavior.BehaviorValidator;
+import com.captcha.toolkit.behavior.ClickBehaviorValidator;
+import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.ClickConfig;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.GeneratedCaptcha;
+import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.PointVo;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
@@ -29,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -50,6 +55,8 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
     private final ClickConfig options;
     private final BackgroundProvider backgroundProvider;
     private final WordFactory wordFactory;
+    /** 点选行为轨迹校验器 */
+    private final BehaviorValidator behaviorValidator;
     private final Random random = new Random();
 
     private BufferedImage image;
@@ -81,12 +88,28 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
         this(options, backgroundProvider, null);
     }
 
+    /** 使用默认（关闭）行为校验构造生成器 */
     public ClickCaptchaGenerator(ClickConfig options,
                                  BackgroundProvider backgroundProvider,
                                  WordFactory wordFactory) {
+        this(options, backgroundProvider, wordFactory,
+                new ClickBehaviorValidator(new BehaviorConfig()));
+    }
+
+    /**
+     * @param options           点选配置
+     * @param backgroundProvider 背景图提供者
+     * @param wordFactory        目标词组工厂
+     * @param behaviorValidator  行为轨迹校验器
+     */
+    public ClickCaptchaGenerator(ClickConfig options,
+                                 BackgroundProvider backgroundProvider,
+                                 WordFactory wordFactory,
+                                 BehaviorValidator behaviorValidator) {
         this.options = options;
         this.backgroundProvider = backgroundProvider;
         this.wordFactory = wordFactory;
+        this.behaviorValidator = behaviorValidator;
     }
 
     @Override
@@ -116,31 +139,21 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
 
     @Override
     protected VerifyResult doVerify(CaptchaSession session, CaptchaAnswer answer) {
-        List<PointVo> points = answer == null ? null : answer.getPoints();
+        List<NormalizedPoint> points = answer == null ? null : answer.getPoints();
         if (points == null || points.size() != session.getTargets().size()) {
             return VerifyResult.badRequest("参数错误");
         }
-        // 前端可能被 CSS 缩放（嵌入容器变窄），客户端坐标是实际渲染尺寸；
-        // 服务端按客户端宽高比例换算回原始图片坐标，再做距离校验。
-        int clientWidth = answer.getClientWidth() == null ? 0 : answer.getClientWidth();
-        int clientHeight = answer.getClientHeight() == null ? 0 : answer.getClientHeight();
-        if (clientWidth < 0 || clientHeight < 0) {
-            return VerifyResult.badRequest("客户端宽高不合法");
+        Optional<String> behaviorError = behaviorValidator.validate(
+                answer.getTd(), answer, session);
+        if (behaviorError.isPresent()) {
+            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR");
         }
-        double scaleX = clientWidth > 0
-                ? (double) session.getWidth() / clientWidth
-                : 1.0;
-        // 只传了一个维度时按统一比例缩放，两个都传则双轴独立换算
-        double scaleY = clientHeight > 0
-                ? (double) session.getHeight() / clientHeight
-                : scaleX;
-
-        // 前端点满目标字后一次性提交，后端按点击顺序逐个校验
+        // 点选答案是归一化坐标；先换算回服务端像素再做距离校验，保持容差语义不变
         for (int i = 0; i < points.size(); i++) {
-            PointVo actual = points.get(i);
+            NormalizedPoint actual = points.get(i);
             PointVo expected = session.getTargets().get(i);
-            double actualX = actual.getX() * scaleX;
-            double actualY = actual.getY() * scaleY;
+            double actualX = actual.x() * session.getWidth();
+            double actualY = actual.y() * session.getHeight();
             if (Math.hypot(actualX - expected.getX(), actualY - expected.getY())
                     > options.getTolerance()) {
                 return VerifyResult.fail("点击错误，请重试", "WRONG");

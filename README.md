@@ -48,7 +48,7 @@ frontend/
 3. 启动后自动注册接口（前缀、参数全部可配）：
 
    - `GET {prefix}?type=slider|click|rotate&shape=classic&debug=1` 下发验证码
-   - `POST {prefix}/verify` 校验答案（滑块 `{id,type,x,width}`；点选 `{id,type,points:[{x,y}...]}`）
+   - `POST {prefix}/verify` 校验答案（滑块 `{id,type,xNorm}`；点选 `{id,type,points:[{x,y}...]}`，坐标为归一化 0~1；开启行为校验时需附带 `td` 与 `clientType`）
    - `GET/POST {prefix}/ticket/verify?ticket=...` 业务接口校验一次性票据
    - `GET {prefix}/types` 查询后端支持的类型与形状（通用前端可动态渲染）
 
@@ -72,7 +72,7 @@ CaptchaEngine engine = CaptchaEngine.of(
 
 CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER, Map.of("shape", "classic"), false);
 VerifyResult result = engine.verify(challenge.getId(),
-        CaptchaAnswer.slider(100.0, challenge.getWidth()));
+        CaptchaAnswer.slider(100.0 / challenge.getWidth()));
 ```
 
 ### 自定义扩展

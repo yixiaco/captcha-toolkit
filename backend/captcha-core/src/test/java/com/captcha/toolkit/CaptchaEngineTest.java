@@ -5,7 +5,7 @@ import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.image.DataUriImageCodec;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
-import com.captcha.toolkit.model.PointVo;
+import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.SliderRenderer;
 import com.captcha.toolkit.render.BackgroundProvider;
@@ -57,26 +57,24 @@ class CaptchaEngineTest {
         assertEquals("slider", challenge.getType());
 
         VerifyResult ok = engine.verify(challenge.getId(),
-                CaptchaAnswer.slider(challenge.getDebugX().doubleValue(), challenge.getWidth()));
+                CaptchaAnswer.slider(challenge.getDebugX() / (double) challenge.getWidth()));
         assertTrue(ok.isSuccess(), ok.getMessage());
 
         // 会话一次性：重复提交必须失败
         VerifyResult again = engine.verify(challenge.getId(),
-                CaptchaAnswer.slider(challenge.getDebugX().doubleValue(), challenge.getWidth()));
+                CaptchaAnswer.slider(challenge.getDebugX() / (double) challenge.getWidth()));
         assertFalse(again.isSuccess());
     }
 
     @Test
-    void sliderScalesClientCoordinatesByClientSize() {
+    void sliderAcceptsNormalizedAnswer() {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
 
-        // 模拟前端嵌入容器缩放到 300x170（后端原图 340x190）
-        double scale = 300.0 / challenge.getWidth();
-        double clientX = challenge.getDebugX() * scale;
-        VerifyResult ok = engine.verify(challenge.getId(),
-                CaptchaAnswer.slider(clientX, 300, 170));
+        // 归一化答案与渲染尺寸无关：直接按服务端图片宽度归一化
+        double xNorm = challenge.getDebugX() / (double) challenge.getWidth();
+        VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.slider(xNorm));
         assertTrue(ok.isSuccess(), ok.getMessage());
     }
 
@@ -90,28 +88,26 @@ class CaptchaEngineTest {
         assertEquals(3, challenge.getPrompt().size());
         assertNotNull(challenge.getDebugTargets());
 
-        List<PointVo> points = challenge.getDebugTargets().stream()
-                .map(p -> new PointVo(p.getX(), p.getY()))
+        List<NormalizedPoint> points = challenge.getDebugTargets().stream()
+                .map(p -> new NormalizedPoint(
+                        p.getX() / (double) challenge.getWidth(),
+                        p.getY() / (double) challenge.getHeight()))
                 .toList();
         VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
         assertTrue(ok.isSuccess(), ok.getMessage());
     }
 
     @Test
-    void clickScalesClientCoordinatesByClientSize() {
+    void clickAcceptsNormalizedPoints() {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
 
-        // 模拟前端嵌入容器缩放到 300x170：客户端坐标 = 服务端坐标 * 缩放比例
-        double scaleX = 300.0 / challenge.getWidth();
-        double scaleY = 170.0 / challenge.getHeight();
-        List<PointVo> points = challenge.getDebugTargets().stream()
-                .map(p -> new PointVo(
-                        (int) Math.round(p.getX() * scaleX),
-                        (int) Math.round(p.getY() * scaleY)))
+        List<NormalizedPoint> points = challenge.getDebugTargets().stream()
+                .map(p -> new NormalizedPoint(
+                        p.getX() / (double) challenge.getWidth(),
+                        p.getY() / (double) challenge.getHeight()))
                 .toList();
-        VerifyResult ok = engine.verify(challenge.getId(),
-                CaptchaAnswer.click(points, 300, 170));
+        VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
         assertTrue(ok.isSuccess(), ok.getMessage());
     }
 
@@ -120,8 +116,10 @@ class CaptchaEngineTest {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
 
-        List<PointVo> points = challenge.getDebugTargets().stream()
-                .map(p -> new PointVo(p.getX() + 50, p.getY() + 50))
+        List<NormalizedPoint> points = challenge.getDebugTargets().stream()
+                .map(p -> new NormalizedPoint(
+                        (p.getX() + 50) / (double) challenge.getWidth(),
+                        (p.getY() + 50) / (double) challenge.getHeight()))
                 .toList();
         VerifyResult result = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
         assertFalse(result.isSuccess());
@@ -143,8 +141,10 @@ class CaptchaEngineTest {
                 || challenge.getPrompt().equals(List.of("麦", "当", "劳")));
         assertEquals(3, challenge.getDebugTargets().size());
 
-        List<PointVo> points = challenge.getDebugTargets().stream()
-                .map(p -> new PointVo(p.getX(), p.getY()))
+        List<NormalizedPoint> points = challenge.getDebugTargets().stream()
+                .map(p -> new NormalizedPoint(
+                        p.getX() / (double) challenge.getWidth(),
+                        p.getY() / (double) challenge.getHeight()))
                 .toList();
         VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
         assertTrue(ok.isSuccess(), ok.getMessage());
@@ -167,8 +167,10 @@ class CaptchaEngineTest {
         assertTrue(challenge.getPrompt().equals(List.of("星", "巴", "克"))
                 || challenge.getPrompt().equals(List.of("麦", "当", "劳")));
 
-        List<PointVo> points = challenge.getDebugTargets().stream()
-                .map(p -> new PointVo(p.getX(), p.getY()))
+        List<NormalizedPoint> points = challenge.getDebugTargets().stream()
+                .map(p -> new NormalizedPoint(
+                        p.getX() / (double) challenge.getWidth(),
+                        p.getY() / (double) challenge.getHeight()))
                 .toList();
         VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
         assertTrue(ok.isSuccess(), ok.getMessage());
@@ -270,7 +272,7 @@ class CaptchaEngineTest {
                 Map.of("shape", "classic"), true);
 
         VerifyResult ok = engine.verify(challenge.getId(),
-                CaptchaAnswer.slider(challenge.getDebugX().doubleValue(), challenge.getWidth()));
+                CaptchaAnswer.slider(challenge.getDebugX() / (double) challenge.getWidth()));
         assertTrue(ok.isSuccess(), ok.getMessage());
         assertNotNull(ok.getTicket());
 

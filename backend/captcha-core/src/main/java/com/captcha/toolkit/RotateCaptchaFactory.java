@@ -1,6 +1,7 @@
 package com.captcha.toolkit;
 
 import com.captcha.toolkit.config.CaptchaConfig;
+import com.captcha.toolkit.behavior.RotateBehaviorValidator;
 import com.captcha.toolkit.generator.CaptchaGenerator;
 import com.captcha.toolkit.generator.RotateCaptchaGenerator;
 import com.captcha.toolkit.render.BackgroundProvider;
@@ -31,6 +32,7 @@ public class RotateCaptchaFactory implements CaptchaFactory {
 
     @Override
     public CaptchaGenerator create(CaptchaConfig config) {
-        return new RotateCaptchaGenerator(config.getRotate(), backgroundProvider);
+        return new RotateCaptchaGenerator(config.getRotate(), backgroundProvider,
+                new RotateBehaviorValidator(config.getBehavior()));
     }
 }

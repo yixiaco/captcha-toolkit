@@ -12,6 +12,9 @@ captcha:
   api-prefix: /api/captcha
   # 验证通过后发放的一次性票据有效期（秒）
   ticket-expire-seconds: 120
+  # 行为轨迹校验：前端采集 td（按下/移动/松开、点击序列）后随 verify 提交
+  behavior:
+    enabled: true
   background:
     sources:
       - /images/captcha/default.jpg

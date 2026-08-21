@@ -26,4 +26,7 @@ public class CaptchaConfig {
 
     /** 图片旋转验证码配置 */
     private RotateConfig rotate = new RotateConfig();
+
+    /** 行为轨迹校验配置（滑块/点选/旋转共用） */
+    private BehaviorConfig behavior = new BehaviorConfig();
 }

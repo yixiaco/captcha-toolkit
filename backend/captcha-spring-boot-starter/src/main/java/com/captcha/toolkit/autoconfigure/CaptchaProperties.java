@@ -1,6 +1,7 @@
 package com.captcha.toolkit.autoconfigure;
 
 import com.captcha.toolkit.config.BackgroundConfig;
+import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.config.ClickConfig;
 import com.captcha.toolkit.config.RotateConfig;
@@ -63,6 +64,9 @@ public class CaptchaProperties {
     /** 图片旋转验证码配置 */
     private RotateConfig rotate = new RotateConfig();
 
+    /** 行为轨迹校验配置 */
+    private BehaviorConfig behavior = new BehaviorConfig();
+
     /**
      * 转换成核心引擎配置。滑块/点选直接复用同一套配置对象，
      * 通过属性拷贝避免两处配置实例互相共享可变引用。
@@ -74,6 +78,7 @@ public class CaptchaProperties {
         BeanUtils.copyProperties(slider, config.getSlider());
         BeanUtils.copyProperties(click, config.getClick());
         BeanUtils.copyProperties(rotate, config.getRotate());
+        BeanUtils.copyProperties(behavior, config.getBehavior());
         return config;
     }
 }

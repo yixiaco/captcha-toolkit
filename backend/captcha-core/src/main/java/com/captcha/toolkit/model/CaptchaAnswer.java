@@ -20,47 +20,51 @@ public class CaptchaAnswer {
     @NotBlank(message = "缺少验证码类型")
     private String type;
 
-    /** 滑块答案：拖动位移（像素），滑块类型必填 */
-    private Double x;
+    /** 滑块答案：归一化位移（0~1，相对轨道/图片宽度），滑块类型必填 */
+    private Double xNorm;
 
-    /** 前端实际渲染宽度（px），用于把客户端坐标换算回服务端坐标 */
-    private Integer clientWidth;
-
-    /** 前端实际渲染高度（px），配合 clientWidth 按图片比例做双轴换算 */
-    private Integer clientHeight;
-
-    /** 点选答案：按点击顺序排列的坐标列表，点选类型必填；坐标使用前端实际渲染尺寸 */
-    private List<PointVo> points;
+    /** 点选答案：按点击顺序排列的归一化坐标（0~1），点选类型必填 */
+    private List<NormalizedPoint> points;
 
     /** 旋转答案：用户旋转的角度（度），图片旋转类型必填 */
     private Double angle;
 
-    public static CaptchaAnswer slider(Double x, Integer clientWidth) {
-        return slider(x, clientWidth, null);
-    }
+    /** 行为轨迹报文（td），格式见 BehaviorTraceCodec；开启行为校验后必填 */
+    private String td;
 
-    public static CaptchaAnswer slider(Double x, Integer clientWidth, Integer clientHeight) {
+    /** 客户端类型：web / h5 / mini_program，用于选择对应的行为校验画像 */
+    private String clientType;
+
+    /**
+     * 构造滑块答案。
+     *
+     * @param xNorm 归一化位移（0~1，相对轨道/图片宽度）
+     * @return 滑块答案
+     */
+    public static CaptchaAnswer slider(Double xNorm) {
         CaptchaAnswer answer = new CaptchaAnswer();
-        answer.x = x;
-        answer.clientWidth = clientWidth;
-        answer.clientHeight = clientHeight;
+        answer.xNorm = xNorm;
         return answer;
     }
 
-    public static CaptchaAnswer click(List<PointVo> points) {
-        return click(points, null, null);
-    }
-
-    public static CaptchaAnswer click(List<PointVo> points,
-                                      Integer clientWidth,
-                                      Integer clientHeight) {
+    /**
+     * 构造点选答案。
+     *
+     * @param points 按点击顺序排列的归一化坐标（0~1）
+     * @return 点选答案
+     */
+    public static CaptchaAnswer click(List<NormalizedPoint> points) {
         CaptchaAnswer answer = new CaptchaAnswer();
         answer.points = points;
-        answer.clientWidth = clientWidth;
-        answer.clientHeight = clientHeight;
         return answer;
     }
 
+    /**
+     * 构造旋转答案。
+     *
+     * @param angle 用户旋转的角度（度）
+     * @return 旋转答案
+     */
     public static CaptchaAnswer rotate(Double angle) {
         CaptchaAnswer answer = new CaptchaAnswer();
         answer.angle = angle;

@@ -5,6 +5,20 @@ import { createCaptchaApi } from './api'
 
 export const CaptchaOptionsKey = Symbol('captcha-options')
 
+/** 按设备能力自动判断客户端类型；小程序等特殊环境可显式传入覆盖 */
+function detectClientType() {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return 'web'
+  }
+  if (navigator.maxTouchPoints > 0) {
+    const finePointer = window.matchMedia && window.matchMedia('(pointer: fine)').matches
+    if (!finePointer) {
+      return 'h5'
+    }
+  }
+  return 'web'
+}
+
 export const defaultCaptchaOptions = {
   /** 自定义 API 客户端；不传则按 baseUrl/request 自动创建 */
   api: null,
@@ -38,6 +52,8 @@ export const defaultCaptchaOptions = {
   promptPrefix: '请依次点选',
   /** 点选去重最小间距（px），防止重复点击同一位置 */
   markMinDistance: 16,
+  /** 客户端类型：web / h5 / mini_program，影响后端行为校验画像 */
+  clientType: detectClientType(),
   /** 图片加载中提示文案 */
   loadingText: '图片加载中...',
   /** 验证图片 alt 文案 */

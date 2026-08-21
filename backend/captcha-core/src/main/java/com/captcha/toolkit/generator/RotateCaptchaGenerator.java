@@ -1,6 +1,9 @@
 package com.captcha.toolkit.generator;
 
 import com.captcha.toolkit.CaptchaType;
+import com.captcha.toolkit.behavior.BehaviorValidator;
+import com.captcha.toolkit.behavior.RotateBehaviorValidator;
+import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.RotateConfig;
 import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.model.CaptchaAnswer;
@@ -16,6 +19,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
+import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -28,11 +32,26 @@ public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
 
     private final RotateConfig options;
     private final BackgroundProvider backgroundProvider;
+    /** 旋转行为轨迹校验器 */
+    private final BehaviorValidator behaviorValidator;
     private final Random random = new Random();
 
+    /** 使用默认（关闭）行为校验构造生成器 */
     public RotateCaptchaGenerator(RotateConfig options, BackgroundProvider backgroundProvider) {
+        this(options, backgroundProvider, new RotateBehaviorValidator(new BehaviorConfig()));
+    }
+
+    /**
+     * @param options           旋转配置
+     * @param backgroundProvider 背景图提供者
+     * @param behaviorValidator  行为轨迹校验器
+     */
+    public RotateCaptchaGenerator(RotateConfig options,
+                                  BackgroundProvider backgroundProvider,
+                                  BehaviorValidator behaviorValidator) {
         this.options = options;
         this.backgroundProvider = backgroundProvider;
+        this.behaviorValidator = behaviorValidator;
     }
 
     @Override
@@ -103,6 +122,11 @@ public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
     protected VerifyResult doVerify(CaptchaSession session, CaptchaAnswer answer) {
         if (answer == null || answer.getAngle() == null) {
             return VerifyResult.badRequest("缺少旋转角度 angle");
+        }
+        Optional<String> behaviorError = behaviorValidator.validate(
+                answer.getTd(), answer, session);
+        if (behaviorError.isPresent()) {
+            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR");
         }
         double diff = normalize(answer.getAngle() - session.getRotation());
         if (Math.abs(diff) <= options.getTolerance()) {

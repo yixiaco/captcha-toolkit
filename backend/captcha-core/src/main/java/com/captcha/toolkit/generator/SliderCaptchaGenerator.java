@@ -1,6 +1,9 @@
 package com.captcha.toolkit.generator;
 
 import com.captcha.toolkit.CaptchaType;
+import com.captcha.toolkit.behavior.BehaviorValidator;
+import com.captcha.toolkit.behavior.SliderBehaviorValidator;
+import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.SliderConfig;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
@@ -12,6 +15,7 @@ import com.captcha.toolkit.render.SliderRenderer;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -22,14 +26,32 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
     private final SliderConfig options;
     private final BackgroundProvider backgroundProvider;
     private final PuzzleShapeRegistry shapeRegistry;
+    /** 滑块行为轨迹校验器 */
+    private final BehaviorValidator behaviorValidator;
     private final Random random = new Random();
 
+    /** 使用默认（关闭）行为校验构造生成器 */
     public SliderCaptchaGenerator(SliderConfig options,
                                   BackgroundProvider backgroundProvider,
                                   PuzzleShapeRegistry shapeRegistry) {
+        this(options, backgroundProvider, shapeRegistry,
+                new SliderBehaviorValidator(new BehaviorConfig()));
+    }
+
+    /**
+     * @param options          滑块配置
+     * @param backgroundProvider 背景图提供者
+     * @param shapeRegistry      拼图形状注册表
+     * @param behaviorValidator  行为轨迹校验器
+     */
+    public SliderCaptchaGenerator(SliderConfig options,
+                                  BackgroundProvider backgroundProvider,
+                                  PuzzleShapeRegistry shapeRegistry,
+                                  BehaviorValidator behaviorValidator) {
         this.options = options;
         this.backgroundProvider = backgroundProvider;
         this.shapeRegistry = shapeRegistry;
+        this.behaviorValidator = behaviorValidator;
     }
 
     @Override
@@ -71,21 +93,18 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
 
     @Override
     protected VerifyResult doVerify(CaptchaSession session, CaptchaAnswer answer) {
-        if (answer == null || answer.getX() == null) {
-            return VerifyResult.badRequest("缺少滑块位移 x");
+        if (answer == null || answer.getXNorm() == null) {
+            return VerifyResult.badRequest("缺少滑块位移 xNorm");
         }
-        int clientWidth = answer.getClientWidth() == null
-                ? session.getWidth()
-                : answer.getClientWidth();
-        if (clientWidth <= 0) {
-            return VerifyResult.badRequest("clientWidth 不合法");
+        Optional<String> behaviorError = behaviorValidator.validate(
+                answer.getTd(), answer, session);
+        if (behaviorError.isPresent()) {
+            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR");
         }
-        if (answer.getClientHeight() != null && answer.getClientHeight() <= 0) {
-            return VerifyResult.badRequest("clientHeight 不合法");
-        }
-        // 前端图片可能被 CSS 缩放，按宽度比例换算回服务端坐标
-        double ratio = (double) session.getWidth() / clientWidth;
-        if (Math.abs(session.getX() - answer.getX() * ratio) <= options.getTolerance() * ratio) {
+        // 答案是归一化位移，直接与服务端答案的归一化坐标对比，与渲染尺寸无关
+        double expected = (double) session.getX() / session.getWidth();
+        double tolerance = (double) options.getTolerance() / session.getWidth();
+        if (Math.abs(answer.getXNorm() - expected) <= tolerance) {
             return VerifyResult.ok("验证通过");
         }
         return VerifyResult.fail("验证失败，请重试", "WRONG");

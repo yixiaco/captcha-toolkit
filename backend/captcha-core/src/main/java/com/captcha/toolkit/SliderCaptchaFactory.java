@@ -1,6 +1,7 @@
 package com.captcha.toolkit;
 
 import com.captcha.toolkit.config.CaptchaConfig;
+import com.captcha.toolkit.behavior.SliderBehaviorValidator;
 import com.captcha.toolkit.generator.CaptchaGenerator;
 import com.captcha.toolkit.generator.SliderCaptchaGenerator;
 import com.captcha.toolkit.render.BackgroundProvider;
@@ -38,6 +39,7 @@ public class SliderCaptchaFactory implements CaptchaFactory {
 
     @Override
     public CaptchaGenerator create(CaptchaConfig config) {
-        return new SliderCaptchaGenerator(config.getSlider(), backgroundProvider, shapeRegistry);
+        return new SliderCaptchaGenerator(config.getSlider(), backgroundProvider, shapeRegistry,
+                new SliderBehaviorValidator(config.getBehavior()));
     }
 }

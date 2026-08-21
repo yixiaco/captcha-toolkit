@@ -1,6 +1,7 @@
 package com.captcha.toolkit;
 
 import com.captcha.toolkit.config.CaptchaConfig;
+import com.captcha.toolkit.behavior.ClickBehaviorValidator;
 import com.captcha.toolkit.generator.CaptchaGenerator;
 import com.captcha.toolkit.generator.ClickCaptchaGenerator;
 import com.captcha.toolkit.render.BackgroundProvider;
@@ -35,6 +36,7 @@ public class ClickCaptchaFactory implements CaptchaFactory {
 
     @Override
     public CaptchaGenerator create(CaptchaConfig config) {
-        return new ClickCaptchaGenerator(config.getClick(), backgroundProvider, wordFactory);
+        return new ClickCaptchaGenerator(config.getClick(), backgroundProvider, wordFactory,
+                new ClickBehaviorValidator(config.getBehavior()));
     }
 }
