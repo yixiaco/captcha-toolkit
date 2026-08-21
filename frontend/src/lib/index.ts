@@ -7,6 +7,8 @@ import Captcha from './Captcha.vue';
 import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
+import AngleCaptcha from './AngleCaptcha.vue';
+import ScratchCaptcha from './ScratchCaptcha.vue';
 import CurveCaptcha from './CurveCaptcha.vue';
 import SlideCurveCaptcha from './SlideCurveCaptcha.vue';
 import SwingTileCaptcha from './SwingTileCaptcha.vue';
@@ -19,6 +21,9 @@ import type {
   SliderChallengeData,
   ClickChallengeData,
   RotateChallengeData,
+  AngleChallengeData,
+  ScratchChallengeData,
+  ScratchDebugPattern,
   CurveChallengeData,
   SlideCurveChallengeData,
   SwingTileChallengeData,
@@ -50,6 +55,8 @@ export {
   SliderCaptcha,
   ClickCaptcha,
   RotateCaptcha,
+  AngleCaptcha,
+  ScratchCaptcha,
   CurveCaptcha,
   SlideCurveCaptcha,
   SwingTileCaptcha,
@@ -74,6 +81,9 @@ export type {
   SliderChallengeData,
   ClickChallengeData,
   RotateChallengeData,
+  AngleChallengeData,
+  ScratchChallengeData,
+  ScratchDebugPattern,
   CurveChallengeData,
   SlideCurveChallengeData,
   SwingTileChallengeData,

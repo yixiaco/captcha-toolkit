@@ -14,6 +14,7 @@ import com.captcha.toolkit.model.PointVo;
 import com.captcha.toolkit.model.RotateChallengeData;
 import com.captcha.toolkit.model.SliderChallengeData;
 import com.captcha.toolkit.model.SlideCurveChallengeData;
+import com.captcha.toolkit.model.ScratchChallengeData;
 import com.captcha.toolkit.model.SwingTileChallengeData;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
@@ -323,6 +324,32 @@ class BehaviorValidationTest {
         assertEquals("BEHAVIOR", result.getCode());
     }
 
+    @Test
+    void scratchPassesWithMatchingTrace() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SCRATCH, Map.of(), true);
+        double answerX = scratchData(challenge).debugX();
+
+        CaptchaAnswer answer = CaptchaAnswer.slider(answerX);
+        answer.setTd(sliderTrace(answerX));
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertTrue(result.isSuccess(), result.getMessage());
+    }
+
+    @Test
+    void scratchRejectsMissingTraceWhenEnabled() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SCRATCH, Map.of(), true);
+        double answerX = scratchData(challenge).debugX();
+
+        CaptchaAnswer answer = CaptchaAnswer.slider(answerX);
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertFalse(result.isSuccess());
+        assertEquals("BEHAVIOR", result.getCode());
+    }
+
     private CaptchaEngine newEngine() {
         return newEngine(false);
     }
@@ -343,6 +370,7 @@ class BehaviorValidationTest {
         config.getCurve().setMinElapsedMs(0);
         config.getSlideCurve().setMinElapsedMs(0);
         config.getSwingTile().setMinElapsedMs(0);
+        config.getScratch().setMinElapsedMs(0);
         FallbackBackgroundProvider background = new FallbackBackgroundProvider(
                 List.of(new SceneBackgroundProvider()));
         return CaptchaEngine.of(config, new InMemoryCaptchaSessionStore(),
@@ -578,4 +606,10 @@ class BehaviorValidationTest {
     private static SwingTileChallengeData swingTileData(CaptchaChallenge<?> challenge) {
         return (SwingTileChallengeData) challenge.getData();
     }
+
+    /** 读取刮刮乐类型特定化载荷 */
+    private static ScratchChallengeData scratchData(CaptchaChallenge<?> challenge) {
+        return (ScratchChallengeData) challenge.getData();
+    }
+
 }

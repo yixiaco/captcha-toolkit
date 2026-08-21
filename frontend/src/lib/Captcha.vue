@@ -34,6 +34,8 @@ import FloatingCaptcha from './FloatingCaptcha.vue';
 import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
+import AngleCaptcha from './AngleCaptcha.vue';
+import ScratchCaptcha from './ScratchCaptcha.vue';
 import CurveCaptcha from './CurveCaptcha.vue';
 import SlideCurveCaptcha from './SlideCurveCaptcha.vue';
 import SwingTileCaptcha from './SwingTileCaptcha.vue';
@@ -66,6 +68,8 @@ const attrs = useAttrs();
 const inlineComponent = computed<Component>(() => {
   if (props.mode === 'click') return ClickCaptcha;
   if (props.mode === 'rotate') return RotateCaptcha;
+  if (props.mode === 'angle') return AngleCaptcha;
+  if (props.mode === 'scratch') return ScratchCaptcha;
   if (props.mode === 'curve') return CurveCaptcha;
   if (props.mode === 'slide-curve') return SlideCurveCaptcha;
   if (props.mode === 'swing-tile') return SwingTileCaptcha;

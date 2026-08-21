@@ -59,6 +59,8 @@ H4sI...
 | `SliderBehaviorValidator` | 按下 → 移动 → 松开，终点归一化 x 与 `xNorm` 一致 |
 | `ClickBehaviorValidator` | 按下/松开成对、点击次数与顺序、坐标、单次点击时长 |
 | `RotateBehaviorValidator` | 按下 → 移动 → 松开事件序列（角度由生成器校验） |
+| `AngleBehaviorValidator` | 按下 → 移动 → 松开，终点归一化 x 与旋转角度（角度 / 360）一致 |
+| `ScratchBehaviorValidator` | 单次按下 → 移动 → 松开，终点归一化 x 与滑块位置 `xNorm` 一致 |
 | `CurveBehaviorValidator` | 按下 → 移动 → 松开，禁止点击事件；轨迹首尾与答案曲线首尾一致 |
 | `SlideCurveBehaviorValidator` | 按下 → 移动 → 松开，终点归一化 x 与曲线摆动量 `xNorm` 一致 |
 | `SwingTileBehaviorValidator` | 按下 → 移动 → 松开，终点归一化 x 与滑块位置 `xNorm` 一致 |
@@ -72,7 +74,7 @@ H4sI...
 还需要第二层统计评分：`DragBehaviorRiskScorer` / `ClickBehaviorRiskScorer`
 把多个弱信号加权汇总成 0~1 综合分，超过画像阈值才判定异常，避免单特征误伤。
 
-拖拽（滑块/旋转/曲线/滑动曲线/滑块摆动）特征：
+拖拽（滑块/旋转/角度/曲线/滑动曲线/滑块摆动）特征：
 
 | 特征 | 含义 | 机器表现 |
 | --- | --- | --- |
@@ -89,6 +91,10 @@ H4sI...
 | `dwell-uniformity` | 按下时长变异系数 | 每次点击时长完全一致 → 异常 |
 | `interval-uniformity` | 点击间隔变异系数 | 节奏完全一致 → 异常 |
 | `duplicate-downs` | 是否存在完全相同的点击坐标 | 精确复现同一点 → 异常 |
+
+刮刮乐为单次拖拽，风险评分走拖拽特征；后端答案位置 = 全部提示图形
+刚好完整出现的最小滑块位置：停早未出全、停晚（目标出现后继续右移）都失败，
+因此前端不提供任何实时进度，避免向机器泄露判定信息。
 
 样本不足的特征权重自动降为 0，避免 H5/小程序稀疏轨迹被误判；
 触摸画像默认阈值也更宽松（`0.8`，Web 为 `0.65`）。

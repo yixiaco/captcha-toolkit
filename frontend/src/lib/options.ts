@@ -41,6 +41,10 @@ export interface CaptchaOptions {
   sliderTip: string
   /** 旋转提示文案 */
   rotateTip: string
+  /** 角度验证提示文案 */
+  angleTip: string
+  /** 刮刮乐提示文案 */
+  scratchTip: string
   /** 滑动曲线提示文案 */
   slideCurveTip: string
   /** 滑块摆动图块提示文案 */
@@ -61,6 +65,10 @@ export interface CaptchaOptions {
   clientType: ClientType
   /** 图片加载中提示文案 */
   loadingText: string
+  /** 加载失败提示文案 */
+  loadFailedText: string
+  /** 重试按钮文案 */
+  retryText: string
   /** 验证图片 alt 文案 */
   imageAlt: string
   /** 是否请求调试答案（仅本地联调开启） */
@@ -121,6 +129,8 @@ export const defaultCaptchaOptions: CaptchaOptions = {
   randomLabel: '随机',
   sliderTip: '按住滑块，拖动完成拼图',
   rotateTip: '拖动滑块旋转图片，使其对齐',
+  angleTip: '按住滑块，旋转圆盘使箭头对准顶部',
+  scratchTip: '按住涂刮，刮出提示中的图形',
   slideCurveTip: '按住滑块，将曲线滑入对应凹槽',
   swingTileTip: '按住滑块，沿曲线把图块摆入目标凹槽',
   slideCurveColor: '#3b7cff',
@@ -131,6 +141,8 @@ export const defaultCaptchaOptions: CaptchaOptions = {
   markMinDistance: 16,
   clientType: detectClientType(),
   loadingText: '图片加载中...',
+  loadFailedText: '加载失败，请重试',
+  retryText: '重试',
   imageAlt: '验证图片',
   debug: false,
   autoReload: true,

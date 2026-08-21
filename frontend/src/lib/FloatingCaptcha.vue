@@ -106,6 +106,8 @@
               :random-label="opts.randomLabel"
               :slider-tip="opts.sliderTip"
               :loading-text="opts.loadingText"
+              :load-failed-text="opts.loadFailedText"
+              :retry-text="opts.retryText"
               :image-alt="opts.imageAlt"
               @success="onCaptchaSuccess"
               @fail="onCaptchaFail"
@@ -121,6 +123,8 @@
               :debug="opts.debug"
               :auto-reload="opts.autoReload"
               :loading-text="opts.loadingText"
+              :load-failed-text="opts.loadFailedText"
+              :retry-text="opts.retryText"
               :image-alt="opts.imageAlt"
               @success="onCaptchaSuccess"
               @fail="onCaptchaFail"
@@ -136,6 +140,42 @@
               :debug="opts.debug"
               :auto-reload="opts.autoReload"
               :loading-text="opts.loadingText"
+              :load-failed-text="opts.loadFailedText"
+              :retry-text="opts.retryText"
+              :image-alt="opts.imageAlt"
+              @success="onCaptchaSuccess"
+              @fail="onCaptchaFail"
+            />
+            <AngleCaptcha
+              v-else-if="mode === 'angle'"
+              :key="`angle-${refreshKey}`"
+              :api="opts.api"
+              :width="opts.width"
+              :height="opts.height"
+              :angle-tip="opts.angleTip"
+              :handle-width="opts.handleWidth"
+              :debug="opts.debug"
+              :auto-reload="opts.autoReload"
+              :loading-text="opts.loadingText"
+              :load-failed-text="opts.loadFailedText"
+              :retry-text="opts.retryText"
+              :image-alt="opts.imageAlt"
+              @success="onCaptchaSuccess"
+              @fail="onCaptchaFail"
+            />
+            <ScratchCaptcha
+              v-else-if="mode === 'scratch'"
+              :key="`scratch-${refreshKey}`"
+              :api="opts.api"
+              :width="opts.width"
+              :height="opts.height"
+              :scratch-tip="opts.scratchTip"
+              :handle-width="opts.handleWidth"
+              :debug="opts.debug"
+              :auto-reload="opts.autoReload"
+              :loading-text="opts.loadingText"
+              :load-failed-text="opts.loadFailedText"
+              :retry-text="opts.retryText"
               :image-alt="opts.imageAlt"
               @success="onCaptchaSuccess"
               @fail="onCaptchaFail"
@@ -152,6 +192,8 @@
               :debug="opts.debug"
               :auto-reload="opts.autoReload"
               :loading-text="opts.loadingText"
+              :load-failed-text="opts.loadFailedText"
+              :retry-text="opts.retryText"
               :image-alt="opts.imageAlt"
               @success="onCaptchaSuccess"
               @fail="onCaptchaFail"
@@ -184,6 +226,8 @@ import { provide, ref } from 'vue';
 import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
+import AngleCaptcha from './AngleCaptcha.vue';
+import ScratchCaptcha from './ScratchCaptcha.vue';
 import CurveCaptcha from './CurveCaptcha.vue';
 import { CaptchaOptionsKey, useCaptchaOptions } from './options';
 import type { CaptchaMessages } from './i18n';
@@ -233,6 +277,10 @@ interface Props {
   sliderTip?: string | null
   /** 旋转提示文案 */
   rotateTip?: string | null
+  /** 角度验证提示文案 */
+  angleTip?: string | null
+  /** 刮刮乐提示文案 */
+  scratchTip?: string | null
   /** 曲线绘制提示文案 */
   curveTip?: string | null
   /** 用户绘制笔迹颜色 */
@@ -241,6 +289,10 @@ interface Props {
   curveWidth?: number | null
   /** 加载提示文案 */
   loadingText?: string | null
+  /** 加载失败提示文案 */
+  loadFailedText?: string | null
+  /** 重试按钮文案 */
+  retryText?: string | null
   /** 图片 alt 文案 */
   imageAlt?: string | null
   /** 浮动按钮文案 */

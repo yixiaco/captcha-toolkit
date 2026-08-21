@@ -32,6 +32,9 @@ public class CaptchaAnswer {
     /** 曲线绘制答案：按绘制顺序排列的归一化坐标（0~1），曲线类型必填 */
     private List<NormalizedPoint> curve;
 
+    /** 刮刮乐答案：刮痕轨迹的归一化坐标（0~1），刮刮乐类型必填 */
+    private List<NormalizedPoint> scratched;
+
     /** 行为轨迹报文（td），格式见 BehaviorTraceCodec；开启行为校验后必填 */
     private String td;
 
@@ -89,6 +92,18 @@ public class CaptchaAnswer {
     public static CaptchaAnswer curve(List<NormalizedPoint> curve) {
         CaptchaAnswer answer = new CaptchaAnswer();
         answer.curve = curve;
+        return answer;
+    }
+
+    /**
+     * 构造刮刮乐答案。
+     *
+     * @param scratched 刮痕轨迹的归一化坐标（0~1）
+     * @return 刮刮乐答案
+     */
+    public static CaptchaAnswer scratch(List<NormalizedPoint> scratched) {
+        CaptchaAnswer answer = new CaptchaAnswer();
+        answer.scratched = scratched;
         return answer;
     }
 }

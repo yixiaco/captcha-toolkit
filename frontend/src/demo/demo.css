@@ -220,6 +220,14 @@ button {
   color: #7c5cff;
 }
 
+.mode-btn.angle svg {
+  color: #f59e0b;
+}
+
+.mode-btn.scratch svg {
+  color: #10b981;
+}
+
 .mode-btn.curve svg {
   color: #00a8a8;
 }

@@ -85,6 +85,11 @@
 
 ## 点选
 
+提示词以下发单张透明背景 PNG 图片（`promptImage`）为主，避免依赖前端字体；
+后端渲染顺序为：`click.fonts` 配置字体 → 内置开源字体
+（`captcha-core/src/main/resources/fonts/`，ZCOOL 快乐体，OFL 协议）→
+系统常见中文字体（微软雅黑/黑体/宋体/Noto Sans CJK 等）→ 逻辑字体兜底。
+
 | 配置 | 说明 | 默认值 |
 | --- | --- | --- |
 | `click.width` / `height` | 图片尺寸 | `340` / `190` |
@@ -106,6 +111,47 @@
 | `rotate.min-angle` / `max-angle` | 错位角度范围 | `20` / `340` |
 | `rotate.min-elapsed-ms` | 最短验证耗时 | `800` |
 | `rotate.render-scale` | 抗锯齿超采样倍数 | `2` |
+
+## 角度验证
+
+角度验证只下发一张圆形图：把背景场景按随机角度旋转后裁成圆形，
+场景本身具有“上下”方向，拖动滑块把圆形图转回正立方向即可通过；
+不带背景框、凹口或方向箭头。
+
+| 配置 | 说明 | 默认值 |
+| --- | --- | --- |
+| `angle.width` / `height` | 图片尺寸 | `340` / `190` |
+| `angle.tolerance` | 角度容差（度） | `3` |
+| `angle.min-angle` / `max-angle` | 箭头初始错位角度范围 | `20` / `340` |
+| `angle.min-elapsed-ms` | 最短验证耗时 | `800` |
+| `angle.expire-seconds` | 会话有效期 | `300` |
+| `angle.disc-radius-ratio` | 圆盘半径占画布短边比例（越大圆盘越大） | `0.4` |
+| `angle.render-scale` | 抗锯齿超采样倍数 | `2` |
+
+## 刮刮乐
+
+刮刮乐复用 `background.sources` 主背景图：图中埋入多个与背景融合的图形
+（颜色从图案中心背景采样，做低明度差、小幅色相偏移与半透明叠加），
+前端套上银色蒙版，用户拖动滑块从左往右横扫揭开蒙版，
+提示图形全部出现后立即停止。
+
+| 配置 | 说明 | 默认值 |
+| --- | --- | --- |
+| `scratch.width` / `height` | 图片尺寸 | `340` / `190` |
+| `scratch.pattern-count` | 图中埋入的图案总数 | `6` |
+| `scratch.target-count` | 目标图形数量上限（实际在 min~max 间随机） | `3` |
+| `scratch.target-count-min` | 目标图形数量下限 | `1` |
+| `scratch.pattern-size-ratio` | 图案边长占图宽比例上限（实际在 min~max 间随机） | `0.13` |
+| `scratch.pattern-size-min-ratio` | 图案边长占图宽比例下限 | `0.06` |
+| `scratch.pattern-min-gap` | 图案最小中心间距（像素） | `36` |
+| `scratch.tolerance` | 滑块位置校验容差（归一化 0~1） | `0.03` |
+| `scratch.lightness-delta-min/max` | 图案相对背景的明度差范围 | `0.04` / `0.12` |
+| `scratch.hue-shift-max` | 图案相对背景的色相偏移上限（度） | `8` |
+| `scratch.alpha-min/max` | 图案透明度范围（与滑块拼图凹槽一致，约 0.8） | `0.75` / `0.85` |
+| `scratch.hole-white-alpha` | 图案白色透明层透明度（与滑块拼图凹槽一致） | `0.5` |
+| `scratch.min-elapsed-ms` | 最短验证耗时 | `1000` |
+| `scratch.expire-seconds` | 会话有效期 | `300` |
+| `scratch.render-scale` | 抗锯齿超采样倍数 | `2` |
 
 ## 曲线绘制
 

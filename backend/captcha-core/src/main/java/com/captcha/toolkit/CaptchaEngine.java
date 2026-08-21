@@ -4,14 +4,17 @@ import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.exception.RateLimitExceededException;
 import com.captcha.toolkit.factory.CaptchaFactory;
+import com.captcha.toolkit.factory.AngleCaptchaFactory;
 import com.captcha.toolkit.factory.ClickCaptchaFactory;
 import com.captcha.toolkit.factory.CurveCaptchaFactory;
 import com.captcha.toolkit.factory.RotateCaptchaFactory;
+import com.captcha.toolkit.factory.ScratchCaptchaFactory;
 import com.captcha.toolkit.factory.SlideCurveCaptchaFactory;
 import com.captcha.toolkit.factory.SliderCaptchaFactory;
 import com.captcha.toolkit.factory.SwingTileCaptchaFactory;
 import com.captcha.toolkit.generator.CaptchaGenerator;
 import com.captcha.toolkit.generator.GenerateRequest;
+import com.captcha.toolkit.generator.ScratchCaptchaGenerator;
 import com.captcha.toolkit.generator.SliderCaptchaGenerator;
 import com.captcha.toolkit.i18n.CaptchaMessages;
 import com.captcha.toolkit.i18n.MessageProvider;
@@ -164,6 +167,10 @@ public class CaptchaEngine {
                 new ClickCaptchaFactory(clickBackgroundProvider, wordFactory).create(config));
         map.putIfAbsent(CaptchaType.ROTATE,
                 new RotateCaptchaFactory(sliderBackgroundProvider).create(config));
+        map.putIfAbsent(CaptchaType.ANGLE,
+                new AngleCaptchaFactory(sliderBackgroundProvider).create(config));
+        map.putIfAbsent(CaptchaType.SCRATCH,
+                new ScratchCaptchaFactory(sliderBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.CURVE,
                 new CurveCaptchaFactory(sliderBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.SLIDE_CURVE,
@@ -218,6 +225,8 @@ public class CaptchaEngine {
         map.putIfAbsent(CaptchaType.SLIDER, new SliderCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.CLICK, new ClickCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.ROTATE, new RotateCaptchaFactory().create(config));
+        map.putIfAbsent(CaptchaType.ANGLE, new AngleCaptchaFactory().create(config));
+        map.putIfAbsent(CaptchaType.SCRATCH, new ScratchCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.CURVE, new CurveCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.SLIDE_CURVE, new SlideCurveCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.SWING_TILE, new SwingTileCaptchaFactory().create(config));
@@ -265,7 +274,10 @@ public class CaptchaEngine {
         CaptchaChallenge<Object> challenge = new CaptchaChallenge<>();
         challenge.setId(generated.getSession().getId());
         challenge.setType(type.getCode());
-        challenge.setImage1(codec.encode(generated.getImage1(), "png"));
+        // 部分类型（如角度验证）可能没有主背景图，只下发独立小图
+        if (generated.getImage1() != null) {
+            challenge.setImage1(codec.encode(generated.getImage1(), "png"));
+        }
         if (generated.getImage2() != null) {
             challenge.setImage2(codec.encode(generated.getImage2(), "png"));
         }
@@ -333,6 +345,7 @@ public class CaptchaEngine {
         ticketStore.remove(ticket);
         return VerifyResult.ok(CaptchaMessages.TICKET_VALID, messages);
     }
+
 
     /** 返回引擎支持的所有验证码类型编码（升序） */
     public List<String> supportedTypes() {

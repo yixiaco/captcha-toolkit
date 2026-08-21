@@ -53,6 +53,9 @@ public final class CaptchaMessages {
     /** 缺少旋转角度 angle */
     public static final String ROTATE_MISSING_ANGLE = "rotate.missing-angle";
 
+    /** 缺少角度验证的旋转角度 angle */
+    public static final String ANGLE_MISSING_ANGLE = "angle.missing-angle";
+
     /** 点击错误，请重试 */
     public static final String CLICK_WRONG = "click.wrong";
 
@@ -145,6 +148,45 @@ public final class CaptchaMessages {
 
     /** 旋转缺少移动轨迹 */
     public static final String ROTATE_MISSING_MOVE = "rotate.missing-move";
+
+    /** 角度验证轨迹应以按下开始 */
+    public static final String ANGLE_EXPECTED_START = "angle.expected-start";
+
+    /** 角度验证轨迹应以松开结束 */
+    public static final String ANGLE_EXPECTED_RELEASE = "angle.expected-release";
+
+    /** 角度验证轨迹不允许出现点击事件 */
+    public static final String ANGLE_CLICK_NOT_ALLOWED = "angle.click-not-allowed";
+
+    /** 角度验证缺少移动轨迹 */
+    public static final String ANGLE_MISSING_MOVE = "angle.missing-move";
+
+    /** 角度验证终点与轨迹不一致 */
+    public static final String ANGLE_END_MISMATCH = "angle.end-mismatch";
+
+    /** 刮刮乐轨迹应以按下开始 */
+    public static final String SCRATCH_EXPECTED_START = "scratch.expected-start";
+
+    /** 刮刮乐轨迹应以松开结束 */
+    public static final String SCRATCH_EXPECTED_RELEASE = "scratch.expected-release";
+
+    /** 刮刮乐缺少刮擦移动轨迹 */
+    public static final String SCRATCH_MISSING_MOVE = "scratch.missing-move";
+
+    /** 缺少刮刮乐滑块位置 xNorm */
+    public static final String SCRATCH_MISSING_X_NORM = "scratch.missing-x-norm";
+
+    /** 刮刮乐轨迹不允许出现点击事件 */
+    public static final String SCRATCH_CLICK_NOT_ALLOWED = "scratch.click-not-allowed";
+
+    /** 刮刮乐终点与轨迹不一致 */
+    public static final String SCRATCH_END_MISMATCH = "scratch.end-mismatch";
+
+    /** 刮出的图形与提示不符 */
+    public static final String SCRATCH_MISMATCH = "scratch.mismatch";
+
+    /** 刮满目标后继续刮擦 */
+    public static final String SCRATCH_CONTINUED_AFTER_DONE = "scratch.continued-after-done";
 
     /** 曲线轨迹应以按下开始 */
     public static final String CURVE_EXPECTED_START = "curve.expected-start";

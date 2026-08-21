@@ -5,11 +5,12 @@
   >
     <div class="click-prompt">
       <span>{{ opts.promptPrefix }}</span>
-      <span
-        v-for="ch in prompt"
-        :key="ch"
-        class="prompt-char"
-      >{{ ch }}</span>
+      <img
+        :src="promptImage"
+        class="click-prompt-img"
+        alt=""
+        draggable="false"
+      >
     </div>
 
     <div
@@ -25,6 +26,7 @@
         :alt="opts.imageAlt"
         draggable="false"
         @pointerdown="onPointerDown"
+        @error="onImageError"
       >
 
       <div
@@ -47,6 +49,13 @@
         <span>{{ opts.loadingText }}</span>
       </div>
 
+      <CaptchaLoadError
+        v-if="status === 'error'"
+        :text="opts.loadFailedText"
+        :retry-text="opts.retryText"
+        @retry="loadCaptcha"
+      />
+
       <transition name="fade">
         <div
           v-if="status === 'success'"
@@ -64,6 +73,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useCaptchaOptions } from './options';
+import CaptchaLoadError from './CaptchaLoadError.vue';
 import type { ClickChallengeData, VerifyResult } from './api';
 import type { CaptchaStatus, ClientType } from './types';
 import { createTrace, pushPoint, buildCompressedTrace, removeLastEvent } from './trace';
@@ -90,6 +100,10 @@ interface Props {
   autoReload?: boolean | null
   /** 加载提示文案 */
   loadingText?: string | null
+  /** 加载失败提示文案 */
+  loadFailedText?: string | null
+  /** 重试按钮文案 */
+  retryText?: string | null
   /** 图片 alt 文案 */
   imageAlt?: string | null
   /** 客户端类型：web / h5 / mini_program */
@@ -114,7 +128,8 @@ const imageRef = ref<HTMLImageElement | null>(null);
 const status = ref<CaptchaStatus>('loading');
 const image1 = ref('');
 const captchaId = ref('');
-const prompt = ref<string[]>([]);
+const promptImage = ref('');
+const targetCount = ref(0);
 const marks = ref<Array<{ x: number; y: number; index: number }>>([]);
 const shaking = ref(false);
 const submitting = ref(false);
@@ -142,9 +157,19 @@ function stopMoveListening() {
   }
 }
 
+/** 图片加载失败：切换到错误回显，并停止记录接近轨迹 */
+function onImageError() {
+  if (status.value !== 'success') {
+    status.value = 'error';
+    stopMoveListening();
+  }
+}
+
 async function loadCaptcha() {
   status.value = 'loading';
   image1.value = '';
+  promptImage.value = '';
+  targetCount.value = 0;
   marks.value = [];
   stopMoveListening();
   trace = null;
@@ -156,7 +181,8 @@ async function loadCaptcha() {
     });
     captchaId.value = res.id;
     image1.value = res.image1;
-    prompt.value = res.data?.prompt || [];
+    promptImage.value = res.data?.promptImage || '';
+    targetCount.value = res.data?.targetCount || 0;
     // 以后端实际图片高度为准（宽度由父容器 100% 决定）
     imgHeight.value = res.height || opts.height;
     status.value = 'idle';
@@ -173,7 +199,7 @@ async function loadCaptcha() {
   } catch (error) {
     console.error('加载点选验证码失败', error);
     emit('error', error);
-    status.value = 'idle';
+    status.value = 'error';
   }
 }
 
@@ -225,7 +251,7 @@ function onPointerUp(event: PointerEvent) {
   pushPoint(trace!, event.clientX, event.clientY, 2, imageRef.value!);
   marks.value.push({ x, y, index: marks.value.length + 1 });
 
-  if (marks.value.length >= prompt.value.length) {
+  if (marks.value.length >= targetCount.value) {
     submit();
   }
 }

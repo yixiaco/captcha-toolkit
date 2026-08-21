@@ -149,4 +149,78 @@ class CurveBehaviorValidatorTest {
         Optional<String> error = enabledValidator().validate(answer.getTd(), answer, session());
         assertEquals("curve.missing-points", error.orElse(""));
     }
+
+    @Test
+    void acceptsStartExactlyAtDoubleTolerance() {
+        CaptchaAnswer answer = answer();
+        answer.setTd(validTrace());
+        // 容差 = pointTolerance * 2 = 0.1：答案起点与轨迹起点距离恰好 0.1 应通过
+        List<NormalizedPoint> curve = new ArrayList<>(answer.getCurve());
+        curve.set(0, new NormalizedPoint(0.2, 0.1));
+        answer.setCurve(curve);
+
+        assertTrue(enabledValidator().validate(answer.getTd(), answer, session()).isEmpty());
+    }
+
+    @Test
+    void rejectsStartJustBeyondDoubleTolerance() {
+        CaptchaAnswer answer = answer();
+        answer.setTd(validTrace());
+        List<NormalizedPoint> curve = new ArrayList<>(answer.getCurve());
+        curve.set(0, new NormalizedPoint(0.200_001, 0.1));
+        answer.setCurve(curve);
+
+        Optional<String> error = enabledValidator().validate(answer.getTd(), answer, session());
+        assertEquals("curve.start-mismatch", error.orElse(""));
+    }
+
+    @Test
+    void acceptsEndExactlyAtDoubleTolerance() {
+        CaptchaAnswer answer = answer();
+        answer.setTd(validTrace());
+        List<NormalizedPoint> curve = new ArrayList<>(answer.getCurve());
+        curve.set(curve.size() - 1, new NormalizedPoint(0.8, 0.9));
+        answer.setCurve(curve);
+
+        assertTrue(enabledValidator().validate(answer.getTd(), answer, session()).isEmpty());
+    }
+
+    @Test
+    void rejectsEndJustBeyondDoubleTolerance() {
+        CaptchaAnswer answer = answer();
+        answer.setTd(validTrace());
+        List<NormalizedPoint> curve = new ArrayList<>(answer.getCurve());
+        curve.set(curve.size() - 1, new NormalizedPoint(0.799_999, 0.9));
+        answer.setCurve(curve);
+
+        Optional<String> error = enabledValidator().validate(answer.getTd(), answer, session());
+        assertEquals("curve.end-mismatch", error.orElse(""));
+    }
+
+    @Test
+    void acceptsCurveWithMinimumPoints() {
+        List<NormalizedPoint> curve = List.of(
+                new NormalizedPoint(0.1, 0.1),
+                new NormalizedPoint(0.3, 0.3),
+                new NormalizedPoint(0.5, 0.5));
+        CaptchaAnswer answer = CaptchaAnswer.curve(curve);
+        answer.setTd(BehaviorTraceCodec.encode(new BehaviorTrace(
+                1, 340, 190, 1_000_000L, 1_000_200L, List.of(
+                        new BehaviorPoint(0, 0.1, 0.1, BehaviorEventType.START),
+                        new BehaviorPoint(100, 0.3, 0.3, BehaviorEventType.MOVE),
+                        new BehaviorPoint(200, 0.5, 0.5, BehaviorEventType.UP)))));
+
+        assertTrue(enabledValidator().validate(answer.getTd(), answer, session()).isEmpty());
+    }
+
+    @Test
+    void rejectsCurveBelowMinimumPoints() {
+        List<NormalizedPoint> curve = List.of(
+                new NormalizedPoint(0.1, 0.1),
+                new NormalizedPoint(0.9, 0.9));
+        CaptchaAnswer answer = CaptchaAnswer.curve(curve);
+        answer.setTd(validTrace());
+        Optional<String> error = enabledValidator().validate(answer.getTd(), answer, session());
+        assertEquals("curve.not-enough-points", error.orElse(""));
+    }
 }

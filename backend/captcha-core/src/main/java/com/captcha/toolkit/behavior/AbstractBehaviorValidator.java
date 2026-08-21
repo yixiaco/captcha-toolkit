@@ -94,7 +94,8 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
         if (trace.protocol() != config.getProtocol()) {
             return Optional.of(CaptchaMessages.BEHAVIOR_PROTOCOL_UNSUPPORTED);
         }
-        if (trace.viewportWidth() <= 0 || trace.viewportHeight() <= 0) {
+        if (!Double.isFinite(trace.viewportWidth()) || trace.viewportWidth() <= 0
+                || !Double.isFinite(trace.viewportHeight()) || trace.viewportHeight() <= 0) {
             return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_VIEWPORT);
         }
         if (trace.startTime() >= trace.endTime()) {
@@ -111,6 +112,14 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
         if (points.isEmpty() || points.size() < profile.getMinPoints()) {
             return Optional.of(CaptchaMessages.BEHAVIOR_NOT_ENOUGH_POINTS);
         }
+        // 所有点（含起点）坐标必须有限且落在 [0,1]，避免 NaN/Infinity 绕过范围校验
+        for (BehaviorPoint point : points) {
+            if (!Double.isFinite(point.x()) || !Double.isFinite(point.y())
+                    || point.x() < 0 || point.x() > 1
+                    || point.y() < 0 || point.y() > 1) {
+                return Optional.of(CaptchaMessages.BEHAVIOR_COORDINATE_OUT_OF_RANGE);
+            }
+        }
         if (points.getFirst().timeMs() < 0 || points.getFirst().timeMs() > 100) {
             return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_START_TIME);
         }
@@ -119,9 +128,6 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
             BehaviorPoint current = points.get(i);
             if (current.timeMs() < prev.timeMs()) {
                 return Optional.of(CaptchaMessages.BEHAVIOR_TIME_OUT_OF_ORDER);
-            }
-            if (current.x() < 0 || current.x() > 1 || current.y() < 0 || current.y() > 1) {
-                return Optional.of(CaptchaMessages.BEHAVIOR_COORDINATE_OUT_OF_RANGE);
             }
             long dt = current.timeMs() - prev.timeMs();
             if (dt > 0) {

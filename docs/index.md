@@ -4,7 +4,7 @@ layout: home
 hero:
   name: Captcha Toolkit
   text: 通用行为验证码组件
-  tagline: 滑块拼图 / 文字点选 / 图片旋转 · Spring Boot + Vue 3
+  tagline: 滑块拼图 / 文字点选 / 图片旋转 / 角度验证 · Spring Boot + Vue 3
   actions:
     - theme: brand
       text: 快速开始

@@ -100,3 +100,41 @@ captcha:
     min-angle: 20
     max-angle: 340
     render-scale: 2
+  angle:
+    width: 340
+    height: 190
+    # 角度容差（度）
+    tolerance: 3
+    min-elapsed-ms: 800
+    expire-seconds: 300
+    # 方向标记初始错位角度范围，避开接近 0/360 的“几乎朝上”
+    min-angle: 20
+    max-angle: 340
+    # 圆盘半径占画布短边的比例（越大圆盘越大）
+    disc-radius-ratio: 0.4
+    render-scale: 2
+  scratch:
+    width: 340
+    height: 190
+    # 最短验证耗时（毫秒）
+    min-elapsed-ms: 1000
+    expire-seconds: 300
+    # 图中埋入的图案总数与目标刮出数量（实际数量在 min~max 间随机，避免每次都拖很远）
+    pattern-count: 6
+    target-count: 3
+    target-count-min: 1
+    # 图案尺寸/间距与刮中判定
+    pattern-size-ratio: 0.13
+    pattern-size-min-ratio: 0.06
+    pattern-min-gap: 36
+    # 滑块位置（归一化 0~1）校验容差
+    tolerance: 0.03
+    # 与背景融合的参数：明度差越小、色相偏移越小、越难识别；透明度与滑块拼图凹槽一致（约 0.8）
+    lightness-delta-min: 0.04
+    lightness-delta-max: 0.12
+    hue-shift-max: 8
+    alpha-min: 0.75
+    alpha-max: 0.85
+    # 图形上的白色透明层（与滑块拼图凹槽一致）
+    hole-white-alpha: 0.5
+    render-scale: 2

@@ -30,6 +30,12 @@ public class CaptchaConfig {
     /** 图片旋转验证码配置 */
     private RotateConfig rotate = new RotateConfig();
 
+    /** 角度验证（圆盘旋转）验证码配置 */
+    private AngleConfig angle = new AngleConfig();
+
+    /** 刮刮乐验证码配置 */
+    private ScratchConfig scratch = new ScratchConfig();
+
     /** 曲线绘制验证码配置 */
     private CurveConfig curve = new CurveConfig();
 

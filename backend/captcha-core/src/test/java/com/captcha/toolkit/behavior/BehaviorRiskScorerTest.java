@@ -1,11 +1,18 @@
 package com.captcha.toolkit.behavior;
 
 import com.captcha.toolkit.config.ClientBehaviorConfig;
+import com.captcha.toolkit.config.BehaviorConfig;
+import com.captcha.toolkit.i18n.CaptchaMessages;
+import com.captcha.toolkit.model.CaptchaAnswer;
+import com.captcha.toolkit.model.CaptchaSession;
+import com.captcha.toolkit.model.NormalizedPoint;
+import com.captcha.toolkit.model.PointVo;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -46,6 +53,55 @@ class BehaviorRiskScorerTest {
         ClientBehaviorConfig touch = ClientBehaviorConfig.touchDefaults();
         BehaviorRiskResult result = new DragBehaviorRiskScorer().score(sparseDrag(0.5), touch);
         assertTrue(result.score() < touch.getRiskThreshold(), result.features().toString());
+    }
+
+    @Test
+    void dragValidatorAcceptsScoreEqualToThresholdAndRejectsJustAbove() {
+        BehaviorTrace trace = straightDrag(0.5);
+        double score = new DragBehaviorRiskScorer().score(trace, web).score();
+
+        BehaviorConfig config = new BehaviorConfig();
+        config.setEnabled(true);
+        config.setRiskEnabled(true);
+        config.setRiskThreshold(score);
+        SliderBehaviorValidator validator = new SliderBehaviorValidator(config);
+        CaptchaAnswer answer = CaptchaAnswer.slider(0.5);
+        answer.setTd(BehaviorTraceCodec.encode(trace));
+        CaptchaSession session = CaptchaSession.slider(
+                "risk-boundary", "classic", 170, 95, 340, 190, 300_000L);
+
+        assertTrue(validator.validate(answer.getTd(), answer, session).isEmpty(),
+                "综合分恰好等于阈值应通过（仅超过阈值才拒绝）");
+        config.setRiskThreshold(Math.nextDown(score));
+        assertEquals(CaptchaMessages.BEHAVIOR_RISK_TOO_HIGH,
+                validator.validate(answer.getTd(), answer, session).orElse(""));
+    }
+
+    @Test
+    void clickValidatorAcceptsScoreEqualToThresholdAndRejectsJustAbove() {
+        BehaviorTrace trace = mechanicalClick();
+        double score = new ClickBehaviorRiskScorer().score(trace, web).score();
+
+        BehaviorConfig config = new BehaviorConfig();
+        config.setEnabled(true);
+        config.setRiskEnabled(true);
+        config.setRiskThreshold(score);
+        ClickBehaviorValidator validator = new ClickBehaviorValidator(config);
+        CaptchaAnswer answer = CaptchaAnswer.click(List.of(
+                new NormalizedPoint(0.3, 0.4),
+                new NormalizedPoint(0.6, 0.7),
+                new NormalizedPoint(0.5, 0.2)));
+        answer.setTd(BehaviorTraceCodec.encode(trace));
+        CaptchaSession session = CaptchaSession.click(
+                "risk-boundary-click", 340, 190,
+                List.of(new PointVo(102, 76), new PointVo(204, 133), new PointVo(170, 38)),
+                List.of("测", "试", "验"), 300_000L);
+
+        assertTrue(validator.validate(answer.getTd(), answer, session).isEmpty(),
+                "综合分恰好等于阈值应通过（仅超过阈值才拒绝）");
+        config.setRiskThreshold(Math.nextDown(score));
+        assertEquals(CaptchaMessages.BEHAVIOR_RISK_TOO_HIGH,
+                validator.validate(answer.getTd(), answer, session).orElse(""));
     }
 
     /** 匀速直线拖拽：每一步速度完全相同，路径绝对平直 */

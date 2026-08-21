@@ -4,7 +4,7 @@ layout: home
 hero:
   name: Captcha Toolkit
   text: Behavior Captcha Components
-  tagline: Slider puzzle / Click characters / Rotate · Spring Boot + Vue 3
+  tagline: Slider puzzle / Click characters / Rotate / Angle / Scratch · Spring Boot + Vue 3
   actions:
     - theme: brand
       text: Quick Start

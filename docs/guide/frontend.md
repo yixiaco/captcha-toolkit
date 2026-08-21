@@ -45,7 +45,7 @@ function onVerified(result) {
 </script>
 ```
 
-也可按需使用底层组件：`SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `CurveCaptcha` / `FloatingCaptcha`。
+也可按需使用底层组件：`SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `AngleCaptcha` / `ScratchCaptcha` / `CurveCaptcha` / `FloatingCaptcha`。
 
 `Captcha` 的 `display` 支持三种展示方式：
 
@@ -61,7 +61,7 @@ function onVerified(result) {
 | `api` | 自定义 API 客户端 | 自动创建 |
 | `request` | 自定义请求函数 | 内置 fetch |
 | `width` / `height` | 图片尺寸 | `340` / `190` |
-| `mode` | 验证方式：slider / click / rotate / curve / slide-curve / swing-tile | `slider` |
+| `mode` | 验证方式：slider / click / rotate / angle / scratch / curve / slide-curve / swing-tile | `slider` |
 | `shape` | 滑块初始形状（仅 debug 生效） | `''` |
 | `debug` | 是否请求调试答案（仅联调） | `false` |
 | `autoReload` | 失败后自动换一张 | `true` |
@@ -74,6 +74,8 @@ function onVerified(result) {
 | `slideCurveTip` | 滑动曲线提示文案 | 中文默认 |
 | `slideCurveColor` | 滑动曲线摆动曲线颜色 | `#3b7cff` |
 | `swingTileTip` | 滑块摆动图块提示文案 | 中文默认 |
+| `angleTip` | 角度验证提示文案 | 中文默认 |
+| `scratchTip` | 刮刮乐提示文案 | 中文默认 |
 | `floatingText` | 浮动按钮文案 | `安全验证` |
 | `floatingPosition` | 浮动位置：bottom-right / bottom-left | `bottom-right` |
 | `loadingText` / `imageAlt` | 加载提示与图片 alt | 中文默认 |

@@ -1,12 +1,14 @@
 package com.captcha.toolkit.autoconfigure;
 
 import com.captcha.toolkit.config.BackgroundConfig;
+import com.captcha.toolkit.config.AngleConfig;
 import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.config.ClickConfig;
 import com.captcha.toolkit.config.CurveConfig;
 import com.captcha.toolkit.config.RateLimitConfig;
 import com.captcha.toolkit.config.RotateConfig;
+import com.captcha.toolkit.config.ScratchConfig;
 import com.captcha.toolkit.config.SlideCurveConfig;
 import com.captcha.toolkit.config.SliderConfig;
 import com.captcha.toolkit.config.SwingTileConfig;
@@ -72,6 +74,12 @@ public class CaptchaProperties {
     /** 图片旋转验证码配置 */
     private RotateConfig rotate = new RotateConfig();
 
+    /** 角度验证（圆盘旋转）验证码配置 */
+    private AngleConfig angle = new AngleConfig();
+
+    /** 刮刮乐验证码配置 */
+    private ScratchConfig scratch = new ScratchConfig();
+
     /** 曲线绘制验证码配置 */
     private CurveConfig curve = new CurveConfig();
 
@@ -101,6 +109,8 @@ public class CaptchaProperties {
         BeanUtils.copyProperties(slider, config.getSlider());
         BeanUtils.copyProperties(click, config.getClick());
         BeanUtils.copyProperties(rotate, config.getRotate());
+        BeanUtils.copyProperties(angle, config.getAngle());
+        BeanUtils.copyProperties(scratch, config.getScratch());
         BeanUtils.copyProperties(curve, config.getCurve());
         BeanUtils.copyProperties(slideCurve, config.getSlideCurve());
         BeanUtils.copyProperties(swingTile, config.getSwingTile());

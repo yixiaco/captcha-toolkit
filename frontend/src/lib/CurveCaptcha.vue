@@ -17,6 +17,7 @@
         class="captcha-img"
         :alt="opts.imageAlt"
         draggable="false"
+        @error="onImageError"
       >
 
       <canvas
@@ -34,6 +35,13 @@
         <div class="spinner" />
         <span>{{ opts.loadingText }}</span>
       </div>
+
+      <CaptchaLoadError
+        v-if="status === 'error'"
+        :text="opts.loadFailedText"
+        :retry-text="opts.retryText"
+        @retry="loadCaptcha"
+      />
 
       <transition name="fade">
         <div
@@ -64,6 +72,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useCaptchaOptions } from './options';
+import CaptchaLoadError from './CaptchaLoadError.vue';
 import type { CurveChallengeData, VerifyResult } from './api';
 import type { CaptchaStatus, ClientType } from './types';
 import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace';
@@ -92,6 +101,10 @@ interface Props {
   autoReload?: boolean | null
   /** 加载提示文案 */
   loadingText?: string | null
+  /** 加载失败提示文案 */
+  loadFailedText?: string | null
+  /** 重试按钮文案 */
+  retryText?: string | null
   /** 图片 alt 文案 */
   imageAlt?: string | null
   /** 客户端类型：web / h5 / mini_program */
@@ -143,6 +156,14 @@ function clearCanvas() {
   if (canvasRef.value) {
     ctx = canvasRef.value.getContext('2d');
     ctx?.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
+  }
+}
+
+/** 图片加载失败：切换到错误回显，并清空画布 */
+function onImageError() {
+  if (status.value !== 'success') {
+    status.value = 'error';
+    clearCanvas();
   }
 }
 
@@ -202,7 +223,7 @@ async function loadCaptcha() {
   } catch (error) {
     console.error('加载曲线验证码失败', error);
     emit('error', error);
-    status.value = 'idle';
+    status.value = 'error';
   }
 }
 

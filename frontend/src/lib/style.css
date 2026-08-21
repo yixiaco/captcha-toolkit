@@ -12,6 +12,8 @@
 .captcha-modal *,
 .slider-captcha *,
 .click-captcha *,
+.angle-captcha *,
+.scratch-captcha *,
 .curve-captcha *,
 .slide-curve-captcha *,
 .swing-tile-captcha *,
@@ -58,6 +60,44 @@
   border-top-color: var(--gt-blue);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
+}
+
+.load-error-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #e5484d;
+  font-size: 12px;
+}
+
+.load-error-text {
+  color: #6b7280;
+}
+
+.load-error-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid #e4e7ec;
+  border-radius: 5px;
+  background: #fff;
+  color: var(--gt-blue);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.load-error-btn:hover {
+  border-color: var(--gt-blue);
+  background: #eef4ff;
 }
 
 .success-mask {
@@ -304,6 +344,74 @@
   width: 100%;
 }
 
+.angle-captcha {
+  width: 100%;
+}
+
+.angle-captcha .img-wrap {
+  background: transparent;
+}
+
+.angle-disc {
+  position: absolute;
+  z-index: 2;
+  border-radius: 50%;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.scratch-captcha {
+  width: 100%;
+}
+
+.scratch-prompt {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  margin-bottom: 10px;
+  padding: 6px 12px;
+  border: 1px solid #e8eaee;
+  border-radius: 6px;
+  background: #f7f8fa;
+  font-size: 13px;
+  color: #4a5160;
+  flex-wrap: wrap;
+}
+
+.scratch-prompt-label {
+  color: #8a919c;
+}
+
+.scratch-prompt-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 5px;
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  color: #0958d9;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.scratch-prompt-img-full {
+  display: block;
+  height: 30px;
+  width: auto;
+}
+
+.scratch-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 .shape-picker {
   display: flex;
   align-items: center;
@@ -463,6 +571,12 @@
   font-family: "KaiTi", "STKaiti", "SimSun", serif;
   font-size: 14px;
   font-weight: 700;
+}
+
+.click-prompt-img {
+  display: block;
+  height: 30px;
+  width: auto;
 }
 
 .click-canvas {

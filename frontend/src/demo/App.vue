@@ -136,6 +136,56 @@
           图片旋转
         </button>
         <button
+          class="mode-btn angle"
+          @click="open('angle')"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="8"
+            />
+            <path d="M12 4v3" />
+            <path d="M12 8l2.5 2.5" />
+          </svg>
+          角度验证
+        </button>
+        <button
+          class="mode-btn scratch"
+          @click="open('scratch')"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect
+              x="3"
+              y="4"
+              width="18"
+              height="16"
+              rx="2"
+            />
+            <path d="M7 8h7M7 12h4M7 16h6" />
+            <path d="M17 9l2 2 2-2" />
+          </svg>
+          刮刮乐
+        </button>
+        <button
           class="mode-btn curve"
           @click="open('curve')"
         >
@@ -275,7 +325,7 @@ const isDev = import.meta.env.DEV;
 const account = ref('');
 const password = ref('');
 const captchaVisible = ref(false);
-const captchaMode = ref<'slider' | 'click' | 'rotate' | 'curve' | 'slide-curve' | 'swing-tile'>('slider');
+const captchaMode = ref<'slider' | 'click' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile'>('slider');
 const demoLocale = ref<'zh-CN' | 'en'>('zh-CN');
 const demoLocales: Array<{ key: 'zh-CN' | 'en'; label: string }> = [
   { key: 'zh-CN', label: '中文' },
@@ -285,14 +335,14 @@ const shapeFromUrl = ref('');
 const verified = ref(false);
 const verifiedTicket = ref('');
 
-function open(mode: 'slider' | 'click' | 'rotate' | 'curve' | 'slide-curve' | 'swing-tile') {
+function open(mode: 'slider' | 'click' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile') {
   resetVerified();
   captchaMode.value = mode;
   captchaVisible.value = true;
 }
 
 function openRandom() {
-  const modes = ['slider', 'click', 'rotate', 'curve', 'slide-curve', 'swing-tile'] as const;
+  const modes = ['slider', 'click', 'rotate', 'angle', 'scratch', 'curve', 'slide-curve', 'swing-tile'] as const;
   open(modes[Math.floor(Math.random() * modes.length)]);
 }
 
@@ -325,7 +375,9 @@ onMounted(() => {
   }
   if (modeParam === 'slider' || modeParam === 'click'
     || modeParam === 'rotate' || modeParam === 'curve'
-    || modeParam === 'slide-curve' || modeParam === 'swing-tile') {
+    || modeParam === 'angle' || modeParam === 'scratch'
+    || modeParam === 'slide-curve'
+    || modeParam === 'swing-tile') {
     open(modeParam);
   } else if (modeParam === 'random') {
     openRandom();

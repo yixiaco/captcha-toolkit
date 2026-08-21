@@ -20,7 +20,7 @@
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `{prefix}?type=slider\|click\|rotate\|curve\|slide-curve\|swing-tile` | 下发验证码 |
+| GET | `{prefix}?type=slider\|click\|rotate\|angle\|scratch\|curve\|slide-curve\|swing-tile` | 下发验证码 |
 | POST | `{prefix}/verify` | 校验答案 |
 | GET/POST | `{prefix}/ticket/verify` | 业务接口校验一次性票据 |
 | GET | `{prefix}/types` | 查询支持的类型与形状 |
@@ -55,8 +55,10 @@ GET /api/captcha?type=slider&shape=classic&debug=1
 | 类型 | `data` 字段 | 说明 |
 | --- | --- | --- |
 | `slider` | `shape` / `pieceOffsetX` / `debugX` | 拼图形状、拼图块留白、调试答案 x |
-| `click` | `prompt` / `debugTargets` | 提示文字、调试目标坐标 |
+| `click` | `promptImage` / `targetCount` / `debugTargets` | 提示词整图（透明背景）、目标字数、调试目标坐标 |
 | `rotate` | `debugAngle` | 调试答案角度（度） |
+| `angle` | `discSize`，调试 `debugAngle` | 圆形图直径（像素）、调试答案角度（度，0~360） |
+| `scratch` | `promptImage` / `targetCount`，调试 `debugX` / `debugTargets` / `debugPatterns` | 提示词整图（透明背景）、目标图形数、调试答案位置与图案布局 |
 | `curve` | `debugCurve` | 调试期望曲线采样点（像素坐标） |
 | `slide-curve` | `endpoints` / `amplitude` / `shape`，调试 `debugSwing` / `debugFakeTargets` | 前端绘制摆动曲线所需参数、调试摆动答案与假凹槽坐标 |
 | `swing-tile` | `path` / `startRotation` / `endRotation` / `swingAmplitude` / `pieceSize`，调试 `debugT` / `debugFakeTargets` | 贝塞尔路径与摆动参数、调试真凹槽位置与假凹槽坐标 |
@@ -102,6 +104,33 @@ GET /api/captcha?type=slider&shape=classic&debug=1
   "td": "H4sI..."
 }
 ```
+
+角度验证：
+
+```json
+{
+  "id": "7f0e...",
+  "type": "angle",
+  "angle": 275.3,
+  "clientType": "web",
+  "td": "H4sI..."
+}
+```
+
+刮刮乐：
+
+```json
+{
+  "id": "7f0e...",
+  "type": "scratch",
+  "xNorm": 0.62,
+  "clientType": "web",
+  "td": "H4sI..."
+}
+```
+
+`xNorm` 为滑块最终位置（归一化 0~1，横扫揭开的进度）；答案位置是全部提示图形
+刚好完整出现的最小位置，停早未出全、停晚继续右移都会判定失败。
 
 曲线：
 

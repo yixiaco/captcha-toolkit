@@ -44,6 +44,12 @@ public class CaptchaSession {
     /** 曲线绘制验证码期望曲线采样点（像素坐标），其他类型为 null */
     private final List<PointVo> curve;
 
+    /** 刮刮乐图案布局（仅刮刮乐会话使用） */
+    private final List<ScratchPatternSpec> scratchPatterns;
+
+    /** 刮刮乐目标图案下标（仅刮刮乐会话使用） */
+    private final List<Integer> scratchTargets;
+
     /** 会话创建时间戳（毫秒） */
     private final long createdAt;
 
@@ -53,7 +59,9 @@ public class CaptchaSession {
     /** 私有构造：所有会话统一从这里创建 */
     private CaptchaSession(String id, CaptchaType type, String shape, int x, int y,
                            int width, int height, List<PointVo> targets, List<String> prompt,
-                           double rotation, List<PointVo> curve, long ttlMillis) {
+                           double rotation, List<PointVo> curve,
+                           List<ScratchPatternSpec> scratchPatterns,
+                           List<Integer> scratchTargets, long ttlMillis) {
         this.id = id;
         this.type = type;
         this.shape = shape;
@@ -65,6 +73,8 @@ public class CaptchaSession {
         this.targets = targets;
         this.prompt = prompt;
         this.curve = curve;
+        this.scratchPatterns = scratchPatterns;
+        this.scratchTargets = scratchTargets;
         long now = System.currentTimeMillis();
         this.createdAt = now;
         this.expiresAt = now + ttlMillis;
@@ -74,28 +84,35 @@ public class CaptchaSession {
     public static CaptchaSession slider(String id, String shape, int x, int y,
                                         int width, int height, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.SLIDER, shape, x, y, width, height,
-                null, null, 0, null, ttlMillis);
+                null, null, 0, null, null, null, ttlMillis);
     }
 
     /** 创建点选会话 */
     public static CaptchaSession click(String id, int width, int height,
                                        List<PointVo> targets, List<String> prompt, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.CLICK, null, 0, 0, width, height,
-                targets, prompt, 0, null, ttlMillis);
+                targets, prompt, 0, null, null, null, ttlMillis);
     }
 
     /** 创建旋转会话 */
     public static CaptchaSession rotate(String id, int width, int height,
                                         double rotation, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.ROTATE, null, 0, 0, width, height,
-                null, null, rotation, null, ttlMillis);
+                null, null, rotation, null, null, null, ttlMillis);
+    }
+
+    /** 创建角度验证（圆盘旋转）会话 */
+    public static CaptchaSession angle(String id, int width, int height,
+                                       double rotation, long ttlMillis) {
+        return new CaptchaSession(id, CaptchaType.ANGLE, null, 0, 0, width, height,
+                null, null, rotation, null, null, null, ttlMillis);
     }
 
     /** 创建曲线绘制会话 */
     public static CaptchaSession curve(String id, int width, int height,
                                        List<PointVo> curve, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.CURVE, null, 0, 0, width, height,
-                null, null, 0, curve, ttlMillis);
+                null, null, 0, curve, null, null, ttlMillis);
     }
 
     /**
@@ -106,7 +123,7 @@ public class CaptchaSession {
     public static CaptchaSession slideCurve(String id, int width, int height,
                                             int x, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.SLIDE_CURVE, null, x, 0, width, height,
-                null, null, 0, null, ttlMillis);
+                null, null, 0, null, null, null, ttlMillis);
     }
 
     /**
@@ -117,7 +134,21 @@ public class CaptchaSession {
     public static CaptchaSession swingTile(String id, int width, int height,
                                            int x, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.SWING_TILE, null, x, 0, width, height,
-                null, null, 0, null, ttlMillis);
+                null, null, 0, null, null, null, ttlMillis);
+    }
+
+    /**
+     * 创建刮刮乐会话。
+     *
+     * @param x             答案滑块位置（0~1 放大 10000 倍后的整数）
+     * @param patterns       全部图案布局
+     * @param targetIndices  目标图案下标
+     */
+    public static CaptchaSession scratch(String id, int width, int height, int x,
+                                         List<ScratchPatternSpec> patterns,
+                                         List<Integer> targetIndices, long ttlMillis) {
+        return new CaptchaSession(id, CaptchaType.SCRATCH, null, x, 0, width, height,
+                null, null, 0, null, patterns, targetIndices, ttlMillis);
     }
 
     /** 会话是否已过期 */

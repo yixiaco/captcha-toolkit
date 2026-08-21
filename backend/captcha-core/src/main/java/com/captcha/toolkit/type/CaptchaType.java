@@ -17,6 +17,12 @@ public enum CaptchaType {
     /** 图片旋转 */
     ROTATE("rotate"),
 
+    /** 角度验证（圆盘旋转） */
+    ANGLE("angle"),
+
+    /** 刮刮乐（刮出指定图形） */
+    SCRATCH("scratch"),
+
     /** 曲线绘制 */
     CURVE("curve"),
 

@@ -78,4 +78,38 @@ class SlideCurveBehaviorValidatorTest {
         Optional<String> error = enabledValidator().validate(answer.getTd(), answer, session());
         assertEquals("slider.end-mismatch", error.orElse(""));
     }
+
+    @Test
+    void acceptsEndExactlyAtTolerance() {
+        // 容差设为可精确表示的 0.125：轨迹终点与答案相差恰好 0.125 应通过
+        CaptchaAnswer answer = CaptchaAnswer.slider(0.5);
+        answer.setTd(dragTrace(0.625));
+        assertTrue(toleranceValidator(0.125)
+                .validate(answer.getTd(), answer, session()).isEmpty());
+    }
+
+    @Test
+    void rejectsEndJustBeyondTolerance() {
+        CaptchaAnswer answer = CaptchaAnswer.slider(0.5);
+        answer.setTd(dragTrace(Math.nextUp(0.625)));
+        Optional<String> error = toleranceValidator(0.125)
+                .validate(answer.getTd(), answer, session());
+        assertEquals("slider.end-mismatch", error.orElse(""));
+    }
+
+    @Test
+    void rejectsMissingXNorm() {
+        CaptchaAnswer answer = CaptchaAnswer.slider(null);
+        answer.setTd(dragTrace(0.5));
+        Optional<String> error = enabledValidator().validate(answer.getTd(), answer, session());
+        assertEquals("slider.missing-x-norm", error.orElse(""));
+    }
+
+    /** 开启行为校验并指定终点容差的校验器 */
+    private static SlideCurveBehaviorValidator toleranceValidator(double tolerance) {
+        BehaviorConfig config = new BehaviorConfig();
+        config.setEnabled(true);
+        config.setPointTolerance(tolerance);
+        return new SlideCurveBehaviorValidator(config);
+    }
 }

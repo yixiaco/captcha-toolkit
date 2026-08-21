@@ -88,6 +88,12 @@ looser than web to tolerate touch noise.
 
 ## Click
 
+The prompt is delivered as a single transparent PNG image (`promptImage`) so the
+frontend does not depend on local fonts. Rendering order: `click.fonts` configured
+font → bundled open-source font (`captcha-core/src/main/resources/fonts/`, ZCOOL
+KuaiLe, OFL) → common system CJK fonts (Microsoft YaHei / SimHei / SimSun / Noto
+Sans CJK, etc.) → logical font fallback.
+
 | Setting | Description | Default |
 | --- | --- | --- |
 | `click.width` / `height` | Image size | `340` / `190` |
@@ -109,6 +115,49 @@ looser than web to tolerate touch noise.
 | `rotate.min-angle` / `max-angle` | Misalignment range | `20` / `340` |
 | `rotate.min-elapsed-ms` | Min elapsed time | `800` |
 | `rotate.render-scale` | Supersampling | `2` |
+
+## Angle
+
+Angle ships a single circular image: the background scene is rotated by a random
+angle and cropped to a circle. The scene itself has an inherent up/down
+orientation; drag the slider to rotate the circle back upright. No background
+frame, notch, or direction arrow is rendered.
+
+| Setting | Description | Default |
+| --- | --- | --- |
+| `angle.width` / `height` | Image size | `340` / `190` |
+| `angle.tolerance` | Angle tolerance (degrees) | `3` |
+| `angle.min-angle` / `max-angle` | Arrow misalignment range | `20` / `340` |
+| `angle.min-elapsed-ms` | Min elapsed time | `800` |
+| `angle.expire-seconds` | Session TTL | `300` |
+| `angle.disc-radius-ratio` | Disc radius ratio of the shorter side (larger = bigger disc) | `0.4` |
+| `angle.render-scale` | Supersampling | `2` |
+
+## Scratch
+
+Scratch reuses the `background.sources` main background: several shapes are embedded
+with colors sampled from the background (low lightness delta, slight hue shift, semi
+transparent) so machine vision struggles to segment them. The frontend covers them
+with a silver coating and the user drags a slider left to right to sweep it away,
+stopping as soon as all prompted shapes appear.
+
+| Setting | Description | Default |
+| --- | --- | --- |
+| `scratch.width` / `height` | Image size | `340` / `190` |
+| `scratch.pattern-count` | Embedded pattern count | `6` |
+| `scratch.target-count` | Target shape count upper bound (random between min and max) | `3` |
+| `scratch.target-count-min` | Target shape count lower bound | `1` |
+| `scratch.pattern-size-ratio` | Pattern size ratio upper bound (random between min and max) | `0.13` |
+| `scratch.pattern-size-min-ratio` | Pattern size ratio lower bound | `0.06` |
+| `scratch.pattern-min-gap` | Min center gap between patterns (px) | `36` |
+| `scratch.tolerance` | Slider position tolerance (normalized 0~1) | `0.03` |
+| `scratch.lightness-delta-min/max` | Lightness delta range vs background | `0.04` / `0.12` |
+| `scratch.hue-shift-max` | Max hue shift (degrees) | `8` |
+| `scratch.alpha-min/max` | Pattern alpha range (same as slider hole, ~0.8) | `0.75` / `0.85` |
+| `scratch.hole-white-alpha` | White translucent layer over patterns (same as slider hole) | `0.5` |
+| `scratch.min-elapsed-ms` | Min elapsed time | `1000` |
+| `scratch.expire-seconds` | Session TTL | `300` |
+| `scratch.render-scale` | Supersampling | `2` |
 
 ## Curve Drawing
 

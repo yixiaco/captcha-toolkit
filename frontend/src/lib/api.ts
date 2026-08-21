@@ -33,8 +33,10 @@ export interface SliderChallengeData {
 
 /** 文字点选类型特定化载荷 */
 export interface ClickChallengeData {
-  /** 提示文字（按点击顺序） */
-  prompt?: string[]
+  /** 提示词整图（透明背景，data URI） */
+  promptImage?: string
+  /** 需要点击的目标数量 */
+  targetCount?: number
   /** 调试：目标坐标 */
   debugTargets?: ChallengePoint[]
   /** 调试：假目标坐标 */
@@ -45,6 +47,38 @@ export interface ClickChallengeData {
 export interface RotateChallengeData {
   /** 调试：正确答案角度（度） */
   debugAngle?: number
+}
+
+/** 角度验证（圆盘旋转）类型特定化载荷 */
+export interface AngleChallengeData {
+  /** 圆形图直径（像素），前端按此尺寸居中渲染 */
+  discSize?: number
+  /** 调试：正确答案角度（度，0~360） */
+  debugAngle?: number
+}
+
+/** 刮刮乐调试图案信息 */
+export interface ScratchDebugPattern {
+  /** 图形名称（与 shapes.ts 的 key 一致） */
+  shape: string
+  /** 归一化中心横坐标（0~1） */
+  x: number
+  /** 归一化中心纵坐标（0~1） */
+  y: number
+}
+
+/** 刮刮乐类型特定化载荷 */
+export interface ScratchChallengeData {
+  /** 提示词整图（透明背景，data URI） */
+  promptImage?: string
+  /** 需要刮出的图形总数 */
+  targetCount?: number
+  /** 调试：全部提示图形刚好出现的滑块位置（归一化 0~1） */
+  debugX?: number
+  /** 调试：目标图案在 debugPatterns 中的下标 */
+  debugTargets?: number[]
+  /** 调试：全部图案（形状 + 归一化中心坐标） */
+  debugPatterns?: ScratchDebugPattern[]
 }
 
 /** 曲线绘制类型特定化载荷 */

@@ -42,6 +42,7 @@
         class="captcha-img"
         :alt="opts.imageAlt"
         draggable="false"
+        @error="onImageError"
       >
 
       <img
@@ -54,6 +55,7 @@
           height: imgHeight + 'px',
           transform: `translateX(${pieceLeft - pieceOffsetX}px)`,
         }"
+        @error="onImageError"
       >
 
       <div
@@ -63,6 +65,13 @@
         <div class="spinner" />
         <span>{{ opts.loadingText }}</span>
       </div>
+
+      <CaptchaLoadError
+        v-if="status === 'error'"
+        :text="opts.loadFailedText"
+        :retry-text="opts.retryText"
+        @retry="loadCaptcha"
+      />
 
       <transition name="fade">
         <div
@@ -134,6 +143,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { getShapeOptions, PUZZLE_SHAPES } from './shapes';
 import { useCaptchaOptions } from './options';
+import CaptchaLoadError from './CaptchaLoadError.vue';
 import type { SliderChallengeData, VerifyResult } from './api';
 import type { CaptchaStatus, ClientType } from './types';
 import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace';
@@ -172,6 +182,10 @@ interface Props {
   sliderTip?: string | null
   /** 加载提示文案 */
   loadingText?: string | null
+  /** 加载失败提示文案 */
+  loadFailedText?: string | null
+  /** 重试按钮文案 */
+  retryText?: string | null
   /** 图片 alt 文案 */
   imageAlt?: string | null
   /** 客户端类型：web / h5 / mini_program */
@@ -224,6 +238,15 @@ function maxLeft() {
   return Math.max(0, trackWidth - opts.handleWidth);
 }
 
+/** 图片加载失败：切换到错误回显，隐藏无法显示的图片 */
+function onImageError() {
+  if (status.value !== 'success') {
+    status.value = 'error';
+    image1.value = '';
+    image2.value = '';
+  }
+}
+
 /** 记录滑块当前位置（而不是指针位置，避免手柄偏移导致终点对不上） */
 function trackPoint(event: PointerEvent, type: 0 | 1 | 2) {
   // 移动事件只按 16ms（约 60fps）采样一次，避免轨迹无限膨胀
@@ -272,7 +295,7 @@ async function loadCaptcha() {
   } catch (error) {
     console.error('加载滑块验证码失败', error);
     emit('error', error);
-    status.value = 'idle';
+    status.value = 'error';
   }
 }
 

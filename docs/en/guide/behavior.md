@@ -48,6 +48,8 @@ The frontend compresses `td` with gzip + base64url (`H4sI...`). The backend auto
 | `SliderBehaviorValidator` | START → MOVE → UP; final x matches `xNorm` |
 | `ClickBehaviorValidator` | DOWN/UP pairs, count, order, coordinates, click duration |
 | `RotateBehaviorValidator` | Drag event sequence (angle checked by the generator) |
+| `AngleBehaviorValidator` | START → MOVE → UP; final x matches the rotation angle (angle / 360) |
+| `ScratchBehaviorValidator` | Single START → MOVE → UP drag; final x matches the slider position `xNorm` |
 | `CurveBehaviorValidator` | START → MOVE → UP, no clicks; trace ends match the answer curve ends |
 | `SlideCurveBehaviorValidator` | START → MOVE → UP; final x matches the curve swing `xNorm` |
 | `SwingTileBehaviorValidator` | START → MOVE → UP; final x matches the slider position `xNorm` |
@@ -64,7 +66,7 @@ scoring: `DragBehaviorRiskScorer` / `ClickBehaviorRiskScorer` combine weak
 signals into a normalized 0~1 score and only reject when the score exceeds the
 profile threshold, reducing false positives.
 
-Drag (slider / rotate / curve / slide-curve / swing-tile) features:
+Drag (slider / rotate / angle / curve / slide-curve / swing-tile) features:
 
 | Feature | Meaning | Bot signature |
 | --- | --- | --- |
@@ -81,6 +83,11 @@ Click features:
 | `dwell-uniformity` | CV of press durations | Identical click durations |
 | `interval-uniformity` | CV of click intervals | Perfectly regular rhythm |
 | `duplicate-downs` | Bit-identical repeated click coordinates | Exact same click position |
+
+Scratch is a single drag, so risk scoring uses the drag features. The backend answer is
+the minimal slider position where all prompted shapes are fully revealed: stopping too
+early (missing shapes) or too late (moving further right) both fail. The frontend shows
+no live progress, so no judgment information leaks to machines.
 
 Features with insufficient samples are automatically excluded, so sparse H5 /
 mini-program traces are not penalized. Touch profiles also default to a looser

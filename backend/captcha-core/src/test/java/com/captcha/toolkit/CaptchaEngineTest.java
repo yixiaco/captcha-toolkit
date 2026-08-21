@@ -6,10 +6,12 @@ import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.image.DataUriImageCodec;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
+import com.captcha.toolkit.model.AngleChallengeData;
 import com.captcha.toolkit.model.ClickChallengeData;
 import com.captcha.toolkit.model.CurveChallengeData;
 import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.RotateChallengeData;
+import com.captcha.toolkit.model.ScratchChallengeData;
 import com.captcha.toolkit.model.SliderChallengeData;
 import com.captcha.toolkit.model.SlideCurveChallengeData;
 import com.captcha.toolkit.model.SwingTileChallengeData;
@@ -24,6 +26,7 @@ import com.captcha.toolkit.type.CaptchaType;
 import com.captcha.toolkit.word.WordFactory;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +50,8 @@ class CaptchaEngineTest {
         config.getSlider().setMinElapsedMs(0);
         config.getClick().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
+        config.getAngle().setMinElapsedMs(0);
+        config.getScratch().setMinElapsedMs(0);
         config.getCurve().setMinElapsedMs(0);
         config.getSlideCurve().setMinElapsedMs(0);
         config.getSwingTile().setMinElapsedMs(0);
@@ -64,6 +69,8 @@ class CaptchaEngineTest {
         config.getSlider().setMinElapsedMs(0);
         config.getClick().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
+        config.getAngle().setMinElapsedMs(0);
+        config.getScratch().setMinElapsedMs(0);
         config.getCurve().setMinElapsedMs(0);
         config.getSlideCurve().setMinElapsedMs(0);
         config.getSwingTile().setMinElapsedMs(0);
@@ -180,8 +187,10 @@ class CaptchaEngineTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
 
         assertNotNull(challenge.getImage1());
-        assertNotNull(clickData(challenge).prompt());
-        assertEquals(3, clickData(challenge).prompt().size());
+        // 提示词以单张透明背景图片下发
+        assertNotNull(clickData(challenge).promptImage());
+        assertTrue(clickData(challenge).promptImage().startsWith("data:image/png;base64,"));
+        assertEquals(3, clickData(challenge).targetCount());
         assertNotNull(clickData(challenge).debugTargets());
 
         List<NormalizedPoint> points = clickData(challenge).debugTargets().stream()
@@ -232,9 +241,9 @@ class CaptchaEngineTest {
                 List.of(), new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())));
 
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
-        // 每次从数组中随机选一个词组，并按词组内文字顺序提示
-        assertTrue(clickData(challenge).prompt().equals(List.of("星", "巴", "克"))
-                || clickData(challenge).prompt().equals(List.of("麦", "当", "劳")));
+        // 每次从数组中随机选一个词组，提示词以单张图片下发
+        assertNotNull(clickData(challenge).promptImage());
+        assertEquals(3, clickData(challenge).targetCount());
         assertEquals(3, clickData(challenge).debugTargets().size());
 
         List<NormalizedPoint> points = clickData(challenge).debugTargets().stream()
@@ -260,8 +269,8 @@ class CaptchaEngineTest {
                 List.of(), background, background, wordFactory);
 
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
-        assertTrue(clickData(challenge).prompt().equals(List.of("星", "巴", "克"))
-                || clickData(challenge).prompt().equals(List.of("麦", "当", "劳")));
+        assertNotNull(clickData(challenge).promptImage());
+        assertEquals(3, clickData(challenge).targetCount());
 
         List<NormalizedPoint> points = clickData(challenge).debugTargets().stream()
                 .map(p -> new NormalizedPoint(
@@ -437,6 +446,60 @@ class CaptchaEngineTest {
     }
 
     @Test
+    void angleGeneratesAndVerifies() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.ANGLE, Map.of(), true);
+
+        assertEquals(null, challenge.getImage1(), "角度验证不再下发背景图");
+        assertNotNull(challenge.getImage2());
+        assertNotNull(angleData(challenge).debugAngle());
+        assertNotNull(angleData(challenge).discSize());
+        assertEquals("angle", challenge.getType());
+
+        VerifyResult ok = engine.verify(challenge.getId(),
+                CaptchaAnswer.rotate(angleData(challenge).debugAngle()));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+
+        // 错误角度应失败
+        CaptchaChallenge wrongChallenge = engine.create(CaptchaType.ANGLE, Map.of(), true);
+        VerifyResult wrong = engine.verify(wrongChallenge.getId(),
+                CaptchaAnswer.rotate(angleData(wrongChallenge).debugAngle() + 30));
+        assertFalse(wrong.isSuccess());
+    }
+
+    @Test
+    void scratchGeneratesAndVerifiesOnlyTargetShapes() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SCRATCH, Map.of(), true);
+
+        assertNotNull(challenge.getImage1());
+        assertEquals("scratch", challenge.getType());
+        ScratchChallengeData data = scratchData(challenge);
+        assertNotNull(data.debugX());
+        // 目标数量随机（1~3），且与 debugTargets 一致
+        assertTrue(data.targetCount() >= 1 && data.targetCount() <= 3);
+        assertEquals(data.targetCount(), data.debugTargets().size());
+        assertEquals(6, data.debugPatterns().size());
+
+        // 滑块停在答案位置 → 通过
+        VerifyResult ok = engine.verify(challenge.getId(),
+                CaptchaAnswer.slider(data.debugX()));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+
+        // 停早了（提示图形未出全）→ 失败
+        CaptchaChallenge earlyChallenge = engine.create(CaptchaType.SCRATCH, Map.of(), true);
+        VerifyResult early = engine.verify(earlyChallenge.getId(),
+                CaptchaAnswer.slider(scratchData(earlyChallenge).debugX() - 0.1));
+        assertFalse(early.isSuccess());
+
+        // 停晚了（目标出现后继续右移）→ 失败
+        CaptchaChallenge lateChallenge = engine.create(CaptchaType.SCRATCH, Map.of(), true);
+        VerifyResult wrong = engine.verify(lateChallenge.getId(),
+                CaptchaAnswer.slider(scratchData(lateChallenge).debugX() + 0.1));
+        assertFalse(wrong.isSuccess());
+    }
+
+    @Test
     void curveGeneratesAndVerifiesWithDebugCurve() {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.CURVE, Map.of(), true);
@@ -548,6 +611,16 @@ class CaptchaEngineTest {
     /** 读取旋转类型特定化载荷 */
     private static RotateChallengeData rotateData(CaptchaChallenge<?> challenge) {
         return (RotateChallengeData) challenge.getData();
+    }
+
+    /** 读取角度验证类型特定化载荷 */
+    private static AngleChallengeData angleData(CaptchaChallenge<?> challenge) {
+        return (AngleChallengeData) challenge.getData();
+    }
+
+    /** 读取刮刮乐类型特定化载荷 */
+    private static ScratchChallengeData scratchData(CaptchaChallenge<?> challenge) {
+        return (ScratchChallengeData) challenge.getData();
     }
 
     /** 读取曲线类型特定化载荷 */

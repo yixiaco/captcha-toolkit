@@ -13,6 +13,10 @@ export interface CaptchaMessages {
   sliderTip: string
   /** 旋转提示文案 */
   rotateTip: string
+  /** 角度验证提示文案 */
+  angleTip: string
+  /** 刮刮乐提示文案 */
+  scratchTip: string
   /** 滑动曲线提示文案 */
   slideCurveTip: string
   /** 滑块摆动图块提示文案 */
@@ -23,6 +27,10 @@ export interface CaptchaMessages {
   promptPrefix: string
   /** 图片加载中提示文案 */
   loadingText: string
+  /** 加载失败提示文案 */
+  loadFailedText: string
+  /** 重试按钮文案 */
+  retryText: string
   /** 验证图片 alt 文案 */
   imageAlt: string
   /** 弹窗/浮动面板标题文案 */
@@ -41,11 +49,15 @@ export const CAPTCHA_MESSAGE_KEYS: Array<keyof CaptchaMessages> = [
   'randomLabel',
   'sliderTip',
   'rotateTip',
+  'angleTip',
+  'scratchTip',
   'slideCurveTip',
   'swingTileTip',
   'curveTip',
   'promptPrefix',
   'loadingText',
+  'loadFailedText',
+  'retryText',
   'imageAlt',
   'title',
   'refreshTitle',
@@ -59,11 +71,15 @@ export const zhCNMessages: CaptchaMessages = {
   randomLabel: '随机',
   sliderTip: '按住滑块，拖动完成拼图',
   rotateTip: '拖动滑块旋转图片，使其对齐',
+  angleTip: '按住滑块，旋转圆盘使箭头对准顶部',
+  scratchTip: '按住涂刮，刮出提示中的图形',
   slideCurveTip: '按住滑块，将曲线滑入对应凹槽',
   swingTileTip: '按住滑块，沿曲线把图块摆入目标凹槽',
   curveTip: '请按住并沿虚线从绿色起点描绘到红色终点',
   promptPrefix: '请依次点选',
   loadingText: '图片加载中...',
+  loadFailedText: '加载失败，请重试',
+  retryText: '重试',
   imageAlt: '验证图片',
   title: '安全验证',
   refreshTitle: '换一张',
@@ -77,11 +93,15 @@ export const enMessages: CaptchaMessages = {
   randomLabel: 'Random',
   sliderTip: 'Press and drag the slider to complete the puzzle',
   rotateTip: 'Drag the slider to rotate the image into place',
+  angleTip: 'Press and drag to rotate the disc until the arrow points up',
+  scratchTip: 'Press and scratch to reveal the prompted shapes',
   slideCurveTip: 'Press and drag to swing the curve into the groove',
   swingTileTip: 'Press and drag to move the tile along the curve into the groove',
   curveTip: 'Press and trace the dashed curve from the green start to the red end',
   promptPrefix: 'Please click in order',
   loadingText: 'Loading image...',
+  loadFailedText: 'Failed to load. Please retry.',
+  retryText: 'Retry',
   imageAlt: 'Captcha image',
   title: 'Security Verification',
   refreshTitle: 'Refresh',

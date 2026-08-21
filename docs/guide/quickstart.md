@@ -47,6 +47,8 @@ npm run build:lib    # 构建组件库（含 .d.ts 类型声明）
 - `http://localhost:5173/?captcha=slider` 滑块拼图
 - `http://localhost:5173/?captcha=click` 文字点选
 - `http://localhost:5173/?captcha=rotate` 图片旋转
+- `http://localhost:5173/?captcha=angle` 角度验证
+- `http://localhost:5173/?captcha=scratch` 刮刮乐
 - `http://localhost:5173/?captcha=curve` 曲线绘制
 - `http://localhost:5173/?captcha=slide-curve` 滑动曲线
 - `http://localhost:5173/?captcha=swing-tile` 滑块摆动图块
@@ -63,5 +65,5 @@ curl http://localhost:18080/api/captcha/types
 返回后端支持的类型与滑块形状：
 
 ```json
-{"types":["click","curve","rotate","slide-curve","slider","swing-tile"],"shapes":{"slider":["classic","leaf","triangle","circle","diamond","star","heart","moon","hexagon"]}}
+{"types":["angle","click","curve","rotate","scratch","slide-curve","slider","swing-tile"],"shapes":{"slider":["classic","leaf","triangle","circle","diamond","star","heart","moon","hexagon"]}}
 ```

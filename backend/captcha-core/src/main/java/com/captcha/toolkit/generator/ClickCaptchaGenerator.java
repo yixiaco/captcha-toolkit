@@ -17,6 +17,8 @@ import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.PointVo;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
+import com.captcha.toolkit.image.DataUriImageCodec;
+import com.captcha.toolkit.util.CaptchaFonts;
 import com.captcha.toolkit.util.ImageUtil;
 import com.captcha.toolkit.util.ColorUtil;
 import com.captcha.toolkit.word.WordFactory;
@@ -191,7 +193,8 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator<ClickChallen
         result.setWidth(options.getWidth());
         result.setHeight(options.getHeight());
         result.setData(new ClickChallengeData(
-                prompt,
+                renderPromptImage(prompt),
+                prompt.size(),
                 request.isDebug() ? new ArrayList<>(targets) : null,
                 null));
         return result;
@@ -336,7 +339,7 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator<ClickChallen
         BufferedImage mask = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = mask.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setFont(new Font(chip.font, Font.BOLD, chip.size * scale));
+        g.setFont(CaptchaFonts.resolve(chip.font, chip.ch, Font.BOLD, chip.size * scale));
         FontMetrics fm = g.getFontMetrics();
         int tw = fm.stringWidth(chip.ch);
         int baseline = (fm.getAscent() - fm.getDescent()) / 2;
@@ -353,6 +356,40 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator<ClickChallen
         int targetSize = chip.size + 26;
         glyph = ImageUtil.scaleDown(glyph, targetSize, targetSize);
         return glyph;
+    }
+
+    /** 渲染提示词整图：把提示文字横向排成一行（透明背景 PNG） */
+    private String renderPromptImage(List<String> prompt) {
+        String fontFamily = options.getFonts().isEmpty()
+                ? "SansSerif" : options.getFonts().getFirst();
+        String sample = prompt.isEmpty() ? "测" : String.join("", prompt);
+        Font font = CaptchaFonts.resolve(fontFamily, sample, Font.BOLD, 40);
+        BufferedImage probe = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        FontMetrics fm = probe.createGraphics().getFontMetrics(font);
+        int padding = 10;
+        int charGap = 8;
+        int height = fm.getHeight() + padding * 2;
+        int width = padding * 2;
+        for (String ch : prompt) {
+            width += fm.stringWidth(ch) + charGap;
+        }
+        width = Math.max(1, width - charGap);
+
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setFont(font);
+        g.setColor(new Color(25, 35, 55));
+        int x = padding;
+        int baseline = padding + fm.getAscent();
+        for (String ch : prompt) {
+            g.drawString(ch, x, baseline);
+            x += fm.stringWidth(ch) + charGap;
+        }
+        g.dispose();
+        return new DataUriImageCodec().encode(image, "png");
     }
 
     /** 对单个字形做正弦形变，破坏笔画直线 */

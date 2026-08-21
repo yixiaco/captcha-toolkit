@@ -18,7 +18,7 @@ The default prefix is `/api/captcha`, configurable via `captcha.api-prefix`.
 
 | Method | Path | Description |
 | --- | --- | --- |
-| GET | `{prefix}?type=slider\|click\|rotate\|curve\|slide-curve\|swing-tile` | Create a challenge |
+| GET | `{prefix}?type=slider\|click\|rotate\|angle\|scratch\|curve\|slide-curve\|swing-tile` | Create a challenge |
 | POST | `{prefix}/verify` | Verify the answer |
 | GET/POST | `{prefix}/ticket/verify` | Verify a one-time ticket |
 | GET | `{prefix}/types` | List supported types and shapes |
@@ -54,8 +54,10 @@ challenge model:
 | Type | `data` fields | Description |
 | --- | --- | --- |
 | `slider` | `shape` / `pieceOffsetX` / `debugX` | Shape, piece offset, debug answer x |
-| `click` | `prompt` / `debugTargets` | Prompt text, debug target coordinates |
+| `click` | `promptImage` / `targetCount` / `debugTargets` | Single transparent prompt image, target character count, debug target coordinates |
 | `rotate` | `debugAngle` | Debug answer angle (degrees) |
+| `angle` | `discSize`, debug `debugAngle` | Disc diameter (px), debug answer angle (degrees, 0~360) |
+| `scratch` | `promptImage` / `targetCount`, debug `debugX` / `debugTargets` / `debugPatterns` | Single transparent prompt image, target shape count, debug answer position and pattern layout |
 | `curve` | `debugCurve` | Debug expected curve sample points (pixels) |
 | `slide-curve` | `endpoints` / `amplitude` / `shape`, debug `debugSwing` / `debugFakeTargets` | Swing curve rendering params, debug swing answer and fake grooves |
 | `swing-tile` | `path` / `startRotation` / `endRotation` / `swingAmplitude` / `pieceSize`, debug `debugT` / `debugFakeTargets` | Bézier path and swing params, debug answer position and fake grooves |
@@ -102,6 +104,34 @@ Rotate:
 }
 ```
 
+Angle:
+
+```json
+{
+  "id": "7f0e...",
+  "type": "angle",
+  "angle": 275.3,
+  "clientType": "web",
+  "td": "H4sI..."
+}
+```
+
+Scratch:
+
+```json
+{
+  "id": "7f0e...",
+  "type": "scratch",
+  "xNorm": 0.62,
+  "clientType": "web",
+  "td": "H4sI..."
+}
+```
+
+`xNorm` is the final slider position (normalized 0~1, the sweep progress). The answer is
+the minimal position where all prompted shapes are fully revealed: stopping too early
+(shapes missing) or too late (moving further right) both fail.
+
 Curve:
 
 ```json
@@ -116,7 +146,7 @@ Curve:
 
 `td` is the behavior payload (plain text or gzip + base64url; the backend auto-detects both).
 
-Click challenges also return `prompt` / `debugTargets`, rotate returns `debugAngle`,
+Click challenges also return `promptImage` / `targetCount` / `debugTargets`, rotate / angle return `debugAngle`,
 and curve returns `debugCurve` (expected curve sample points in pixels, debug mode only).
 
 ### Ticket Verification
