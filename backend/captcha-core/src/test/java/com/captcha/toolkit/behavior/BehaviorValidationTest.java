@@ -154,10 +154,96 @@ class BehaviorValidationTest {
         assertEquals("BEHAVIOR", result.getCode());
     }
 
+    @Test
+    void sliderRejectsUniformStraightTraceWhenRiskEnabled() {
+        CaptchaEngine engine = newEngineWithRisk();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
+                Map.of("shape", "classic"), true);
+        int width = challenge.getWidth();
+        double endX = challenge.getDebugX() / (double) width;
+
+        CaptchaAnswer answer = CaptchaAnswer.slider(challenge.getDebugX() / (double) width);
+        answer.setTd(sliderTrace(endX));
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertFalse(result.isSuccess());
+        assertEquals("BEHAVIOR", result.getCode());
+    }
+
+    @Test
+    void sliderPassesHumanLikeTraceWhenRiskEnabled() {
+        CaptchaEngine engine = newEngineWithRisk();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
+                Map.of("shape", "classic"), true);
+        int width = challenge.getWidth();
+        double endX = challenge.getDebugX() / (double) width;
+
+        CaptchaAnswer answer = CaptchaAnswer.slider(challenge.getDebugX() / (double) width);
+        answer.setTd(humanLikeSliderTrace(endX));
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertTrue(result.isSuccess(), result.getMessage());
+    }
+
+    @Test
+    void clickRejectsMechanicalTraceWhenRiskEnabled() {
+        CaptchaEngine engine = newEngineWithRisk();
+        CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
+        List<PointVo> targets = serverTargets(challenge);
+
+        CaptchaAnswer answer = CaptchaAnswer.click(normalizedPoints(challenge));
+        answer.setTd(mechanicalClickTrace(targets,
+                challenge.getWidth(), challenge.getHeight()));
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertFalse(result.isSuccess());
+        assertEquals("BEHAVIOR", result.getCode());
+    }
+
+    @Test
+    void clickPassesVariedTraceWhenRiskEnabled() {
+        CaptchaEngine engine = newEngineWithRisk();
+        CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
+        List<PointVo> targets = serverTargets(challenge);
+
+        CaptchaAnswer answer = CaptchaAnswer.click(normalizedPoints(challenge));
+        answer.setTd(humanLikeClickTrace(targets,
+                challenge.getWidth(), challenge.getHeight()));
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertTrue(result.isSuccess(), result.getMessage());
+    }
+
+    @Test
+    void h5SparseTracePassesRiskScoring() {
+        CaptchaEngine engine = newEngineWithRisk();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
+                Map.of("shape", "classic"), true);
+        int width = challenge.getWidth();
+        double endX = challenge.getDebugX() / (double) width;
+
+        CaptchaAnswer answer = CaptchaAnswer.slider(challenge.getDebugX() / (double) width);
+        answer.setClientType("h5");
+        answer.setTd(sparseSliderTrace(endX));
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertTrue(result.isSuccess(), result.getMessage());
+    }
+
     private CaptchaEngine newEngine() {
+        return newEngine(false);
+    }
+
+    /** 开启第二层风险评分的引擎 */
+    private CaptchaEngine newEngineWithRisk() {
+        return newEngine(true);
+    }
+
+    private CaptchaEngine newEngine(boolean riskEnabled) {
         CaptchaConfig config = new CaptchaConfig();
         config.setDebugEnabled(true);
         config.getBehavior().setEnabled(true);
+        config.getBehavior().setRiskEnabled(riskEnabled);
         config.getSlider().setMinElapsedMs(0);
         config.getClick().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
@@ -238,5 +324,116 @@ class BehaviorValidationTest {
                     y0 + (y1 - y0) * ratio,
                     BehaviorEventType.MOVE));
         }
+    }
+
+    /** 生成一条“机械”点选轨迹：每段匀速移动、按下时长与相邻点击间隔完全一致 */
+    private static String mechanicalClickTrace(List<PointVo> targets, int width, int height) {
+        List<BehaviorPoint> points = new ArrayList<>();
+        int time = 0;
+        int nextDown = 0;
+        double cursorX = targets.getFirst().getX() / (double) width;
+        double cursorY = targets.getFirst().getY() / (double) height;
+        points.add(new BehaviorPoint(time, cursorX, cursorY, BehaviorEventType.START));
+
+        for (int i = 0; i < targets.size(); i++) {
+            PointVo target = targets.get(i);
+            double targetX = target.getX() / (double) width;
+            double targetY = target.getY() / (double) height;
+            double distance = Math.hypot(targetX - cursorX, targetY - cursorY);
+            int steps = 6;
+            int moveDuration = 0;
+            int[] dts = new int[steps];
+            // 时间按距离等比分配，保证每段移动速度完全一致
+            for (int s = 0; s < steps; s++) {
+                dts[s] = (int) Math.max(1, Math.round(distance * 100 / steps));
+                moveDuration += dts[s];
+            }
+            if (i == 0) {
+                time = 0;
+            } else {
+                // 等待到固定的按下时刻，使相邻点击间隔一致
+                time = nextDown - moveDuration;
+                // 等待期间原地停留，避免把“等待”算成一段慢速移动
+                points.add(new BehaviorPoint(
+                        time, cursorX, cursorY, BehaviorEventType.MOVE));
+            }
+            for (int s = 0; s < steps; s++) {
+                time += dts[s];
+                double ratio = (s + 1) / (double) steps;
+                points.add(new BehaviorPoint(time,
+                        cursorX + (targetX - cursorX) * ratio,
+                        cursorY + (targetY - cursorY) * ratio,
+                        BehaviorEventType.MOVE));
+            }
+            points.add(new BehaviorPoint(time, targetX, targetY, BehaviorEventType.DOWN));
+            if (i == 0) {
+                nextDown = time + 300;
+            } else {
+                nextDown += 300;
+            }
+            time += 80;
+            points.add(new BehaviorPoint(time, targetX, targetY, BehaviorEventType.UP));
+            cursorX = targetX;
+            cursorY = targetY;
+        }
+        return BehaviorTraceCodec.encode(new BehaviorTrace(
+                1, width, height, 1_000_000L, 1_000_000L + time, points));
+    }
+
+    /** 生成一条“拟人”滑块轨迹：起始停顿、变速、末端减速、轻微摆动与过冲修正 */
+    private static String humanLikeSliderTrace(double endX) {
+        List<BehaviorPoint> points = new ArrayList<>();
+        points.add(new BehaviorPoint(0, 0.01, 0.5, BehaviorEventType.START));
+        int time = 180;
+        double[] ratios = {0.02, 0.06, 0.13, 0.23, 0.36, 0.52, 0.68, 0.81, 0.9, 0.96, 1.0};
+        for (int i = 1; i < ratios.length; i++) {
+            time += 16 + (i % 3) * 3;
+            points.add(new BehaviorPoint(time,
+                    0.01 + (endX - 0.01) * ratios[i],
+                    0.5 + Math.sin(i * 0.7) * 0.008,
+                    BehaviorEventType.MOVE));
+        }
+        time += 30;
+        points.add(new BehaviorPoint(time, endX + 0.015, 0.5, BehaviorEventType.MOVE));
+        time += 24;
+        points.add(new BehaviorPoint(time, endX, 0.5, BehaviorEventType.MOVE));
+        time += 40;
+        points.add(new BehaviorPoint(time, endX, 0.5, BehaviorEventType.UP));
+        return BehaviorTraceCodec.encode(new BehaviorTrace(
+                1, 340, 190, 1_000_000L, 1_000_000L + time, points));
+    }
+
+    /** 生成一条“拟人”点选轨迹：点击间减速接近、时长与间隔有波动 */
+    private static String humanLikeClickTrace(List<PointVo> targets, int width, int height) {
+        List<BehaviorPoint> points = new ArrayList<>();
+        int time = 0;
+        double cursorX = targets.getFirst().getX() / (double) width;
+        double cursorY = targets.getFirst().getY() / (double) height;
+        points.add(new BehaviorPoint(time, cursorX, cursorY, BehaviorEventType.START));
+        int[] steps = {5, 7, 9};
+        int[] dwells = {90, 150, 60};
+        for (int i = 0; i < targets.size(); i++) {
+            PointVo target = targets.get(i);
+            double targetX = target.getX() / (double) width;
+            double targetY = target.getY() / (double) height;
+            int stepCount = steps[i % steps.length];
+            for (int s = 1; s <= stepCount; s++) {
+                time += 12 + (s % 3) * 4;
+                double eased = Math.pow(s / (double) stepCount, 2)
+                        * (3 - 2 * (s / (double) stepCount));
+                points.add(new BehaviorPoint(time,
+                        cursorX + (targetX - cursorX) * eased + Math.sin(s) * 0.004,
+                        cursorY + (targetY - cursorY) * eased + Math.cos(s) * 0.004,
+                        BehaviorEventType.MOVE));
+            }
+            time += 20;
+            points.add(new BehaviorPoint(time, targetX, targetY, BehaviorEventType.DOWN));
+            time += dwells[i % dwells.length];
+            points.add(new BehaviorPoint(time, targetX, targetY, BehaviorEventType.UP));
+            cursorX = targetX;
+            cursorY = targetY;
+        }
+        return BehaviorTraceCodec.encode(new BehaviorTrace(
+                1, width, height, 1_000_000L, 1_000_000L + time, points));
     }
 }

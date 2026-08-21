@@ -25,6 +25,8 @@ All settings live under `captcha.*` and are bound by Spring Boot.
 | Setting | Description | Default |
 | --- | --- | --- |
 | `behavior.enabled` | Enable behavior validation | `false` |
+| `behavior.risk-enabled` | Enable second-layer risk scoring | `false` |
+| `behavior.risk-threshold` | Risk score threshold (0~1) | `0.65` |
 | `behavior.protocol` | Payload protocol version | `1` |
 | `behavior.min-points` | Min trajectory points | `3` |
 | `behavior.min-duration-ms` | Min total duration | `100` |
@@ -35,6 +37,9 @@ All settings live under `captcha.*` and are bound by Spring Boot.
 | `behavior.max-click-duration-ms` | Max click duration | `5000` |
 | `behavior.h5.*` | H5 touch profile | touch defaults |
 | `behavior.mini-program.*` | Mini program profile | touch defaults |
+
+The `risk-threshold` inside the H5 / mini-program profiles defaults to `0.8`,
+looser than web to tolerate touch noise.
 
 ## Slider
 

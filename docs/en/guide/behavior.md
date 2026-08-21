@@ -49,6 +49,48 @@ The frontend compresses `td` with gzip + base64url (`H4sI...`). The backend auto
 | `ClickBehaviorValidator` | DOWN/UP pairs, count, order, coordinates, click duration |
 | `RotateBehaviorValidator` | Drag event sequence (angle checked by the generator) |
 
+## Risk Scoring (Second Layer)
+
+Hard rules only catch obviously fake trajectories. To detect bots that fake
+Bezier curves and add jitter, the engine adds a second layer of statistical
+scoring: `DragBehaviorRiskScorer` / `ClickBehaviorRiskScorer` combine weak
+signals into a normalized 0~1 score and only reject when the score exceeds the
+profile threshold, reducing false positives.
+
+Drag (slider / rotate) features:
+
+| Feature | Meaning | Bot signature |
+| --- | --- | --- |
+| `speed-uniformity` | Coefficient of variation of move speeds | Constant-speed straight line |
+| `end-deceleration` | End speed / peak speed | No deceleration before release |
+| `start-pause` | Pause between press and first movement | Moving immediately after press |
+| `path-efficiency` | Path length / straight-line distance | Perfectly straight path |
+
+Click features:
+
+| Feature | Meaning | Bot signature |
+| --- | --- | --- |
+| `move-uniformity` | CV of move speeds between clicks | Constant-speed movement |
+| `dwell-uniformity` | CV of press durations | Identical click durations |
+| `interval-uniformity` | CV of click intervals | Perfectly regular rhythm |
+| `duplicate-downs` | Bit-identical repeated click coordinates | Exact same click position |
+
+Features with insufficient samples are automatically excluded, so sparse H5 /
+mini-program traces are not penalized. Touch profiles also default to a looser
+threshold (`0.8`; web uses `0.65`).
+
+Enable it with:
+
+```yaml
+captcha:
+  behavior:
+    enabled: true
+    risk-enabled: true
+    risk-threshold: 0.65
+```
+
+Scores above the threshold return the `BEHAVIOR` code as well.
+
 ## Per-Client Profiles
 
 | Profile | Scenario | Characteristics |

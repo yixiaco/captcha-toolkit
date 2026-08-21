@@ -60,6 +60,45 @@ H4sI...
 | `ClickBehaviorValidator` | 按下/松开成对、点击次数与顺序、坐标、单次点击时长 |
 | `RotateBehaviorValidator` | 按下 → 移动 → 松开事件序列（角度由生成器校验） |
 
+## 风险评分（第二层）
+
+硬规则只能拦截“一眼假”的轨迹；对能伪造贝塞尔曲线、会加抖动的机器人，
+还需要第二层统计评分：`DragBehaviorRiskScorer` / `ClickBehaviorRiskScorer`
+把多个弱信号加权汇总成 0~1 综合分，超过画像阈值才判定异常，避免单特征误伤。
+
+拖拽（滑块/旋转）特征：
+
+| 特征 | 含义 | 机器表现 |
+| --- | --- | --- |
+| `speed-uniformity` | 移动速度变异系数 | 匀速直线 → 异常 |
+| `end-deceleration` | 末端速度 / 峰值速度 | 全程不减速 → 异常 |
+| `start-pause` | 按下到开始移动的停顿 | 按下立即移动 → 异常 |
+| `path-efficiency` | 路径长度 / 直线位移 | 绝对平直 → 异常 |
+
+点选特征：
+
+| 特征 | 含义 | 机器表现 |
+| --- | --- | --- |
+| `move-uniformity` | 点击间移动速度变异系数 | 匀速移动 → 异常 |
+| `dwell-uniformity` | 按下时长变异系数 | 每次点击时长完全一致 → 异常 |
+| `interval-uniformity` | 点击间隔变异系数 | 节奏完全一致 → 异常 |
+| `duplicate-downs` | 是否存在完全相同的点击坐标 | 精确复现同一点 → 异常 |
+
+样本不足的特征权重自动降为 0，避免 H5/小程序稀疏轨迹被误判；
+触摸画像默认阈值也更宽松（`0.8`，Web 为 `0.65`）。
+
+开启方式：
+
+```yaml
+captcha:
+  behavior:
+    enabled: true
+    risk-enabled: true
+    risk-threshold: 0.65
+```
+
+综合分超过阈值时同样返回 `BEHAVIOR` 业务码。
+
 ## 分端画像
 
 不同设备的轨迹差异很大，阈值按客户端类型区分：

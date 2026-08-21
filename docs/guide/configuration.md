@@ -25,6 +25,8 @@
 | 配置 | 说明 | 默认值 |
 | --- | --- | --- |
 | `behavior.enabled` | 是否开启行为校验 | `false` |
+| `behavior.risk-enabled` | 是否开启第二层风险评分 | `false` |
+| `behavior.risk-threshold` | 风险综合分数阈值（0~1） | `0.65` |
 | `behavior.protocol` | 报文协议版本 | `1` |
 | `behavior.min-points` | 轨迹点数量下限 | `3` |
 | `behavior.min-duration-ms` | 行为总耗时下限 | `100` |
@@ -35,6 +37,8 @@
 | `behavior.max-click-duration-ms` | 点选按下到松开最长时长 | `5000` |
 | `behavior.h5.*` | H5 触摸画像（字段同上） | 触摸默认 |
 | `behavior.mini-program.*` | 小程序触摸画像（字段同上） | 触摸默认 |
+
+其中 H5 / 小程序的 `risk-threshold` 默认为 `0.8`，比 Web 宽松，以容忍触摸端的数据噪声。
 
 ## 滑块
 

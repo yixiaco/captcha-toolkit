@@ -15,6 +15,7 @@ import java.util.Optional;
  *   <li>解析 td 报文并做通用字段/耗时/坐标检查</li>
  *   <li>调用子类 {@link #validateEvents} 校验事件序列</li>
  *   <li>调用子类 {@link #validateAnswer} 校验与本次答案的关联</li>
+ *   <li>开启风险评分时，用统计特征综合打分，超过画像阈值判定异常</li>
  * </ol>
  *
  * <p>新增验证码类型时，继承本类并实现两个抽象方法即可复用全部通用规则。</p>
@@ -23,6 +24,12 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
 
     /** 行为校验配置（含分端画像） */
     private final BehaviorConfig config;
+
+    /** 拖拽类（滑块/旋转）风险评分器 */
+    private final BehaviorRiskScorer dragRiskScorer = new DragBehaviorRiskScorer();
+
+    /** 点选类风险评分器 */
+    private final BehaviorRiskScorer clickRiskScorer = new ClickBehaviorRiskScorer();
 
     /**
      * @param config 行为校验配置（含分端画像）
@@ -58,7 +65,11 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
         if (events.isPresent()) {
             return events;
         }
-        return validateAnswer(trace, answer, session, profile);
+        Optional<String> answerError = validateAnswer(trace, answer, session, profile);
+        if (answerError.isPresent()) {
+            return answerError;
+        }
+        return validateRisk(trace, profile);
     }
 
     /** 返回当前校验器使用的行为配置 */
@@ -120,5 +131,31 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * 第二层风险评分：把多个弱信号加权汇总成综合分数，
+     * 超过画像阈值才判定异常，避免单特征误伤正常用户。
+     */
+    private Optional<String> validateRisk(BehaviorTrace trace, ClientBehaviorConfig profile) {
+        if (!config.isRiskEnabled()) {
+            return Optional.empty();
+        }
+        BehaviorRiskScorer scorer = isClickTrace(trace) ? clickRiskScorer : dragRiskScorer;
+        BehaviorRiskResult risk = scorer.score(trace, profile);
+        if (risk.score() > profile.getRiskThreshold()) {
+            return Optional.of("行为轨迹风险过高");
+        }
+        return Optional.empty();
+    }
+
+    /** 轨迹中出现 DOWN 事件即视为点选轨迹，否则按拖拽轨迹评分 */
+    private static boolean isClickTrace(BehaviorTrace trace) {
+        for (BehaviorPoint point : trace.points()) {
+            if (point.type() == BehaviorEventType.DOWN) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -15,6 +15,12 @@ public class BehaviorConfig {
     /** 是否开启行为轨迹校验；默认关闭，开启后前端必须提交 td */
     private boolean enabled = false;
 
+    /** 是否开启第二层风险评分（统计特征综合打分）；默认关闭，避免误伤正常用户 */
+    private boolean riskEnabled = false;
+
+    /** 行为风险综合分数阈值（0~1），综合分超过该值判定“行为轨迹风险过高” */
+    private double riskThreshold = 0.65;
+
     /** 当前支持的行为报文协议版本 */
     private int protocol = 1;
 
@@ -68,6 +74,7 @@ public class BehaviorConfig {
         profile.setPointTolerance(pointTolerance);
         profile.setMinClickDurationMs(minClickDurationMs);
         profile.setMaxClickDurationMs(maxClickDurationMs);
+        profile.setRiskThreshold(riskThreshold);
         return profile;
     }
 }

@@ -32,6 +32,9 @@ public class ClientBehaviorConfig {
     /** 点选单次按下到松开的最长时长（毫秒） */
     private long maxClickDurationMs = 5_000;
 
+    /** 行为风险综合分数阈值（0~1）；触摸端数据噪声大，默认比 Web 宽松 */
+    private double riskThreshold = 0.8;
+
     /**
      * 触摸端默认画像：容忍稀疏采样、手指抖动和更快的点击。
      *
@@ -42,6 +45,7 @@ public class ClientBehaviorConfig {
         config.setMaxJumpRatio(0.9);
         config.setPointTolerance(0.08);
         config.setMinClickDurationMs(20);
+        config.setRiskThreshold(0.8);
         return config;
     }
 }
