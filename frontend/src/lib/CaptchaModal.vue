@@ -207,6 +207,11 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   visible: false,
   mode: 'slider',
+  // 布尔可选 props 统一用 null 作为“未传”标记，避免 Vue 默认 false 覆盖全局配置
+  showShapePicker: null,
+  debug: null,
+  autoReload: null,
+  closeOnSuccess: null,
 });
 
 const emit = defineEmits<{

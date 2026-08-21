@@ -178,7 +178,12 @@ interface Props {
   clientType?: ClientType | null
 }
 
-const props = defineProps<Props>();
+// 布尔可选 props 统一用 null 作为“未传”标记，避免 Vue 默认 false 覆盖全局配置
+const props = withDefaults(defineProps<Props>(), {
+  showShapePicker: null,
+  debug: null,
+  autoReload: null,
+});
 
 const emit = defineEmits<{
   (e: 'success', result: VerifyResult): void
