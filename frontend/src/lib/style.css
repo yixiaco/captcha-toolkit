@@ -11,7 +11,8 @@
 
 .captcha-modal *,
 .slider-captcha *,
-.click-captcha * {
+.click-captcha *,
+.curve-captcha * {
   box-sizing: border-box;
 }
 
@@ -370,6 +371,51 @@
   pointer-events: none;
   transform: translate(-50%, -50%);
   animation: pop-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ========== 曲线绘制 ========== */
+
+.curve-captcha {
+  width: 100%;
+}
+
+.curve-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.curve-tip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  margin-top: 10px;
+  padding: 0 12px;
+  border: 1px solid #e8eaee;
+  border-radius: 6px;
+  background: #f7f8fa;
+  font-size: 13px;
+  color: #4a5160;
+}
+
+.curve-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.curve-dot.start {
+  background: #2ecc71;
+  box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.25);
+}
+
+.curve-dot.end {
+  background: #ff5252;
+  box-shadow: 0 0 0 2px rgba(255, 82, 82, 0.25);
 }
 
 /* ========== 动画 ========== */

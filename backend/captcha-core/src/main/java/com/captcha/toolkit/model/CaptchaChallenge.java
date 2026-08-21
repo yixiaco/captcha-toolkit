@@ -14,7 +14,7 @@ public class CaptchaChallenge {
     /** 验证码会话 id，前端提交答案时原样带回 */
     private String id;
 
-    /** 验证码类型：slider / click */
+    /** 验证码类型：slider / click / rotate / curve */
     private String type;
 
     /** 大图（滑块背景图 / 点选背景图），Base64 Data URI */
@@ -44,6 +44,8 @@ public class CaptchaChallenge {
     private List<PointVo> debugFakeTargets;
     /** 调试字段：仅 debug=1 且引擎开启调试时返回旋转验证码答案角度 */
     private Double debugAngle;
+    /** 调试字段：仅 debug=1 且引擎开启调试时返回曲线绘制期望曲线采样点 */
+    private List<PointVo> debugCurve;
     /** 扩展元数据：自定义验证码可携带任意附加信息 */
     private Map<String, Object> metadata;
 

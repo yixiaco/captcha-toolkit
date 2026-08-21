@@ -230,6 +230,41 @@ class BehaviorValidationTest {
         assertTrue(result.isSuccess(), result.getMessage());
     }
 
+    @Test
+    void curvePassesWithMatchingTrace() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.CURVE, Map.of(), true);
+        List<PointVo> curve = challenge.getDebugCurve();
+
+        CaptchaAnswer answer = CaptchaAnswer.curve(
+                curve.stream()
+                        .map(p -> new NormalizedPoint(
+                                p.getX() / (double) challenge.getWidth(),
+                                p.getY() / (double) challenge.getHeight()))
+                        .toList());
+        answer.setTd(curveTrace(curve, challenge.getWidth(), challenge.getHeight()));
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertTrue(result.isSuccess(), result.getMessage());
+    }
+
+    @Test
+    void curveRejectsMissingTraceWhenEnabled() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.CURVE, Map.of(), true);
+
+        CaptchaAnswer answer = CaptchaAnswer.curve(
+                challenge.getDebugCurve().stream()
+                        .map(p -> new NormalizedPoint(
+                                p.getX() / (double) challenge.getWidth(),
+                                p.getY() / (double) challenge.getHeight()))
+                        .toList());
+
+        VerifyResult result = engine.verify(challenge.getId(), answer);
+        assertFalse(result.isSuccess());
+        assertEquals("BEHAVIOR", result.getCode());
+    }
+
     private CaptchaEngine newEngine() {
         return newEngine(false);
     }
@@ -247,6 +282,7 @@ class BehaviorValidationTest {
         config.getSlider().setMinElapsedMs(0);
         config.getClick().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
+        config.getCurve().setMinElapsedMs(0);
         FallbackBackgroundProvider background = new FallbackBackgroundProvider(
                 List.of(new SceneBackgroundProvider()));
         return CaptchaEngine.of(config, new InMemoryCaptchaSessionStore(),
@@ -435,5 +471,21 @@ class BehaviorValidationTest {
         }
         return BehaviorTraceCodec.encode(new BehaviorTrace(
                 1, width, height, 1_000_000L, 1_000_000L + time, points));
+    }
+
+    /** 生成一条沿期望曲线逐点移动的绘制轨迹：起点按下、中间移动、终点松开 */
+    private static String curveTrace(List<PointVo> curve, int width, int height) {
+        List<BehaviorPoint> points = new ArrayList<>();
+        for (int i = 0; i < curve.size(); i++) {
+            double x = curve.get(i).getX() / (double) width;
+            double y = curve.get(i).getY() / (double) height;
+            BehaviorEventType type = i == 0 ? BehaviorEventType.START
+                    : i == curve.size() - 1 ? BehaviorEventType.UP
+                    : BehaviorEventType.MOVE;
+            points.add(new BehaviorPoint(i * 30, x, y, type));
+        }
+        return BehaviorTraceCodec.encode(new BehaviorTrace(
+                1, width, height, 1_000_000L,
+                1_000_000L + (curve.size() - 1) * 30L, points));
     }
 }

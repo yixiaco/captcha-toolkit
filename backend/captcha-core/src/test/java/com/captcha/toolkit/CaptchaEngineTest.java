@@ -40,6 +40,7 @@ class CaptchaEngineTest {
         config.getSlider().setMinElapsedMs(0);
         config.getClick().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
+        config.getCurve().setMinElapsedMs(0);
         CaptchaImageCodec codec = new DataUriImageCodec();
         FallbackBackgroundProvider background = new FallbackBackgroundProvider(
                 List.of(new SceneBackgroundProvider()));
@@ -54,6 +55,7 @@ class CaptchaEngineTest {
         config.getSlider().setMinElapsedMs(0);
         config.getClick().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
+        config.getCurve().setMinElapsedMs(0);
         config.getRateLimit().setEnabled(true);
         config.getRateLimit().setMaxRequests(maxRequests);
         config.getRateLimit().setWindowSeconds(windowSeconds);
@@ -421,5 +423,44 @@ class CaptchaEngineTest {
         VerifyResult wrong = engine.verify(wrongChallenge.getId(),
                 CaptchaAnswer.rotate(wrongChallenge.getDebugAngle() + 30));
         assertFalse(wrong.isSuccess());
+    }
+
+    @Test
+    void curveGeneratesAndVerifiesWithDebugCurve() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.CURVE, Map.of(), true);
+
+        assertNotNull(challenge.getImage1());
+        assertNotNull(challenge.getDebugCurve());
+        assertEquals("curve", challenge.getType());
+
+        List<NormalizedPoint> curve = challenge.getDebugCurve().stream()
+                .map(p -> new NormalizedPoint(
+                        p.getX() / (double) challenge.getWidth(),
+                        p.getY() / (double) challenge.getHeight()))
+                .toList();
+        VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.curve(curve));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+
+        // 会话一次性：同一 id 再次提交失败
+        VerifyResult again = engine.verify(challenge.getId(), CaptchaAnswer.curve(curve));
+        assertFalse(again.isSuccess());
+    }
+
+    @Test
+    void curveRejectsWrongEndPoint() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.CURVE, Map.of(), true);
+        List<NormalizedPoint> curve = challenge.getDebugCurve().stream()
+                .map(p -> new NormalizedPoint(
+                        p.getX() / (double) challenge.getWidth(),
+                        p.getY() / (double) challenge.getHeight()))
+                .toList();
+        List<NormalizedPoint> wrong = new java.util.ArrayList<>(curve);
+        wrong.set(wrong.size() - 1, new NormalizedPoint(0.05, 0.05));
+
+        VerifyResult result = engine.verify(challenge.getId(), CaptchaAnswer.curve(wrong));
+        assertFalse(result.isSuccess());
+        assertEquals("WRONG", result.getCode());
     }
 }

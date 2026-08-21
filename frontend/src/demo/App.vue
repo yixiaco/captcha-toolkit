@@ -124,6 +124,36 @@
           图片旋转
         </button>
         <button
+          class="mode-btn curve"
+          @click="open('curve')"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 17c4-8 8-8 11-3s5 4 7-3" />
+            <circle
+              cx="3"
+              cy="17"
+              r="1.6"
+              fill="currentColor"
+            />
+            <circle
+              cx="21"
+              cy="11"
+              r="1.6"
+              fill="currentColor"
+            />
+          </svg>
+          曲线绘制
+        </button>
+        <button
           class="mode-btn random"
           @click="openRandom"
         >
@@ -213,25 +243,26 @@ const isDev = import.meta.env.DEV;
 const account = ref('');
 const password = ref('');
 const captchaVisible = ref(false);
-const captchaMode = ref<'slider' | 'click' | 'rotate'>('slider');
+const captchaMode = ref<'slider' | 'click' | 'rotate' | 'curve'>('slider');
 const shapeFromUrl = ref('');
 const verified = ref(false);
 const verifiedTicket = ref('');
-const inlineMode = ref<'slider' | 'click' | 'rotate'>('slider');
-const embedModes: Array<{ key: 'slider' | 'click' | 'rotate'; label: string }> = [
+const inlineMode = ref<'slider' | 'click' | 'rotate' | 'curve'>('slider');
+const embedModes: Array<{ key: 'slider' | 'click' | 'rotate' | 'curve'; label: string }> = [
   { key: 'slider', label: '滑块' },
   { key: 'click', label: '点选' },
   { key: 'rotate', label: '旋转' },
+  { key: 'curve', label: '曲线' },
 ];
 
-function open(mode: 'slider' | 'click' | 'rotate') {
+function open(mode: 'slider' | 'click' | 'rotate' | 'curve') {
   resetVerified();
   captchaMode.value = mode;
   captchaVisible.value = true;
 }
 
 function openRandom() {
-  const modes = ['slider', 'click', 'rotate'] as const;
+  const modes = ['slider', 'click', 'rotate', 'curve'] as const;
   open(modes[Math.floor(Math.random() * modes.length)]);
 }
 
@@ -262,7 +293,8 @@ onMounted(() => {
   if (modeParam === 'slider' && shapeParam && PUZZLE_SHAPES[shapeParam]) {
     shapeFromUrl.value = shapeParam;
   }
-  if (modeParam === 'slider' || modeParam === 'click' || modeParam === 'rotate') {
+  if (modeParam === 'slider' || modeParam === 'click'
+    || modeParam === 'rotate' || modeParam === 'curve') {
     open(modeParam);
   } else if (modeParam === 'random') {
     openRandom();

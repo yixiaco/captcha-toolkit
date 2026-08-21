@@ -15,7 +15,10 @@ public enum CaptchaType {
     CLICK("click"),
 
     /** 图片旋转 */
-    ROTATE("rotate");
+    ROTATE("rotate"),
+
+    /** 曲线绘制 */
+    CURVE("curve");
 
     /** 对外使用的类型编码 */
     private final String code;

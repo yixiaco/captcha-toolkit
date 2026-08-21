@@ -25,6 +25,8 @@ export interface CaptchaChallenge {
   debugX?: number
   debugTargets?: Array<{ x: number; y: number }>
   debugAngle?: number
+  /** 调试：曲线绘制验证码期望曲线采样点（像素坐标） */
+  debugCurve?: Array<{ x: number; y: number }>
   metadata?: Record<string, unknown>
 }
 

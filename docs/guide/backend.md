@@ -20,7 +20,7 @@
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `{prefix}?type=slider\|click\|rotate` | 下发验证码 |
+| GET | `{prefix}?type=slider\|click\|rotate\|curve` | 下发验证码 |
 | POST | `{prefix}/verify` | 校验答案 |
 | GET/POST | `{prefix}/ticket/verify` | 业务接口校验一次性票据 |
 | GET | `{prefix}/types` | 查询支持的类型与形状 |
@@ -46,7 +46,8 @@ GET /api/captcha?type=slider&shape=classic&debug=1
 }
 ```
 
-点选类型额外返回 `prompt`（提示文字）与 `debugTargets`；旋转类型额外返回 `debugAngle`。
+点选类型额外返回 `prompt`（提示文字）与 `debugTargets`；旋转类型额外返回 `debugAngle`；
+曲线类型额外返回 `debugCurve`（期望曲线采样点，像素坐标，debug 模式）。
 
 ### 校验答案
 
@@ -83,6 +84,18 @@ GET /api/captcha?type=slider&shape=classic&debug=1
   "id": "7f0e...",
   "type": "rotate",
   "angle": 275.3,
+  "clientType": "web",
+  "td": "H4sI..."
+}
+```
+
+曲线：
+
+```json
+{
+  "id": "7f0e...",
+  "type": "curve",
+  "curve": [{"x": 0.12, "y": 0.33}, {"x": 0.35, "y": 0.61}],
   "clientType": "web",
   "td": "H4sI..."
 }

@@ -145,4 +145,31 @@ public final class CaptchaMessages {
 
     /** 旋转缺少移动轨迹 */
     public static final String ROTATE_MISSING_MOVE = "rotate.missing-move";
+
+    /** 曲线轨迹应以按下开始 */
+    public static final String CURVE_EXPECTED_START = "curve.expected-start";
+
+    /** 曲线轨迹应以松开结束 */
+    public static final String CURVE_EXPECTED_RELEASE = "curve.expected-release";
+
+    /** 曲线轨迹不允许出现点击事件 */
+    public static final String CURVE_CLICK_NOT_ALLOWED = "curve.click-not-allowed";
+
+    /** 曲线缺少移动轨迹 */
+    public static final String CURVE_MISSING_MOVE = "curve.missing-move";
+
+    /** 缺少绘制曲线 */
+    public static final String CURVE_MISSING_POINTS = "curve.missing-points";
+
+    /** 绘制曲线点数不足 */
+    public static final String CURVE_NOT_ENOUGH_POINTS = "curve.not-enough-points";
+
+    /** 绘制起点与引导曲线不一致 */
+    public static final String CURVE_START_MISMATCH = "curve.start-mismatch";
+
+    /** 绘制终点与引导曲线不一致 */
+    public static final String CURVE_END_MISMATCH = "curve.end-mismatch";
+
+    /** 绘制覆盖范围不足 */
+    public static final String CURVE_COVERAGE_TOO_LOW = "curve.coverage-too-low";
 }

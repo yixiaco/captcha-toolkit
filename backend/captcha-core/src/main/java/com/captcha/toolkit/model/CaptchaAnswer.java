@@ -29,6 +29,9 @@ public class CaptchaAnswer {
     /** 旋转答案：用户旋转的角度（度），图片旋转类型必填 */
     private Double angle;
 
+    /** 曲线绘制答案：按绘制顺序排列的归一化坐标（0~1），曲线类型必填 */
+    private List<NormalizedPoint> curve;
+
     /** 行为轨迹报文（td），格式见 BehaviorTraceCodec；开启行为校验后必填 */
     private String td;
 
@@ -74,6 +77,18 @@ public class CaptchaAnswer {
     public static CaptchaAnswer rotate(Double angle) {
         CaptchaAnswer answer = new CaptchaAnswer();
         answer.angle = angle;
+        return answer;
+    }
+
+    /**
+     * 构造曲线绘制答案。
+     *
+     * @param curve 按绘制顺序排列的归一化坐标（0~1）
+     * @return 曲线绘制答案
+     */
+    public static CaptchaAnswer curve(List<NormalizedPoint> curve) {
+        CaptchaAnswer answer = new CaptchaAnswer();
+        answer.curve = curve;
         return answer;
     }
 }

@@ -46,7 +46,7 @@ function onVerified(result: VerifyResult) {
 </script>
 ```
 
-Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha`.
+Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `CurveCaptcha`.
 
 ## Main Props
 
@@ -56,13 +56,16 @@ Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha`.
 | `api` | Custom API client | auto |
 | `request` | Custom request function | fetch |
 | `width` / `height` | Image size | `340` / `190` |
-| `mode` | slider / click / rotate | `slider` |
+| `mode` | slider / click / rotate / curve | `slider` |
 | `shape` | Initial slider shape (debug only) | `''` |
 | `debug` | Request debug answers | `false` |
 | `autoReload` | Reload after failure | `true` |
 | `handleWidth` | Slider handle width | `44` |
 | `clientType` | web / h5 / mini_program | auto-detected |
 | `promptPrefix` | Click prompt prefix | `请依次点选` |
+| `curveTip` | Curve drawing hint | Chinese default |
+| `curveColor` | Stroke color | `#3b7cff` |
+| `curveWidth` | Stroke width (px) | `3` |
 
 ## Events
 

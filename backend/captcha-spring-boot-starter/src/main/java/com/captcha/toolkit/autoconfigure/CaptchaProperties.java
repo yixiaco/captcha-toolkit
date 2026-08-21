@@ -4,6 +4,7 @@ import com.captcha.toolkit.config.BackgroundConfig;
 import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.config.ClickConfig;
+import com.captcha.toolkit.config.CurveConfig;
 import com.captcha.toolkit.config.RateLimitConfig;
 import com.captcha.toolkit.config.RotateConfig;
 import com.captcha.toolkit.config.SliderConfig;
@@ -69,6 +70,9 @@ public class CaptchaProperties {
     /** 图片旋转验证码配置 */
     private RotateConfig rotate = new RotateConfig();
 
+    /** 曲线绘制验证码配置 */
+    private CurveConfig curve = new CurveConfig();
+
     /** 行为轨迹校验配置 */
     private BehaviorConfig behavior = new BehaviorConfig();
 
@@ -89,6 +93,7 @@ public class CaptchaProperties {
         BeanUtils.copyProperties(slider, config.getSlider());
         BeanUtils.copyProperties(click, config.getClick());
         BeanUtils.copyProperties(rotate, config.getRotate());
+        BeanUtils.copyProperties(curve, config.getCurve());
         BeanUtils.copyProperties(behavior, config.getBehavior());
         BeanUtils.copyProperties(rateLimit, config.getRateLimit());
         config.setMessageProvider(new ResourceBundleMessageProvider(parseLocale(locale)));

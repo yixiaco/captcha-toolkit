@@ -35,6 +35,12 @@ export interface CaptchaOptions {
   sliderTip: string
   /** 旋转提示文案 */
   rotateTip: string
+  /** 曲线绘制提示文案 */
+  curveTip: string
+  /** 用户绘制笔迹颜色 */
+  curveColor: string
+  /** 用户绘制笔迹宽度（px） */
+  curveWidth: number
   /** 点选提示前缀文案 */
   promptPrefix: string
   /** 点选去重最小间距（px），防止重复点击同一位置 */
@@ -97,6 +103,9 @@ export const defaultCaptchaOptions: CaptchaOptions = {
   randomLabel: '随机',
   sliderTip: '按住滑块，拖动完成拼图',
   rotateTip: '拖动滑块旋转图片，使其对齐',
+  curveTip: '请按住并沿虚线从绿色起点描绘到红色终点',
+  curveColor: '#3b7cff',
+  curveWidth: 3,
   promptPrefix: '请依次点选',
   markMinDistance: 16,
   clientType: detectClientType(),

@@ -45,7 +45,7 @@ function onVerified(result) {
 </script>
 ```
 
-也可按需使用底层组件：`SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha`。
+也可按需使用底层组件：`SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `CurveCaptcha`。
 
 ## 主要 Props
 
@@ -55,13 +55,16 @@ function onVerified(result) {
 | `api` | 自定义 API 客户端 | 自动创建 |
 | `request` | 自定义请求函数 | 内置 fetch |
 | `width` / `height` | 图片尺寸 | `340` / `190` |
-| `mode` | 验证方式：slider / click / rotate | `slider` |
+| `mode` | 验证方式：slider / click / rotate / curve | `slider` |
 | `shape` | 滑块初始形状（仅 debug 生效） | `''` |
 | `debug` | 是否请求调试答案（仅联调） | `false` |
 | `autoReload` | 失败后自动换一张 | `true` |
 | `handleWidth` | 滑块手柄宽度 | `44` |
 | `clientType` | `web` / `h5` / `mini_program`，影响后端行为校验画像 | 自动检测 |
 | `promptPrefix` | 点选提示文案 | `请依次点选` |
+| `curveTip` | 曲线绘制提示文案 | 中文默认 |
+| `curveColor` | 用户绘制笔迹颜色 | `#3b7cff` |
+| `curveWidth` | 用户绘制笔迹宽度（px） | `3` |
 | `loadingText` / `imageAlt` | 加载提示与图片 alt | 中文默认 |
 | `title` / `brandText` / `sloganText` | 弹窗标题/品牌/标语 | 品牌与标语默认隐藏 |
 

@@ -115,6 +115,22 @@
             @success="onCaptchaSuccess"
             @fail="onCaptchaFail"
           />
+          <CurveCaptcha
+            v-if="mode === 'curve'"
+            :key="`curve-${refreshKey}`"
+            :api="opts.api"
+            :width="opts.width"
+            :height="opts.height"
+            :curve-tip="opts.curveTip"
+            :curve-color="opts.curveColor"
+            :curve-width="opts.curveWidth"
+            :debug="opts.debug"
+            :auto-reload="opts.autoReload"
+            :loading-text="opts.loadingText"
+            :image-alt="opts.imageAlt"
+            @success="onCaptchaSuccess"
+            @fail="onCaptchaFail"
+          />
         </div>
 
         <div
@@ -142,6 +158,7 @@ import { ref, watch } from 'vue';
 import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
+import CurveCaptcha from './CurveCaptcha.vue';
 import { useCaptchaOptions } from './options';
 import type { VerifyResult } from './api';
 import type { CaptchaMode } from './types';
@@ -187,6 +204,12 @@ interface Props {
   sliderTip?: string | null
   /** 旋转提示文案 */
   rotateTip?: string | null
+  /** 曲线绘制提示文案 */
+  curveTip?: string | null
+  /** 用户绘制笔迹颜色 */
+  curveColor?: string | null
+  /** 用户绘制笔迹宽度（px） */
+  curveWidth?: number | null
   /** 加载提示文案 */
   loadingText?: string | null
   /** 图片 alt 文案 */

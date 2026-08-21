@@ -6,6 +6,7 @@ import Captcha from './Captcha.vue';
 import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
+import CurveCaptcha from './CurveCaptcha.vue';
 import { createCaptchaApi, defaultRequest } from './api';
 import type {
   CaptchaApi,
@@ -32,6 +33,7 @@ export {
   SliderCaptcha,
   ClickCaptcha,
   RotateCaptcha,
+  CurveCaptcha,
   createCaptchaApi,
   defaultRequest,
   PUZZLE_SHAPES,

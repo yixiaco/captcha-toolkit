@@ -107,6 +107,21 @@
 | `rotate.min-elapsed-ms` | 最短验证耗时 | `800` |
 | `rotate.render-scale` | 抗锯齿超采样倍数 | `2` |
 
+## 曲线绘制
+
+曲线绘制复用 `background.sources` 主背景图，在其上绘制引导曲线与起终点标记。
+
+| 配置 | 说明 | 默认值 |
+| --- | --- | --- |
+| `curve.width` / `height` | 图片尺寸 | `340` / `190` |
+| `curve.tolerance` | 判定绘制点贴近期望曲线的容差（服务端像素） | `12` |
+| `curve.min-elapsed-ms` | 最短验证耗时 | `800` |
+| `curve.expire-seconds` | 会话有效期 | `300` |
+| `curve.control-point-count` | 引导曲线控制点数量 | `5` |
+| `curve.point-count` | 期望曲线采样点数 | `48` |
+| `curve.min-coverage` | 最小覆盖率（0~1） | `0.6` |
+| `curve.min-drawn-points` | 绘制答案最少点数 | `5` |
+
 ## 安全说明
 
 - `debug-enabled` 生产环境必须关闭

@@ -41,6 +41,9 @@ public class CaptchaSession {
     /** 点选提示文字 */
     private final List<String> prompt;
 
+    /** 曲线绘制验证码期望曲线采样点（像素坐标），其他类型为 null */
+    private final List<PointVo> curve;
+
     /** 会话创建时间戳（毫秒） */
     private final long createdAt;
 
@@ -50,7 +53,7 @@ public class CaptchaSession {
     /** 私有构造：所有会话统一从这里创建 */
     private CaptchaSession(String id, CaptchaType type, String shape, int x, int y,
                            int width, int height, List<PointVo> targets, List<String> prompt,
-                           double rotation, long ttlMillis) {
+                           double rotation, List<PointVo> curve, long ttlMillis) {
         this.id = id;
         this.type = type;
         this.shape = shape;
@@ -61,6 +64,7 @@ public class CaptchaSession {
         this.height = height;
         this.targets = targets;
         this.prompt = prompt;
+        this.curve = curve;
         long now = System.currentTimeMillis();
         this.createdAt = now;
         this.expiresAt = now + ttlMillis;
@@ -70,21 +74,28 @@ public class CaptchaSession {
     public static CaptchaSession slider(String id, String shape, int x, int y,
                                         int width, int height, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.SLIDER, shape, x, y, width, height,
-                null, null, 0, ttlMillis);
+                null, null, 0, null, ttlMillis);
     }
 
     /** 创建点选会话 */
     public static CaptchaSession click(String id, int width, int height,
                                        List<PointVo> targets, List<String> prompt, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.CLICK, null, 0, 0, width, height,
-                targets, prompt, 0, ttlMillis);
+                targets, prompt, 0, null, ttlMillis);
     }
 
     /** 创建旋转会话 */
     public static CaptchaSession rotate(String id, int width, int height,
                                         double rotation, long ttlMillis) {
         return new CaptchaSession(id, CaptchaType.ROTATE, null, 0, 0, width, height,
-                null, null, rotation, ttlMillis);
+                null, null, rotation, null, ttlMillis);
+    }
+
+    /** 创建曲线绘制会话 */
+    public static CaptchaSession curve(String id, int width, int height,
+                                       List<PointVo> curve, long ttlMillis) {
+        return new CaptchaSession(id, CaptchaType.CURVE, null, 0, 0, width, height,
+                null, null, 0, curve, ttlMillis);
     }
 
     /** 会话是否已过期 */

@@ -110,6 +110,22 @@ looser than web to tolerate touch noise.
 | `rotate.min-elapsed-ms` | Min elapsed time | `800` |
 | `rotate.render-scale` | Supersampling | `2` |
 
+## Curve Drawing
+
+Curve drawing reuses the `background.sources` main background and draws the
+guide curve plus start/end markers on top of it.
+
+| Setting | Description | Default |
+| --- | --- | --- |
+| `curve.width` / `height` | Image size | `340` / `190` |
+| `curve.tolerance` | Server-side pixel tolerance for matching drawn points | `12` |
+| `curve.min-elapsed-ms` | Min elapsed time | `800` |
+| `curve.expire-seconds` | Session TTL | `300` |
+| `curve.control-point-count` | Guide curve control points | `5` |
+| `curve.point-count` | Expected curve sample points | `48` |
+| `curve.min-coverage` | Min coverage (0~1) | `0.6` |
+| `curve.min-drawn-points` | Min drawn answer points | `5` |
+
 ## Security
 
 - Keep `debug-enabled` off in production

@@ -18,7 +18,7 @@ The default prefix is `/api/captcha`, configurable via `captcha.api-prefix`.
 
 | Method | Path | Description |
 | --- | --- | --- |
-| GET | `{prefix}?type=slider\|click\|rotate` | Create a challenge |
+| GET | `{prefix}?type=slider\|click\|rotate\|curve` | Create a challenge |
 | POST | `{prefix}/verify` | Verify the answer |
 | GET/POST | `{prefix}/ticket/verify` | Verify a one-time ticket |
 | GET | `{prefix}/types` | List supported types and shapes |
@@ -84,7 +84,22 @@ Rotate:
 }
 ```
 
+Curve:
+
+```json
+{
+  "id": "7f0e...",
+  "type": "curve",
+  "curve": [{"x": 0.12, "y": 0.33}, {"x": 0.35, "y": 0.61}],
+  "clientType": "web",
+  "td": "H4sI..."
+}
+```
+
 `td` is the behavior payload (plain text or gzip + base64url; the backend auto-detects both).
+
+Click challenges also return `prompt` / `debugTargets`, rotate returns `debugAngle`,
+and curve returns `debugCurve` (expected curve sample points in pixels, debug mode only).
 
 ### Ticket Verification
 

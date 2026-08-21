@@ -157,6 +157,8 @@ public class CaptchaEngine {
                 new ClickCaptchaFactory(clickBackgroundProvider, wordFactory).create(config));
         map.putIfAbsent(CaptchaType.ROTATE,
                 new RotateCaptchaFactory(sliderBackgroundProvider).create(config));
+        map.putIfAbsent(CaptchaType.CURVE,
+                new CurveCaptchaFactory(sliderBackgroundProvider).create(config));
         return new CaptchaEngine(map, store, ticketStore, codec,
                 config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000,
                 config.getMessageProvider(), effectiveRateLimiter(config),
@@ -205,6 +207,7 @@ public class CaptchaEngine {
         map.putIfAbsent(CaptchaType.SLIDER, new SliderCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.CLICK, new ClickCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.ROTATE, new RotateCaptchaFactory().create(config));
+        map.putIfAbsent(CaptchaType.CURVE, new CurveCaptchaFactory().create(config));
         return map;
     }
 
@@ -265,6 +268,7 @@ public class CaptchaEngine {
             challenge.setDebugTargets(generated.getDebugTargets());
             challenge.setDebugFakeTargets(generated.getDebugFakeTargets());
             challenge.setDebugAngle(generated.getDebugAngle());
+            challenge.setDebugCurve(generated.getDebugCurve());
         }
         return challenge;
     }

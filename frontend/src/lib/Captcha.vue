@@ -24,6 +24,7 @@ import CaptchaModal from './CaptchaModal.vue';
 import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
+import CurveCaptcha from './CurveCaptcha.vue';
 import type { VerifyResult } from './api';
 import type { CaptchaMode } from './types';
 
@@ -53,6 +54,7 @@ const attrs = useAttrs();
 const inlineComponent = computed<Component>(() => {
   if (props.mode === 'click') return ClickCaptcha;
   if (props.mode === 'rotate') return RotateCaptcha;
+  if (props.mode === 'curve') return CurveCaptcha;
   return SliderCaptcha;
 });
 
