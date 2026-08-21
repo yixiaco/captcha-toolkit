@@ -80,4 +80,32 @@ class PuzzleShapesTest {
         assertTrue(topFilledRow < maxRow * 0.9,
                 "月亮顶部应有内凹缺口，top=" + topFilledRow + ", max=" + maxRow);
     }
+
+    @Test
+    void leafFollowsReferenceSvgProportions() {
+        Path2D path = PuzzleShapes.leaf().create(0, 0, 100);
+        Rectangle2D bounds = path.getBounds2D();
+
+        assertTrue(bounds.getMinX() >= -0.01 && bounds.getMinY() >= -0.01
+                        && bounds.getMaxX() <= 100.01 && bounds.getMaxY() <= 100.01,
+                "树叶应完整位于方块内: " + bounds);
+
+        BufferedImage image = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fill(path);
+        g.dispose();
+
+        long filled = 0;
+        for (int y = 0; y < 100; y++) {
+            for (int x = 0; x < 100; x++) {
+                if (((image.getRGB(x, y) >>> 24) & 0xFF) > 0) {
+                    filled++;
+                }
+            }
+        }
+        double ratio = filled / 10000.0;
+        assertTrue(ratio > 0.1 && ratio < 0.7,
+                "树叶面积占比应合理（非空也非整块），实际 ratio=" + ratio);
+    }
 }

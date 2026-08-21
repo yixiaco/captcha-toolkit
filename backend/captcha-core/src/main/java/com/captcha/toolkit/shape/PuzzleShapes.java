@@ -1,5 +1,7 @@
 package com.captcha.toolkit.shape;
 
+import com.captcha.toolkit.util.SvgPathParser;
+
 import java.awt.geom.Arc2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
@@ -28,15 +30,26 @@ public final class PuzzleShapes {
     public static PuzzleShape leaf() {
         return named("leaf", "叶子", (x, y, size) -> {
             Path2D path = new Path2D.Double();
-            path.moveTo(x + size * 0.5, y + size * 0.02);
-            path.curveTo(x + size * 0.98, y + size * 0.16, x + size * 0.98, y + size * 0.72,
-                    x + size * 0.5, y + size * 0.98);
-            path.curveTo(x + size * 0.02, y + size * 0.72, x + size * 0.02, y + size * 0.16,
-                    x + size * 0.5, y + size * 0.02);
-            path.closePath();
+            path.append(LEAF_TEMPLATE.getPathIterator(null), false);
+            fitToBox(path, x, y, size);
             return path;
         });
     }
+
+    /** 参考 Leaf.svg 的树叶路径（viewBox 1024×1024，解析一次后复用） */
+    private static final Path2D LEAF_TEMPLATE = SvgPathParser.parse(
+            "M853.333333 128h-171.264 "
+                    + "C316.16 128 133.802667 281.301333 127.573333 542.250667 "
+                    + "l-0.128 21.973333 "
+                    + "c0.597333 74.538667 17.621333 138.325333 68.266667 201.216 "
+                    + "a726.186667 726.186667 0 0 0-24.746667 125.866667 "
+                    + "42.666667 42.666667 0 1 0 84.778667 9.386666 "
+                    + "c3.541333-31.744 8.832-61.738667 16-90.026666 "
+                    + "H384 "
+                    + "c309.717333 0 490.624-180.992 511.914667-552.234667 "
+                    + "L896 170.666667 "
+                    + "a42.666667 42.666667 0 0 0-42.666667-42.666667 "
+                    + "z");
 
     /** 三角形 */
     public static PuzzleShape triangle() {
