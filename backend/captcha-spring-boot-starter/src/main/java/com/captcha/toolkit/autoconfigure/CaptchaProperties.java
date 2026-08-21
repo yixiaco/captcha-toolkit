@@ -4,6 +4,7 @@ import com.captcha.toolkit.config.BackgroundConfig;
 import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.config.ClickConfig;
+import com.captcha.toolkit.config.RateLimitConfig;
 import com.captcha.toolkit.config.RotateConfig;
 import com.captcha.toolkit.config.SliderConfig;
 import com.captcha.toolkit.i18n.MessageProvider;
@@ -74,6 +75,9 @@ public class CaptchaProperties {
     /** 默认提示语言（如 zh_CN / en），用于解析用户提示消息资源 */
     private String locale = "zh_CN";
 
+    /** 设备维度高频请求限流配置 */
+    private RateLimitConfig rateLimit = new RateLimitConfig();
+
     /**
      * 转换成核心引擎配置。滑块/点选直接复用同一套配置对象，
      * 通过属性拷贝避免两处配置实例互相共享可变引用。
@@ -86,6 +90,7 @@ public class CaptchaProperties {
         BeanUtils.copyProperties(click, config.getClick());
         BeanUtils.copyProperties(rotate, config.getRotate());
         BeanUtils.copyProperties(behavior, config.getBehavior());
+        BeanUtils.copyProperties(rateLimit, config.getRateLimit());
         config.setMessageProvider(new ResourceBundleMessageProvider(parseLocale(locale)));
         return config;
     }

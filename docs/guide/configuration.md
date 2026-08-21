@@ -24,6 +24,22 @@
 
 完整消息编码见 `CaptchaMessages` 与 `captcha-messages*.properties`。
 
+## 设备指纹与高频限流
+
+前端组件默认采集设备指纹（UA、屏幕、时区、Canvas、WebGL 等），随下发与校验请求
+自动携带；后端只保存 SHA-256 脱敏哈希，不落库原始指纹。
+
+| 配置 | 说明 | 默认值 |
+| --- | --- | --- |
+| `rate-limit.enabled` | 是否开启同设备高频请求限流 | `false` |
+| `rate-limit.max-requests` | 每个时间窗口内同一设备最大请求数 | `20` |
+| `rate-limit.window-seconds` | 时间窗口长度（秒） | `60` |
+| `rate-limit.fingerprint-salt` | 指纹脱敏盐 | 空 |
+
+- 下发与校验都会按设备计数；超过上限时返回 `RATE_LIMITED` 业务码；
+- 未携带指纹的请求不参与计数，便于存量前端平滑接入；
+- 默认内存实现仅适合单实例，多实例请自定义 `DeviceRequestLimiter` Bean 接入 Redis 等共享存储。
+
 ## 背景图
 
 | 配置 | 说明 | 默认值 |

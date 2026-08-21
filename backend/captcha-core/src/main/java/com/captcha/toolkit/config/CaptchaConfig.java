@@ -2,6 +2,7 @@ package com.captcha.toolkit.config;
 
 import com.captcha.toolkit.i18n.MessageProvider;
 import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
+import com.captcha.toolkit.limit.DeviceRequestLimiter;
 import lombok.Data;
 
 /**
@@ -34,4 +35,10 @@ public class CaptchaConfig {
 
     /** 用户提示消息提供者（多语言资源加载，默认中文） */
     private MessageProvider messageProvider = new ResourceBundleMessageProvider();
+
+    /** 设备维度高频请求限流配置 */
+    private RateLimitConfig rateLimit = new RateLimitConfig();
+
+    /** 设备维度限流器；为 null 时由引擎按 rateLimit 配置创建内存实现 */
+    private DeviceRequestLimiter deviceRequestLimiter;
 }

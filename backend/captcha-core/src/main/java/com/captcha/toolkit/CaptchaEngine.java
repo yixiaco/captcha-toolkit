@@ -5,8 +5,12 @@ import com.captcha.toolkit.generator.GenerateRequest;
 import com.captcha.toolkit.generator.SliderCaptchaGenerator;
 import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.config.CaptchaConfig;
+import com.captcha.toolkit.config.RateLimitConfig;
+import com.captcha.toolkit.exception.RateLimitExceededException;
 import com.captcha.toolkit.i18n.CaptchaMessages;
 import com.captcha.toolkit.i18n.MessageProvider;
+import com.captcha.toolkit.limit.DeviceRequestLimiter;
+import com.captcha.toolkit.limit.InMemoryDeviceRequestLimiter;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
 import com.captcha.toolkit.exception.CaptchaException;
@@ -18,6 +22,7 @@ import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.store.CaptchaSessionStore;
 import com.captcha.toolkit.store.CaptchaTicketStore;
 import com.captcha.toolkit.store.InMemoryCaptchaTicketStore;
+import com.captcha.toolkit.util.FingerprintHasher;
 import com.captcha.toolkit.word.WordFactory;
 
 import java.util.ArrayList;
@@ -60,6 +65,15 @@ public class CaptchaEngine {
     /** 用户提示消息提供者（多语言资源加载） */
     private final MessageProvider messages;
 
+    /** 设备维度限流器（未开启限流时不会被调用） */
+    private final DeviceRequestLimiter rateLimiter;
+
+    /** 设备维度限流是否开启 */
+    private final boolean deviceRateLimitEnabled;
+
+    /** 设备指纹脱敏盐 */
+    private final String fingerprintSalt;
+
     /**
      * 使用默认内存票据存储构造引擎。
      */
@@ -76,7 +90,8 @@ public class CaptchaEngine {
                          CaptchaImageCodec codec) {
         this(buildGenerators(factories, config), store, ticketStore, codec,
                 config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000,
-                config.getMessageProvider());
+                config.getMessageProvider(), effectiveRateLimiter(config),
+                config.getRateLimit().isEnabled(), config.getRateLimit().getFingerprintSalt());
     }
 
     /**
@@ -144,7 +159,8 @@ public class CaptchaEngine {
                 new RotateCaptchaFactory(sliderBackgroundProvider).create(config));
         return new CaptchaEngine(map, store, ticketStore, codec,
                 config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000,
-                config.getMessageProvider());
+                config.getMessageProvider(), effectiveRateLimiter(config),
+                config.getRateLimit().isEnabled(), config.getRateLimit().getFingerprintSalt());
     }
 
     /** 私有构造：统一接收已组装好的生成器映射与依赖 */
@@ -154,7 +170,10 @@ public class CaptchaEngine {
                           CaptchaImageCodec codec,
                           boolean debugEnabled,
                           long ticketTtlMillis,
-                          MessageProvider messages) {
+                          MessageProvider messages,
+                          DeviceRequestLimiter rateLimiter,
+                          boolean deviceRateLimitEnabled,
+                          String fingerprintSalt) {
         this.generators = generators;
         this.store = store;
         this.ticketStore = ticketStore;
@@ -162,6 +181,16 @@ public class CaptchaEngine {
         this.debugEnabled = debugEnabled;
         this.ticketTtlMillis = ticketTtlMillis;
         this.messages = messages;
+        this.rateLimiter = rateLimiter;
+        this.deviceRateLimitEnabled = deviceRateLimitEnabled;
+        this.fingerprintSalt = fingerprintSalt;
+    }
+
+    /** 使用配置的限流器，未配置时按 rateLimit 创建内存实现 */
+    private static DeviceRequestLimiter effectiveRateLimiter(CaptchaConfig config) {
+        return config.getDeviceRequestLimiter() != null
+                ? config.getDeviceRequestLimiter()
+                : new InMemoryDeviceRequestLimiter(config.getRateLimit());
     }
 
     /** 构建生成器映射：用户工厂优先，缺失类型用内置工厂补齐 */
@@ -187,6 +216,20 @@ public class CaptchaEngine {
      * @param debug  是否尝试附加答案（最终受 captcha.debug-enabled 控制）
      */
     public CaptchaChallenge create(CaptchaType type, Map<String, String> params, boolean debug) {
+        return create(type, params, debug, null);
+    }
+
+    /**
+     * 下发一张验证码（带设备指纹，开启限流时按设备计数）。
+     *
+     * @param type               验证码类型
+     * @param params             扩展参数，例如滑块 shape
+     * @param debug              是否尝试附加答案（最终受 captcha.debug-enabled 控制）
+     * @param deviceFingerprint  设备指纹（可为 null；限流开启且指纹缺失时不计数）
+     */
+    public CaptchaChallenge create(CaptchaType type, Map<String, String> params, boolean debug,
+                                   String deviceFingerprint) {
+        enforceDeviceRateLimit(deviceFingerprint);
         CaptchaGenerator generator = generators.get(type);
         if (generator == null) {
             throw new CaptchaException("不支持的验证码类型: " + type);
@@ -199,7 +242,7 @@ public class CaptchaEngine {
             effectiveParams.remove("shape");
         }
         GenerateRequest request = new GenerateRequest(
-                UUID.randomUUID().toString(), effectiveParams, debug);
+                UUID.randomUUID().toString(), effectiveParams, debug, deviceFingerprint);
         GeneratedCaptcha generated = generator.generate(request);
         store.put(generated.getSession());
 
@@ -234,6 +277,9 @@ public class CaptchaEngine {
         if (session == null) {
             return VerifyResult.expired(CaptchaMessages.VERIFY_EXPIRED, messages);
         }
+        if (!isDeviceAllowed(answer)) {
+            return VerifyResult.fail(CaptchaMessages.RATE_LIMIT_EXCEEDED, "RATE_LIMITED", messages);
+        }
         CaptchaGenerator generator = generators.get(session.getType());
         if (generator == null) {
             return VerifyResult.badRequest(CaptchaMessages.VERIFY_UNSUPPORTED_TYPE, messages);
@@ -246,6 +292,27 @@ public class CaptchaEngine {
             result.setTicket(ticket);
         }
         return result;
+    }
+
+    /** 下发验证码前的设备限流检查：超限抛出异常，由 HTTP 层转换为 RATE_LIMITED */
+    private void enforceDeviceRateLimit(String deviceFingerprint) {
+        if (!deviceRateLimitEnabled || deviceFingerprint == null || deviceFingerprint.isBlank()) {
+            return;
+        }
+        if (!rateLimiter.allow(FingerprintHasher.hash(deviceFingerprint, fingerprintSalt))) {
+            throw new RateLimitExceededException();
+        }
+    }
+
+    /** 校验阶段的设备限流检查：超限返回失败结果，且不销毁会话 */
+    private boolean isDeviceAllowed(CaptchaAnswer answer) {
+        if (!deviceRateLimitEnabled || answer == null
+                || answer.getDeviceFingerprint() == null
+                || answer.getDeviceFingerprint().isBlank()) {
+            return true;
+        }
+        return rateLimiter.allow(FingerprintHasher.hash(
+                answer.getDeviceFingerprint(), fingerprintSalt));
     }
 
     /**

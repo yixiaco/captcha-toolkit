@@ -30,6 +30,14 @@ class ResourceBundleMessageProviderTest {
     }
 
     @Test
+    void rateLimitMessageLocalized() {
+        assertEquals("请求过于频繁，请稍后再试",
+                provider.get(CaptchaMessages.RATE_LIMIT_EXCEEDED));
+        assertEquals("Too many requests, please try again later",
+                provider.get(Locale.ENGLISH, CaptchaMessages.RATE_LIMIT_EXCEEDED));
+    }
+
+    @Test
     void verifyResultLocalizesPerRequest() {
         VerifyResult result = VerifyResult.fail(
                 CaptchaMessages.VERIFY_WRONG, "WRONG", provider);

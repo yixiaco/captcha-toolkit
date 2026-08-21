@@ -25,6 +25,23 @@ etc.) are no longer hardcoded. They use message codes loaded from
 
 See `CaptchaMessages` and `captcha-messages*.properties` for the full list of codes.
 
+## Device Fingerprint & Rate Limiting
+
+The frontend components collect a device fingerprint by default (UA, screen,
+timezone, Canvas, WebGL, etc.) and attach it to create/verify requests. The
+backend only stores a SHA-256 hashed value, never the raw fingerprint.
+
+| Setting | Description | Default |
+| --- | --- | --- |
+| `rate-limit.enabled` | Enable per-device rate limiting | `false` |
+| `rate-limit.max-requests` | Max requests per device per window | `20` |
+| `rate-limit.window-seconds` | Window length (seconds) | `60` |
+| `rate-limit.fingerprint-salt` | Fingerprint salt | empty |
+
+- Both create and verify count towards the limit; exceeding it returns the `RATE_LIMITED` code.
+- Requests without a fingerprint are not counted, so existing clients can migrate smoothly.
+- The in-memory implementation is single-instance only; provide a custom `DeviceRequestLimiter` bean backed by Redis for multi-instance deployments.
+
 ## Backgrounds
 
 | Setting | Description | Default |

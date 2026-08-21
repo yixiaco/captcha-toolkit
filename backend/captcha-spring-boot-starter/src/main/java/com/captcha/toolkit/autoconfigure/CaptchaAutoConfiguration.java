@@ -7,6 +7,8 @@ import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.image.DataUriImageCodec;
 import com.captcha.toolkit.i18n.MessageProvider;
 import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
+import com.captcha.toolkit.limit.DeviceRequestLimiter;
+import com.captcha.toolkit.limit.InMemoryDeviceRequestLimiter;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.store.CaptchaSessionStore;
@@ -88,12 +90,22 @@ public class CaptchaAutoConfiguration {
         return new ResourceBundleMessageProvider(parseLocale(properties.getLocale()));
     }
 
+    /** 默认设备限流器：内存固定窗口实现，多实例时宿主可替换为 Redis 等共享实现 */
+    @Bean
+    @ConditionalOnMissingBean
+    public DeviceRequestLimiter captchaDeviceRequestLimiter(CaptchaProperties properties) {
+        return new InMemoryDeviceRequestLimiter(properties.getRateLimit());
+    }
+
     /** 把 Spring 配置属性转换为核心引擎配置 */
     @Bean
     @ConditionalOnMissingBean
-    public CaptchaConfig captchaConfig(CaptchaProperties properties, MessageProvider messageProvider) {
+    public CaptchaConfig captchaConfig(CaptchaProperties properties,
+                                       MessageProvider messageProvider,
+                                       DeviceRequestLimiter deviceRequestLimiter) {
         CaptchaConfig config = properties.toConfig();
         config.setMessageProvider(messageProvider);
+        config.setDeviceRequestLimiter(deviceRequestLimiter);
         return config;
     }
 

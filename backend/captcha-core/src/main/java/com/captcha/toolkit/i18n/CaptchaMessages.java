@@ -44,6 +44,9 @@ public final class CaptchaMessages {
     /** 票据有效 */
     public static final String TICKET_VALID = "ticket.valid";
 
+    /** 请求过于频繁，请稍后再试 */
+    public static final String RATE_LIMIT_EXCEEDED = "rate-limit.exceeded";
+
     /** 缺少滑块位移 xNorm */
     public static final String SLIDER_MISSING_X_NORM = "slider.missing-x-norm";
 

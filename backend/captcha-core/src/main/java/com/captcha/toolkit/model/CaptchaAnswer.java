@@ -38,6 +38,9 @@ public class CaptchaAnswer {
     /** 提示语言（如 zh / en），可选；缺省时使用 Accept-Language 或服务端默认语言 */
     private String lang;
 
+    /** 设备指纹（可选）；开启 captcha.rate-limit 后用于同设备高频请求限流 */
+    private String deviceFingerprint;
+
     /**
      * 构造滑块答案。
      *

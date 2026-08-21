@@ -17,15 +17,30 @@ public class GenerateRequest {
     /** 是否请求调试答案 */
     private final boolean debug;
 
+    /** 设备指纹（原始值，仅用于服务端脱敏哈希，不落库） */
+    private final String deviceFingerprint;
+
     /**
      * @param id     会话唯一标识
      * @param params 扩展参数
      * @param debug  是否请求调试答案
      */
     public GenerateRequest(String id, Map<String, String> params, boolean debug) {
+        this(id, params, debug, null);
+    }
+
+    /**
+     * @param id               会话唯一标识
+     * @param params           扩展参数
+     * @param debug            是否请求调试答案
+     * @param deviceFingerprint 设备指纹（可为 null）
+     */
+    public GenerateRequest(String id, Map<String, String> params, boolean debug,
+                           String deviceFingerprint) {
         this.id = id;
         this.params = params == null ? new LinkedHashMap<>() : new LinkedHashMap<>(params);
         this.debug = debug;
+        this.deviceFingerprint = deviceFingerprint;
     }
 
     /** 返回会话唯一标识 */
@@ -41,5 +56,10 @@ public class GenerateRequest {
     /** 是否请求调试答案 */
     public boolean isDebug() {
         return debug;
+    }
+
+    /** 返回设备指纹（可为 null，表示未采集到指纹） */
+    public String getDeviceFingerprint() {
+        return deviceFingerprint;
     }
 }

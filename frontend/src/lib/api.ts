@@ -1,5 +1,7 @@
 // 验证码请求适配器：默认走 fetch，宿主可传入自己的 request 函数
 
+import { getDeviceFingerprint } from './device';
+
 export interface RequestOptions {
   method?: 'GET' | 'POST'
   query?: Record<string, unknown>
@@ -51,6 +53,20 @@ export interface CaptchaApi {
 }
 
 /**
+ * 自动携带设备指纹：请求方显式传了 deviceFingerprint 时优先保留，
+ * 否则用本地采集的指纹；采集失败时跳过该字段。
+ */
+async function attachDeviceFingerprint(
+  payload?: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const merged = { ...(payload || {}) };
+  if (!merged.deviceFingerprint) {
+    merged.deviceFingerprint = await getDeviceFingerprint();
+  }
+  return merged;
+}
+
+/**
  * 默认请求实现：GET 拼接 query，POST 发送 JSON。
  */
 export async function defaultRequest(
@@ -95,12 +111,14 @@ export function createCaptchaApi({
   const requestFn = request || defaultRequest;
   return {
     /** 获取验证码 */
-    getCaptcha(params = {}) {
-      return requestFn(baseUrl, { method: 'GET', query: params });
+    async getCaptcha(params = {}) {
+      const query = await attachDeviceFingerprint(params);
+      return requestFn(baseUrl, { method: 'GET', query });
     },
     /** 提交答案 */
-    verify(payload) {
-      return requestFn(`${baseUrl}/verify`, { method: 'POST', json: payload });
+    async verify(payload) {
+      const json = await attachDeviceFingerprint(payload);
+      return requestFn(`${baseUrl}/verify`, { method: 'POST', json });
     },
     /** 查询后端支持的类型与形状（通用前端可用它动态渲染） */
     getTypes() {

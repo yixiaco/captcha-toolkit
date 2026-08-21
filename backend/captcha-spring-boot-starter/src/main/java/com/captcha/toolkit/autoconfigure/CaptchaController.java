@@ -2,10 +2,10 @@ package com.captcha.toolkit.autoconfigure;
 
 import com.captcha.toolkit.CaptchaEngine;
 import com.captcha.toolkit.CaptchaType;
+import com.captcha.toolkit.exception.RateLimitExceededException;
 import com.captcha.toolkit.i18n.CaptchaMessages;
 import com.captcha.toolkit.i18n.MessageProvider;
 import com.captcha.toolkit.model.CaptchaAnswer;
-import com.captcha.toolkit.model.CaptchaChallenge;
 import com.captcha.toolkit.model.TicketVerifyRequest;
 import com.captcha.toolkit.model.VerifyResult;
 import jakarta.validation.Valid;
@@ -61,15 +61,25 @@ public class CaptchaController {
 
     /** 下发一张验证码：type 指定类型，shape 指定滑块形状，debug 请求调试答案 */
     @GetMapping
-    public CaptchaChallenge create(@RequestParam(defaultValue = "slider") String type,
-                                   @RequestParam(required = false) String shape,
-                                   @RequestParam(defaultValue = "false") boolean debug) {
+    public Object create(@RequestParam(defaultValue = "slider") String type,
+                         @RequestParam(required = false) String shape,
+                         @RequestParam(defaultValue = "false") boolean debug,
+                         @RequestParam(required = false) String deviceFingerprint,
+                         @RequestParam(required = false) String lang,
+                         @RequestHeader(name = "Accept-Language", required = false)
+                         String acceptLanguage) {
         Map<String, String> params = new LinkedHashMap<>();
         if (shape != null && !shape.isBlank()) {
             params.put("shape", shape);
         }
-        return engine.create(CaptchaType.fromCode(type), params,
-                debug && properties.isDebugEnabled());
+        try {
+            return engine.create(CaptchaType.fromCode(type), params,
+                    debug && properties.isDebugEnabled(), deviceFingerprint);
+        } catch (RateLimitExceededException e) {
+            return VerifyResult.fail(CaptchaMessages.RATE_LIMIT_EXCEEDED,
+                    "RATE_LIMITED", messageProvider)
+                    .localize(resolveLocale(lang, acceptLanguage), messageProvider);
+        }
     }
 
     /** 校验前端提交的答案 */

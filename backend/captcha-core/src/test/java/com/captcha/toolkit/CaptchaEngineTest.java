@@ -1,6 +1,7 @@
 package com.captcha.toolkit;
 
 import com.captcha.toolkit.config.CaptchaConfig;
+import com.captcha.toolkit.exception.RateLimitExceededException;
 import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.image.DataUriImageCodec;
 import com.captcha.toolkit.model.CaptchaAnswer;
@@ -24,6 +25,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -43,6 +45,87 @@ class CaptchaEngineTest {
                 List.of(new SceneBackgroundProvider()));
         return CaptchaEngine.of(config, new InMemoryCaptchaSessionStore(), codec,
                 List.of(), background);
+    }
+
+    /** 开启设备限流的引擎 */
+    private CaptchaEngine newRateLimitedEngine(int maxRequests, long windowSeconds) {
+        CaptchaConfig config = new CaptchaConfig();
+        config.setDebugEnabled(true);
+        config.getSlider().setMinElapsedMs(0);
+        config.getClick().setMinElapsedMs(0);
+        config.getRotate().setMinElapsedMs(0);
+        config.getRateLimit().setEnabled(true);
+        config.getRateLimit().setMaxRequests(maxRequests);
+        config.getRateLimit().setWindowSeconds(windowSeconds);
+        return CaptchaEngine.of(config, new InMemoryCaptchaSessionStore(),
+                new DataUriImageCodec(), List.of(),
+                new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())));
+    }
+
+    @Test
+    void rateLimitDisabledByDefaultAllowsRepeatedCreates() {
+        CaptchaEngine engine = newEngine();
+        for (int i = 0; i < 3; i++) {
+            engine.create(CaptchaType.SLIDER, Map.of("shape", "classic"), true, "device-a");
+        }
+    }
+
+    @Test
+    void createRejectsHighFrequencyDevice() {
+        CaptchaEngine engine = newRateLimitedEngine(2, 60);
+        engine.create(CaptchaType.SLIDER, Map.of("shape", "classic"), true, "device-a");
+        engine.create(CaptchaType.SLIDER, Map.of("shape", "classic"), true, "device-a");
+        assertThrows(RateLimitExceededException.class,
+                () -> engine.create(CaptchaType.SLIDER,
+                        Map.of("shape", "classic"), true, "device-a"));
+    }
+
+    @Test
+    void verifyRejectsHighFrequencyDeviceWithoutConsumingSession() {
+        CaptchaEngine engine = newRateLimitedEngine(1, 60);
+
+        // 第一次校验携带指纹，占用设备额度
+        CaptchaChallenge first = engine.create(CaptchaType.SLIDER,
+                Map.of("shape", "classic"), true);
+        CaptchaAnswer firstAnswer = CaptchaAnswer.slider(
+                first.getDebugX() / (double) first.getWidth());
+        firstAnswer.setDeviceFingerprint("device-a");
+        assertTrue(engine.verify(first.getId(), firstAnswer).isSuccess());
+
+        // 同设备第二次校验被限流
+        CaptchaChallenge second = engine.create(CaptchaType.SLIDER,
+                Map.of("shape", "classic"), true);
+        CaptchaAnswer secondAnswer = CaptchaAnswer.slider(
+                second.getDebugX() / (double) second.getWidth());
+        secondAnswer.setDeviceFingerprint("device-a");
+        VerifyResult rejected = engine.verify(second.getId(), secondAnswer);
+        assertFalse(rejected.isSuccess());
+        assertEquals("RATE_LIMITED", rejected.getCode());
+
+        // 会话未被销毁：不带指纹重新校验同一会话仍可成功
+        CaptchaAnswer retry = CaptchaAnswer.slider(
+                second.getDebugX() / (double) second.getWidth());
+        assertTrue(engine.verify(second.getId(), retry).isSuccess());
+    }
+
+    @Test
+    void verifyAllowsDifferentDevicesIndependently() {
+        CaptchaEngine engine = newRateLimitedEngine(1, 60);
+        for (int i = 0; i < 2; i++) {
+            CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
+                    Map.of("shape", "classic"), true);
+            CaptchaAnswer answer = CaptchaAnswer.slider(
+                    challenge.getDebugX() / (double) challenge.getWidth());
+            answer.setDeviceFingerprint("device-" + i);
+            assertTrue(engine.verify(challenge.getId(), answer).isSuccess());
+        }
+    }
+
+    @Test
+    void missingFingerprintSkipsRateLimit() {
+        CaptchaEngine engine = newRateLimitedEngine(1, 60);
+        engine.create(CaptchaType.SLIDER, Map.of("shape", "classic"), true);
+        engine.create(CaptchaType.SLIDER, Map.of("shape", "classic"), true);
     }
 
     @Test
