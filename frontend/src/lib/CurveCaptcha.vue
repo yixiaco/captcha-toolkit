@@ -64,7 +64,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useCaptchaOptions } from './options';
-import type { VerifyResult } from './api';
+import type { CurveChallengeData, VerifyResult } from './api';
 import type { CaptchaStatus, ClientType } from './types';
 import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace';
 import type { BehaviorTrace } from './trace';
@@ -183,7 +183,7 @@ async function loadCaptcha() {
   image1.value = '';
   clearCanvas();
   try {
-    const res = await opts.api.getCaptcha({
+    const res = await opts.api.getCaptcha<CurveChallengeData>({
       type: 'curve',
       debug: opts.debug ? '1' : undefined,
     });
@@ -193,9 +193,9 @@ async function loadCaptcha() {
     await nextTick();
     if (opts.debug && rootRef.value) {
       rootRef.value.dataset.captchaId = res.id;
-      if (res.debugCurve) {
+      if (res.data?.debugCurve) {
         rootRef.value.dataset.debugCurve = JSON.stringify(
-          res.debugCurve.map((p) => ({ x: p.x, y: p.y }))
+          res.data.debugCurve.map((p) => ({ x: p.x, y: p.y }))
         );
       }
     }

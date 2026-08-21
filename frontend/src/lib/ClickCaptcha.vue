@@ -64,7 +64,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useCaptchaOptions } from './options';
-import type { VerifyResult } from './api';
+import type { ClickChallengeData, VerifyResult } from './api';
 import type { CaptchaStatus, ClientType } from './types';
 import { createTrace, pushPoint, buildCompressedTrace, removeLastEvent } from './trace';
 import type { BehaviorTrace } from './trace';
@@ -150,13 +150,13 @@ async function loadCaptcha() {
   trace = null;
   pressAccepted = false;
   try {
-    const res = await opts.api.getCaptcha({
+    const res = await opts.api.getCaptcha<ClickChallengeData>({
       type: 'click',
       debug: opts.debug ? '1' : undefined,
     });
     captchaId.value = res.id;
     image1.value = res.image1;
-    prompt.value = res.prompt || [];
+    prompt.value = res.data?.prompt || [];
     // 以后端实际图片高度为准（宽度由父容器 100% 决定）
     imgHeight.value = res.height || opts.height;
     status.value = 'idle';
@@ -164,9 +164,9 @@ async function loadCaptcha() {
     await nextTick();
     if (opts.debug && imageRef.value) {
       imageRef.value.dataset.captchaId = res.id;
-      if (res.debugTargets) {
+      if (res.data?.debugTargets) {
         imageRef.value.dataset.debugTargets = JSON.stringify(
-          res.debugTargets.map((p) => ({ x: p.x, y: p.y }))
+          res.data.debugTargets.map((p) => ({ x: p.x, y: p.y }))
         );
       }
     }

@@ -12,6 +12,7 @@ import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.GeneratedCaptcha;
 import com.captcha.toolkit.model.PointVo;
+import com.captcha.toolkit.model.SliderChallengeData;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.SliderRenderer;
@@ -24,7 +25,7 @@ import java.util.Random;
 /**
  * 滑块拼图验证码生成器。
  */
-public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
+public class SliderCaptchaGenerator extends AbstractCaptchaGenerator<SliderChallengeData> {
 
     /** 滑块配置 */
     private final SliderConfig options;
@@ -88,7 +89,7 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
     }
 
     @Override
-    protected GeneratedCaptcha doGenerate(GenerateRequest request) {
+    protected GeneratedCaptcha<SliderChallengeData> doGenerate(GenerateRequest request) {
         // 拼图形状默认由后端随机决定；只有 debug 模式下前端才能显式指定
         String requested = request.getParams().get("shape");
         String shape = request.isDebug() && requested != null && !requested.isBlank()
@@ -102,20 +103,19 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator {
                 request.getId(), shape, renderer.getX(), renderer.getY(),
                 renderer.getWidth(), renderer.getHeight(), options.getExpireSeconds() * 1000);
 
-        GeneratedCaptcha result = new GeneratedCaptcha();
+        GeneratedCaptcha<SliderChallengeData> result = new GeneratedCaptcha<>();
         result.setSession(session);
         result.setImage1(renderer.getArtwork());
         result.setImage2(renderer.getVacancy());
         result.setWidth(renderer.getWidth());
         result.setHeight(renderer.getHeight());
-        result.setShape(shape);
-        result.setPieceOffsetX(renderer.getPieceOffsetX());
-        if (request.isDebug()) {
-            result.setDebugX(renderer.getX());
-            result.setDebugFakeTargets(renderer.getFakeTargets().stream()
+        result.setData(new SliderChallengeData(
+                shape,
+                renderer.getPieceOffsetX(),
+                request.isDebug() ? renderer.getX() : null,
+                request.isDebug() ? renderer.getFakeTargets().stream()
                     .map(p -> new PointVo(p.getX(), p.getY()))
-                    .toList());
-        }
+                    .toList() : null));
         return result;
     }
 

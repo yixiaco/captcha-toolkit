@@ -8,11 +8,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 生成器内部产物：图片 + 会话 + 调试信息。
- * 引擎负责把图片编码为 Data URI 并组装成对外响应。
+ * 生成器内部产物：图片 + 会话 + 类型特定化数据。
+ *
+ * <p>不同类型验证码的额外字段（形状、提示、调试答案等）统一放在泛型
+ * {@code data} 中，新增验证码类型时只需定义自己的数据类，不再往这里加字段。</p>
+ *
+ * @param <T> 类型特定化数据（如 {@link SliderChallengeData} / {@link ClickChallengeData}）
  */
 @Data
-public class GeneratedCaptcha {
+public class GeneratedCaptcha<T> {
 
     /** 本次生成对应的服务端会话 */
     private CaptchaSession session;
@@ -29,29 +33,8 @@ public class GeneratedCaptcha {
     /** 图片高度 */
     private Integer height;
 
-    /** 滑块拼图形状 */
-    private String shape;
-
-    /** 点选提示文字 */
-    private List<String> prompt;
-
-    /** 滑块小图内部左侧留白 */
-    private Integer pieceOffsetX;
-
-    /** 调试：滑块答案 x */
-    private Integer debugX;
-
-    /** 调试：点选目标坐标 */
-    private List<PointVo> debugTargets;
-
-    /** 调试：滑块假目标坐标 */
-    private List<PointVo> debugFakeTargets;
-
-    /** 调试：旋转验证码正确答案角度（度） */
-    private Double debugAngle;
-
-    /** 调试：曲线绘制验证码期望曲线采样点（像素坐标） */
-    private List<PointVo> debugCurve;
+    /** 类型特定化数据：每种验证码类型携带各自的形状/提示/调试答案等字段 */
+    private T data;
 
     /** 扩展元数据：自定义验证码可携带任意附加信息 */
     private final Map<String, Object> metadata = new HashMap<>();

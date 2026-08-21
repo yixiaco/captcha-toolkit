@@ -11,6 +11,7 @@ import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.model.CaptchaSession;
+import com.captcha.toolkit.model.ClickChallengeData;
 import com.captcha.toolkit.model.GeneratedCaptcha;
 import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.PointVo;
@@ -53,7 +54,7 @@ import java.util.Random;
  *   <li>整图再做一次波浪形变，并叠加干扰线/噪点</li>
  * </ul>
  */
-public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
+public class ClickCaptchaGenerator extends AbstractCaptchaGenerator<ClickChallengeData> {
 
     /** 点选配置 */
     private final ClickConfig options;
@@ -177,22 +178,22 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator {
     }
 
     @Override
-    protected GeneratedCaptcha doGenerate(GenerateRequest request) {
+    protected GeneratedCaptcha<ClickChallengeData> doGenerate(GenerateRequest request) {
         run();
 
         CaptchaSession session = CaptchaSession.click(request.getId(),
                 options.getWidth(), options.getHeight(), targets, prompt,
                 options.getExpireSeconds() * 1000);
 
-        GeneratedCaptcha result = new GeneratedCaptcha();
+        GeneratedCaptcha<ClickChallengeData> result = new GeneratedCaptcha<>();
         result.setSession(session);
         result.setImage1(image);
         result.setWidth(options.getWidth());
         result.setHeight(options.getHeight());
-        result.setPrompt(prompt);
-        if (request.isDebug()) {
-            result.setDebugTargets(new ArrayList<>(targets));
-        }
+        result.setData(new ClickChallengeData(
+                prompt,
+                request.isDebug() ? new ArrayList<>(targets) : null,
+                null));
         return result;
     }
 

@@ -134,7 +134,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { getShapeOptions, PUZZLE_SHAPES } from './shapes';
 import { useCaptchaOptions } from './options';
-import type { VerifyResult } from './api';
+import type { SliderChallengeData, VerifyResult } from './api';
 import type { CaptchaStatus, ClientType } from './types';
 import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace';
 import type { BehaviorTrace } from './trace';
@@ -245,7 +245,7 @@ async function loadCaptcha() {
   image2.value = '';
   trace = null;
   try {
-    const res = await opts.api.getCaptcha({
+    const res = await opts.api.getCaptcha<SliderChallengeData>({
       type: 'slider',
       // 正常模式不传 shape，由后端随机决定；debug 模式才允许前端指定
       shape: opts.debug ? selectedShape.value || 'random' : undefined,
@@ -260,13 +260,13 @@ async function loadCaptcha() {
     await nextTick();
     trackWidth = trackRef.value ? trackRef.value.clientWidth : imgWidth.value;
     // 小图是从拼图块左侧留白处裁剪的，整体左移 offset 让拼图块贴住大图左边缘
-    pieceOffsetX.value = res.pieceOffsetX || 0;
+    pieceOffsetX.value = res.data?.pieceOffsetX || 0;
     pieceLeft.value = 0;
     status.value = 'idle';
     if (opts.debug && rootRef.value) {
       rootRef.value.dataset.captchaId = res.id;
-      if (res.debugX != null) {
-        rootRef.value.dataset.debugX = String(res.debugX);
+      if (res.data?.debugX != null) {
+        rootRef.value.dataset.debugX = String(res.data.debugX);
       }
     }
   } catch (error) {

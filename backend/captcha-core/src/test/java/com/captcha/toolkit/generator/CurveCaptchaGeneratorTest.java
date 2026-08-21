@@ -2,6 +2,7 @@ package com.captcha.toolkit.generator;
 
 import com.captcha.toolkit.config.CurveConfig;
 import com.captcha.toolkit.model.CaptchaAnswer;
+import com.captcha.toolkit.model.CurveChallengeData;
 import com.captcha.toolkit.model.GeneratedCaptcha;
 import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.PointVo;
@@ -55,7 +56,8 @@ class CurveCaptchaGeneratorTest {
         GeneratedCaptcha captcha = generate(newGenerator());
 
         assertNotNull(captcha.getImage1());
-        assertEquals("curve", captcha.getShape());
+        assertTrue(captcha.getData() instanceof CurveChallengeData,
+                "生成结果应携带曲线类型特定化载荷");
         List<PointVo> curve = captcha.getSession().getCurve();
         assertEquals(48, curve.size(), "默认采样点数应为 48");
 
@@ -78,8 +80,9 @@ class CurveCaptchaGeneratorTest {
     @Test
     void debugModeExposesExpectedCurve() {
         GeneratedCaptcha captcha = generate(newGenerator());
-        assertNotNull(captcha.getDebugCurve());
-        assertEquals(captcha.getSession().getCurve(), captcha.getDebugCurve());
+        CurveChallengeData data = (CurveChallengeData) captcha.getData();
+        assertNotNull(data.debugCurve());
+        assertEquals(captcha.getSession().getCurve(), data.debugCurve());
     }
 
     @Test

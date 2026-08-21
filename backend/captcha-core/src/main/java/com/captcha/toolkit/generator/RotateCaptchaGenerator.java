@@ -12,6 +12,7 @@ import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.GeneratedCaptcha;
+import com.captcha.toolkit.model.RotateChallengeData;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.util.ImageUtil;
@@ -31,7 +32,7 @@ import java.util.Random;
  * <p>背景中心放一个按随机角度旋转错位的圆盘，用户拖动滑块把圆盘转回
  * 与背景对齐的角度；答案角度只保存在服务端会话里。</p>
  */
-public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
+public class RotateCaptchaGenerator extends AbstractCaptchaGenerator<RotateChallengeData> {
 
     /** 旋转配置 */
     private final RotateConfig options;
@@ -85,7 +86,7 @@ public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
     }
 
     @Override
-    protected GeneratedCaptcha doGenerate(GenerateRequest request) {
+    protected GeneratedCaptcha<RotateChallengeData> doGenerate(GenerateRequest request) {
         int w = options.getWidth();
         int h = options.getHeight();
         int scale = Math.max(1, options.getRenderScale());
@@ -130,16 +131,13 @@ public class RotateCaptchaGenerator extends AbstractCaptchaGenerator {
 
         CaptchaSession session = CaptchaSession.rotate(request.getId(), w, h,
                 answer, options.getExpireSeconds() * 1000);
-        GeneratedCaptcha result = new GeneratedCaptcha();
+        GeneratedCaptcha<RotateChallengeData> result = new GeneratedCaptcha<>();
         result.setSession(session);
         result.setImage1(artwork);
         result.setImage2(piece);
         result.setWidth(w);
         result.setHeight(h);
-        result.setShape("rotate");
-        if (request.isDebug()) {
-            result.setDebugAngle(answer);
-        }
+        result.setData(new RotateChallengeData(request.isDebug() ? answer : null));
         return result;
     }
 

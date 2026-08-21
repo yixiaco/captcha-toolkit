@@ -36,7 +36,7 @@ public class CurveCaptchaFactory implements CaptchaFactory {
     }
 
     @Override
-    public CaptchaGenerator create(CaptchaConfig config) {
+    public CaptchaGenerator<?> create(CaptchaConfig config) {
         return new CurveCaptchaGenerator(config.getCurve(), backgroundProvider,
                 new CurveBehaviorValidator(config.getBehavior()), config.getMessageProvider());
     }

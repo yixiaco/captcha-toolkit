@@ -41,13 +41,25 @@ GET /api/captcha?type=slider&shape=classic&debug=1
   "image2": "data:image/png;base64,...",
   "width": 340,
   "height": 190,
-  "shape": "classic",
-  "debugX": 168
+  "data": {
+    "shape": "classic",
+    "pieceOffsetX": 8,
+    "debugX": 168
+  }
 }
 ```
 
-点选类型额外返回 `prompt`（提示文字）与 `debugTargets`；旋转类型额外返回 `debugAngle`；
-曲线类型额外返回 `debugCurve`（期望曲线采样点，像素坐标，debug 模式）。
+所有类型特定化属性统一放在 `data` 对象里（泛型载荷），新增验证码类型时只需定义自己的
+`data` 结构，不需要给下发模型加字段：
+
+| 类型 | `data` 字段 | 说明 |
+| --- | --- | --- |
+| `slider` | `shape` / `pieceOffsetX` / `debugX` | 拼图形状、拼图块留白、调试答案 x |
+| `click` | `prompt` / `debugTargets` | 提示文字、调试目标坐标 |
+| `rotate` | `debugAngle` | 调试答案角度（度） |
+| `curve` | `debugCurve` | 调试期望曲线采样点（像素坐标） |
+
+调试字段仅在 `debug=1` 且引擎开启 `debug-enabled` 时返回。
 
 ### 校验答案
 

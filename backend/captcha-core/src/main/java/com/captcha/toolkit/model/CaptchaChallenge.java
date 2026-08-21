@@ -7,9 +7,14 @@ import java.util.Map;
 
 /**
  * 验证码下发载荷（接口响应模型）。
+ *
+ * <p>不同类型验证码的特定化属性（形状、提示、调试答案等）统一放在泛型
+ * {@code data} 中：新增验证码类型时只需定义自己的数据类，不再给本类加字段。</p>
+ *
+ * @param <T> 类型特定化数据（如 {@link SliderChallengeData} / {@link ClickChallengeData}）
  */
 @Data
-public class CaptchaChallenge {
+public class CaptchaChallenge<T> {
 
     /** 验证码会话 id，前端提交答案时原样带回 */
     private String id;
@@ -29,23 +34,8 @@ public class CaptchaChallenge {
     /** 图片高度（服务端像素坐标系） */
     private Integer height;
 
-    /** 滑块拼图形状名 */
-    private String shape;
-
-    /** 点选提示文字（词组模式为词组，单字模式为单个汉字） */
-    private List<String> prompt;
-    /** 小图（拼图块）内部左侧留白，前端定位时使用 */
-    private Integer pieceOffsetX;
-    /** 调试字段：仅 debug=1 且引擎开启调试时返回滑块答案 x */
-    private Integer debugX;
-    /** 调试字段：仅 debug=1 且引擎开启调试时返回点选目标坐标 */
-    private List<PointVo> debugTargets;
-    /** 调试字段：仅 debug=1 且引擎开启调试时返回滑块假目标坐标 */
-    private List<PointVo> debugFakeTargets;
-    /** 调试字段：仅 debug=1 且引擎开启调试时返回旋转验证码答案角度 */
-    private Double debugAngle;
-    /** 调试字段：仅 debug=1 且引擎开启调试时返回曲线绘制期望曲线采样点 */
-    private List<PointVo> debugCurve;
+    /** 类型特定化数据：每种验证码类型携带各自的形状/提示/调试答案等字段 */
+    private T data;
     /** 扩展元数据：自定义验证码可携带任意附加信息 */
     private Map<String, Object> metadata;
 

@@ -39,10 +39,26 @@ Example response (debug mode includes the answer):
   "image2": "data:image/png;base64,...",
   "width": 340,
   "height": 190,
-  "shape": "classic",
-  "debugX": 168
+  "data": {
+    "shape": "classic",
+    "pieceOffsetX": 8,
+    "debugX": 168
+  }
 }
 ```
+
+All type-specific properties are grouped in a generic `data` payload. When adding a
+new captcha type, define its own `data` structure instead of adding fields to the
+challenge model:
+
+| Type | `data` fields | Description |
+| --- | --- | --- |
+| `slider` | `shape` / `pieceOffsetX` / `debugX` | Shape, piece offset, debug answer x |
+| `click` | `prompt` / `debugTargets` | Prompt text, debug target coordinates |
+| `rotate` | `debugAngle` | Debug answer angle (degrees) |
+| `curve` | `debugCurve` | Debug expected curve sample points (pixels) |
+
+Debug fields are only returned when `debug=1` and `debug-enabled` is on.
 
 ### Verify Answers
 

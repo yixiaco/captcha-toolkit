@@ -17,8 +17,10 @@ import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
  * </ol>
  *
  * <p>新增验证码时只需继承本类并实现三个抽象方法。</p>
+ *
+ * @param <T> 类型特定化数据（如 {@link com.captcha.toolkit.model.SliderChallengeData}）
  */
-public abstract class AbstractCaptchaGenerator implements CaptchaGenerator {
+public abstract class AbstractCaptchaGenerator<T> implements CaptchaGenerator<T> {
 
     /** 用户提示消息提供者（多语言资源加载） */
     protected final MessageProvider messages;
@@ -37,7 +39,7 @@ public abstract class AbstractCaptchaGenerator implements CaptchaGenerator {
 
     /** 生成阶段：固定调用子类实现，不对外暴露模板细节 */
     @Override
-    public final GeneratedCaptcha generate(GenerateRequest request) {
+    public final GeneratedCaptcha<T> generate(GenerateRequest request) {
         return doGenerate(request);
     }
 
@@ -58,7 +60,7 @@ public abstract class AbstractCaptchaGenerator implements CaptchaGenerator {
     }
 
     /** 子类实现具体的挑战生成逻辑 */
-    protected abstract GeneratedCaptcha doGenerate(GenerateRequest request);
+    protected abstract GeneratedCaptcha<T> doGenerate(GenerateRequest request);
 
     /** 子类实现具体的答案校验逻辑 */
     protected abstract VerifyResult doVerify(CaptchaSession session, CaptchaAnswer answer);

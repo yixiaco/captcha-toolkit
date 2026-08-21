@@ -15,5 +15,5 @@ public interface CaptchaFactory {
     CaptchaType type();
 
     /** 根据全局配置创建生成器 */
-    CaptchaGenerator create(CaptchaConfig config);
+    CaptchaGenerator<?> create(CaptchaConfig config);
 }

@@ -7,8 +7,12 @@ import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.image.DataUriImageCodec;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
+import com.captcha.toolkit.model.ClickChallengeData;
+import com.captcha.toolkit.model.CurveChallengeData;
 import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.PointVo;
+import com.captcha.toolkit.model.RotateChallengeData;
+import com.captcha.toolkit.model.SliderChallengeData;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.FallbackBackgroundProvider;
 import com.captcha.toolkit.render.SceneBackgroundProvider;
@@ -35,9 +39,9 @@ class BehaviorValidationTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
         int width = challenge.getWidth();
-        double endX = challenge.getDebugX() / (double) width;
+        double endX = sliderData(challenge).debugX() / (double) width;
 
-        CaptchaAnswer answer = CaptchaAnswer.slider(challenge.getDebugX() / (double) width);
+        CaptchaAnswer answer = CaptchaAnswer.slider(sliderData(challenge).debugX() / (double) width);
         answer.setTd(sliderTrace(endX));
 
         VerifyResult result = engine.verify(challenge.getId(), answer);
@@ -50,9 +54,9 @@ class BehaviorValidationTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
         int width = challenge.getWidth();
-        double endX = challenge.getDebugX() / (double) width;
+        double endX = sliderData(challenge).debugX() / (double) width;
 
-        CaptchaAnswer answer = CaptchaAnswer.slider(challenge.getDebugX() / (double) width);
+        CaptchaAnswer answer = CaptchaAnswer.slider(sliderData(challenge).debugX() / (double) width);
         answer.setTd(BehaviorTraceCodec.encode(new BehaviorTrace(1, width, challenge.getHeight(),
                 1_000_000L, 1_002_000L, List.of(
                         new BehaviorPoint(0, 0.01, 0.5, BehaviorEventType.START),
@@ -71,7 +75,7 @@ class BehaviorValidationTest {
                 Map.of("shape", "classic"), true);
 
         CaptchaAnswer answer = CaptchaAnswer.slider(
-                challenge.getDebugX() / (double) challenge.getWidth());
+                sliderData(challenge).debugX() / (double) challenge.getWidth());
 
         VerifyResult result = engine.verify(challenge.getId(), answer);
         assertFalse(result.isSuccess());
@@ -114,7 +118,7 @@ class BehaviorValidationTest {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.ROTATE, Map.of(), true);
 
-        CaptchaAnswer answer = CaptchaAnswer.rotate(challenge.getDebugAngle());
+        CaptchaAnswer answer = CaptchaAnswer.rotate(rotateData(challenge).debugAngle());
         answer.setTd(sliderTrace(0.5));
 
         VerifyResult result = engine.verify(challenge.getId(), answer);
@@ -127,9 +131,9 @@ class BehaviorValidationTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
         int width = challenge.getWidth();
-        double endX = challenge.getDebugX() / (double) width;
+        double endX = sliderData(challenge).debugX() / (double) width;
 
-        CaptchaAnswer answer = CaptchaAnswer.slider(challenge.getDebugX() / (double) width);
+        CaptchaAnswer answer = CaptchaAnswer.slider(sliderData(challenge).debugX() / (double) width);
         answer.setClientType("h5");
         answer.setTd(sparseSliderTrace(endX));
 
@@ -143,9 +147,9 @@ class BehaviorValidationTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
         int width = challenge.getWidth();
-        double endX = challenge.getDebugX() / (double) width;
+        double endX = sliderData(challenge).debugX() / (double) width;
 
-        CaptchaAnswer answer = CaptchaAnswer.slider(challenge.getDebugX() / (double) width);
+        CaptchaAnswer answer = CaptchaAnswer.slider(sliderData(challenge).debugX() / (double) width);
         answer.setClientType("web");
         answer.setTd(sparseSliderTrace(endX));
 
@@ -160,9 +164,9 @@ class BehaviorValidationTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
         int width = challenge.getWidth();
-        double endX = challenge.getDebugX() / (double) width;
+        double endX = sliderData(challenge).debugX() / (double) width;
 
-        CaptchaAnswer answer = CaptchaAnswer.slider(challenge.getDebugX() / (double) width);
+        CaptchaAnswer answer = CaptchaAnswer.slider(sliderData(challenge).debugX() / (double) width);
         answer.setTd(sliderTrace(endX));
 
         VerifyResult result = engine.verify(challenge.getId(), answer);
@@ -176,9 +180,9 @@ class BehaviorValidationTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
         int width = challenge.getWidth();
-        double endX = challenge.getDebugX() / (double) width;
+        double endX = sliderData(challenge).debugX() / (double) width;
 
-        CaptchaAnswer answer = CaptchaAnswer.slider(challenge.getDebugX() / (double) width);
+        CaptchaAnswer answer = CaptchaAnswer.slider(sliderData(challenge).debugX() / (double) width);
         answer.setTd(humanLikeSliderTrace(endX));
 
         VerifyResult result = engine.verify(challenge.getId(), answer);
@@ -220,9 +224,9 @@ class BehaviorValidationTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
         int width = challenge.getWidth();
-        double endX = challenge.getDebugX() / (double) width;
+        double endX = sliderData(challenge).debugX() / (double) width;
 
-        CaptchaAnswer answer = CaptchaAnswer.slider(challenge.getDebugX() / (double) width);
+        CaptchaAnswer answer = CaptchaAnswer.slider(sliderData(challenge).debugX() / (double) width);
         answer.setClientType("h5");
         answer.setTd(sparseSliderTrace(endX));
 
@@ -234,7 +238,7 @@ class BehaviorValidationTest {
     void curvePassesWithMatchingTrace() {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.CURVE, Map.of(), true);
-        List<PointVo> curve = challenge.getDebugCurve();
+        List<PointVo> curve = curveData(challenge).debugCurve();
 
         CaptchaAnswer answer = CaptchaAnswer.curve(
                 curve.stream()
@@ -254,7 +258,7 @@ class BehaviorValidationTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.CURVE, Map.of(), true);
 
         CaptchaAnswer answer = CaptchaAnswer.curve(
-                challenge.getDebugCurve().stream()
+                curveData(challenge).debugCurve().stream()
                         .map(p -> new NormalizedPoint(
                                 p.getX() / (double) challenge.getWidth(),
                                 p.getY() / (double) challenge.getHeight()))
@@ -290,7 +294,7 @@ class BehaviorValidationTest {
     }
 
     private static List<NormalizedPoint> normalizedPoints(CaptchaChallenge challenge) {
-        return challenge.getDebugTargets().stream()
+        return clickData(challenge).debugTargets().stream()
                 .map(p -> new NormalizedPoint(
                         p.getX() / (double) challenge.getWidth(),
                         p.getY() / (double) challenge.getHeight()))
@@ -298,7 +302,7 @@ class BehaviorValidationTest {
     }
 
     private static List<PointVo> serverTargets(CaptchaChallenge challenge) {
-        return challenge.getDebugTargets().stream()
+        return clickData(challenge).debugTargets().stream()
                 .map(p -> new PointVo(p.getX(), p.getY()))
                 .toList();
     }
@@ -487,5 +491,25 @@ class BehaviorValidationTest {
         return BehaviorTraceCodec.encode(new BehaviorTrace(
                 1, width, height, 1_000_000L,
                 1_000_000L + (curve.size() - 1) * 30L, points));
+    }
+
+    /** 读取滑块类型特定化载荷 */
+    private static SliderChallengeData sliderData(CaptchaChallenge<?> challenge) {
+        return (SliderChallengeData) challenge.getData();
+    }
+
+    /** 读取点选类型特定化载荷 */
+    private static ClickChallengeData clickData(CaptchaChallenge<?> challenge) {
+        return (ClickChallengeData) challenge.getData();
+    }
+
+    /** 读取旋转类型特定化载荷 */
+    private static RotateChallengeData rotateData(CaptchaChallenge<?> challenge) {
+        return (RotateChallengeData) challenge.getData();
+    }
+
+    /** 读取曲线类型特定化载荷 */
+    private static CurveChallengeData curveData(CaptchaChallenge<?> challenge) {
+        return (CurveChallengeData) challenge.getData();
     }
 }

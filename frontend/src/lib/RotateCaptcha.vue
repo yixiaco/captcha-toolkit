@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useCaptchaOptions } from './options';
-import type { VerifyResult } from './api';
+import type { RotateChallengeData, VerifyResult } from './api';
 import type { CaptchaStatus, ClientType } from './types';
 import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace';
 import type { BehaviorTrace } from './trace';
@@ -191,7 +191,7 @@ async function loadCaptcha() {
   image2.value = '';
   trace = null;
   try {
-    const res = await opts.api.getCaptcha({
+    const res = await opts.api.getCaptcha<RotateChallengeData>({
       type: 'rotate',
       debug: opts.debug ? '1' : undefined,
     });
@@ -203,8 +203,8 @@ async function loadCaptcha() {
     status.value = 'idle';
     if (opts.debug && rootRef.value) {
       rootRef.value.dataset.captchaId = res.id;
-      if (res.debugAngle != null) {
-        rootRef.value.dataset.debugAngle = String(res.debugAngle);
+      if (res.data?.debugAngle != null) {
+        rootRef.value.dataset.debugAngle = String(res.data.debugAngle);
       }
     }
   } catch (error) {

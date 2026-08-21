@@ -11,22 +11,59 @@ export interface RequestOptions {
 /** 宿主可替换的请求函数，兼容 fetch 风格 */
 export type RequestFunction = (url: string, options?: RequestOptions) => Promise<any>
 
-/** 验证码下发载荷 */
-export interface CaptchaChallenge {
+/** 坐标点（滑块/点选/曲线调试答案共用） */
+export interface ChallengePoint {
+  x: number
+  y: number
+}
+
+/** 滑块拼图类型特定化载荷 */
+export interface SliderChallengeData {
+  /** 拼图形状名 */
+  shape?: string
+  /** 拼图块内部左侧留白 */
+  pieceOffsetX?: number
+  /** 调试：滑块答案 x */
+  debugX?: number
+  /** 调试：假目标坐标 */
+  debugFakeTargets?: ChallengePoint[]
+}
+
+/** 文字点选类型特定化载荷 */
+export interface ClickChallengeData {
+  /** 提示文字（按点击顺序） */
+  prompt?: string[]
+  /** 调试：目标坐标 */
+  debugTargets?: ChallengePoint[]
+  /** 调试：假目标坐标 */
+  debugFakeTargets?: ChallengePoint[]
+}
+
+/** 图片旋转类型特定化载荷 */
+export interface RotateChallengeData {
+  /** 调试：正确答案角度（度） */
+  debugAngle?: number
+}
+
+/** 曲线绘制类型特定化载荷 */
+export interface CurveChallengeData {
+  /** 调试：期望曲线采样点（像素坐标） */
+  debugCurve?: ChallengePoint[]
+}
+
+/**
+ * 验证码下发载荷：类型特定化属性统一放在泛型 {@code data} 中，
+ * 新增验证码类型时只需定义自己的 data 接口，无需扩展本接口。
+ */
+export interface CaptchaChallenge<T = Record<string, unknown>> {
   id: string
   type: string
   image1: string
   image2?: string
   width: number
   height: number
-  shape?: string
-  prompt?: string[]
-  pieceOffsetX?: number
-  debugX?: number
-  debugTargets?: Array<{ x: number; y: number }>
-  debugAngle?: number
-  /** 调试：曲线绘制验证码期望曲线采样点（像素坐标） */
-  debugCurve?: Array<{ x: number; y: number }>
+  /** 类型特定化数据：由各验证码类型的 data 接口定义 */
+  data?: T
   metadata?: Record<string, unknown>
 }
 
@@ -49,7 +86,7 @@ export interface CaptchaTypes {
 
 /** 验证码 API 客户端 */
 export interface CaptchaApi {
-  getCaptcha(params?: Record<string, unknown>): Promise<CaptchaChallenge>
+  getCaptcha<T = Record<string, unknown>>(params?: Record<string, unknown>): Promise<CaptchaChallenge<T>>
   verify(payload: Record<string, unknown>): Promise<VerifyResult>
   getTypes(): Promise<CaptchaTypes>
 }
@@ -113,7 +150,7 @@ export function createCaptchaApi({
   const requestFn = request || defaultRequest;
   return {
     /** 获取验证码 */
-    async getCaptcha(params = {}) {
+    async getCaptcha<T = Record<string, unknown>>(params = {}): Promise<CaptchaChallenge<T>> {
       const query = await attachDeviceFingerprint(params);
       return requestFn(baseUrl, { method: 'GET', query });
     },

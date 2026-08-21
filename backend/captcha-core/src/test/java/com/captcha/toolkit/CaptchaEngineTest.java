@@ -6,7 +6,11 @@ import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.image.DataUriImageCodec;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
+import com.captcha.toolkit.model.ClickChallengeData;
+import com.captcha.toolkit.model.CurveChallengeData;
 import com.captcha.toolkit.model.NormalizedPoint;
+import com.captcha.toolkit.model.RotateChallengeData;
+import com.captcha.toolkit.model.SliderChallengeData;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.SliderRenderer;
 import com.captcha.toolkit.render.BackgroundProvider;
@@ -90,7 +94,7 @@ class CaptchaEngineTest {
         CaptchaChallenge first = engine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
         CaptchaAnswer firstAnswer = CaptchaAnswer.slider(
-                first.getDebugX() / (double) first.getWidth());
+                sliderData(first).debugX() / (double) first.getWidth());
         firstAnswer.setDeviceFingerprint("device-a");
         assertTrue(engine.verify(first.getId(), firstAnswer).isSuccess());
 
@@ -98,7 +102,7 @@ class CaptchaEngineTest {
         CaptchaChallenge second = engine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
         CaptchaAnswer secondAnswer = CaptchaAnswer.slider(
-                second.getDebugX() / (double) second.getWidth());
+                sliderData(second).debugX() / (double) second.getWidth());
         secondAnswer.setDeviceFingerprint("device-a");
         VerifyResult rejected = engine.verify(second.getId(), secondAnswer);
         assertFalse(rejected.isSuccess());
@@ -106,7 +110,7 @@ class CaptchaEngineTest {
 
         // 会话未被销毁：不带指纹重新校验同一会话仍可成功
         CaptchaAnswer retry = CaptchaAnswer.slider(
-                second.getDebugX() / (double) second.getWidth());
+                sliderData(second).debugX() / (double) second.getWidth());
         assertTrue(engine.verify(second.getId(), retry).isSuccess());
     }
 
@@ -117,7 +121,7 @@ class CaptchaEngineTest {
             CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                     Map.of("shape", "classic"), true);
             CaptchaAnswer answer = CaptchaAnswer.slider(
-                    challenge.getDebugX() / (double) challenge.getWidth());
+                    sliderData(challenge).debugX() / (double) challenge.getWidth());
             answer.setDeviceFingerprint("device-" + i);
             assertTrue(engine.verify(challenge.getId(), answer).isSuccess());
         }
@@ -138,16 +142,16 @@ class CaptchaEngineTest {
 
         assertNotNull(challenge.getImage1());
         assertNotNull(challenge.getImage2());
-        assertNotNull(challenge.getDebugX());
+        assertNotNull(sliderData(challenge).debugX());
         assertEquals("slider", challenge.getType());
 
         VerifyResult ok = engine.verify(challenge.getId(),
-                CaptchaAnswer.slider(challenge.getDebugX() / (double) challenge.getWidth()));
+                CaptchaAnswer.slider(sliderData(challenge).debugX() / (double) challenge.getWidth()));
         assertTrue(ok.isSuccess(), ok.getMessage());
 
         // 会话一次性：重复提交必须失败
         VerifyResult again = engine.verify(challenge.getId(),
-                CaptchaAnswer.slider(challenge.getDebugX() / (double) challenge.getWidth()));
+                CaptchaAnswer.slider(sliderData(challenge).debugX() / (double) challenge.getWidth()));
         assertFalse(again.isSuccess());
     }
 
@@ -158,7 +162,7 @@ class CaptchaEngineTest {
                 Map.of("shape", "classic"), true);
 
         // 归一化答案与渲染尺寸无关：直接按服务端图片宽度归一化
-        double xNorm = challenge.getDebugX() / (double) challenge.getWidth();
+        double xNorm = sliderData(challenge).debugX() / (double) challenge.getWidth();
         VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.slider(xNorm));
         assertTrue(ok.isSuccess(), ok.getMessage());
     }
@@ -169,11 +173,11 @@ class CaptchaEngineTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
 
         assertNotNull(challenge.getImage1());
-        assertNotNull(challenge.getPrompt());
-        assertEquals(3, challenge.getPrompt().size());
-        assertNotNull(challenge.getDebugTargets());
+        assertNotNull(clickData(challenge).prompt());
+        assertEquals(3, clickData(challenge).prompt().size());
+        assertNotNull(clickData(challenge).debugTargets());
 
-        List<NormalizedPoint> points = challenge.getDebugTargets().stream()
+        List<NormalizedPoint> points = clickData(challenge).debugTargets().stream()
                 .map(p -> new NormalizedPoint(
                         p.getX() / (double) challenge.getWidth(),
                         p.getY() / (double) challenge.getHeight()))
@@ -187,7 +191,7 @@ class CaptchaEngineTest {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
 
-        List<NormalizedPoint> points = challenge.getDebugTargets().stream()
+        List<NormalizedPoint> points = clickData(challenge).debugTargets().stream()
                 .map(p -> new NormalizedPoint(
                         p.getX() / (double) challenge.getWidth(),
                         p.getY() / (double) challenge.getHeight()))
@@ -201,7 +205,7 @@ class CaptchaEngineTest {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
 
-        List<NormalizedPoint> points = challenge.getDebugTargets().stream()
+        List<NormalizedPoint> points = clickData(challenge).debugTargets().stream()
                 .map(p -> new NormalizedPoint(
                         (p.getX() + 50) / (double) challenge.getWidth(),
                         (p.getY() + 50) / (double) challenge.getHeight()))
@@ -222,11 +226,11 @@ class CaptchaEngineTest {
 
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
         // 每次从数组中随机选一个词组，并按词组内文字顺序提示
-        assertTrue(challenge.getPrompt().equals(List.of("星", "巴", "克"))
-                || challenge.getPrompt().equals(List.of("麦", "当", "劳")));
-        assertEquals(3, challenge.getDebugTargets().size());
+        assertTrue(clickData(challenge).prompt().equals(List.of("星", "巴", "克"))
+                || clickData(challenge).prompt().equals(List.of("麦", "当", "劳")));
+        assertEquals(3, clickData(challenge).debugTargets().size());
 
-        List<NormalizedPoint> points = challenge.getDebugTargets().stream()
+        List<NormalizedPoint> points = clickData(challenge).debugTargets().stream()
                 .map(p -> new NormalizedPoint(
                         p.getX() / (double) challenge.getWidth(),
                         p.getY() / (double) challenge.getHeight()))
@@ -249,10 +253,10 @@ class CaptchaEngineTest {
                 List.of(), background, background, wordFactory);
 
         CaptchaChallenge challenge = engine.create(CaptchaType.CLICK, Map.of(), true);
-        assertTrue(challenge.getPrompt().equals(List.of("星", "巴", "克"))
-                || challenge.getPrompt().equals(List.of("麦", "当", "劳")));
+        assertTrue(clickData(challenge).prompt().equals(List.of("星", "巴", "克"))
+                || clickData(challenge).prompt().equals(List.of("麦", "当", "劳")));
 
-        List<NormalizedPoint> points = challenge.getDebugTargets().stream()
+        List<NormalizedPoint> points = clickData(challenge).debugTargets().stream()
                 .map(p -> new NormalizedPoint(
                         p.getX() / (double) challenge.getWidth(),
                         p.getY() / (double) challenge.getHeight()))
@@ -357,7 +361,7 @@ class CaptchaEngineTest {
                 Map.of("shape", "classic"), true);
 
         VerifyResult ok = engine.verify(challenge.getId(),
-                CaptchaAnswer.slider(challenge.getDebugX() / (double) challenge.getWidth()));
+                CaptchaAnswer.slider(sliderData(challenge).debugX() / (double) challenge.getWidth()));
         assertTrue(ok.isSuccess(), ok.getMessage());
         assertNotNull(ok.getTicket());
 
@@ -373,7 +377,7 @@ class CaptchaEngineTest {
         for (int i = 0; i < 12; i++) {
             CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                     Map.of("shape", "random"), true);
-            shapes.add(challenge.getShape());
+            shapes.add(sliderData(challenge).shape());
         }
         assertTrue(shapes.size() > 1, "shape=random 应出现多种形状: " + shapes);
     }
@@ -384,7 +388,7 @@ class CaptchaEngineTest {
         CaptchaEngine debugEngine = newEngine();
         CaptchaChallenge explicit = debugEngine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
-        assertEquals("classic", explicit.getShape());
+        assertEquals("classic", sliderData(explicit).shape());
 
         // 仅前端 debug、后端未开启 debug：形状由后端随机决定，忽略前端指定
         CaptchaConfig config = new CaptchaConfig();
@@ -399,7 +403,7 @@ class CaptchaEngineTest {
         for (int i = 0; i < 12; i++) {
             CaptchaChallenge challenge = nonDebugEngine.create(CaptchaType.SLIDER,
                     Map.of("shape", "classic"), true);
-            shapes.add(challenge.getShape());
+            shapes.add(sliderData(challenge).shape());
         }
         assertTrue(shapes.size() > 1,
                 "后端非 debug 时应忽略前端指定形状: " + shapes);
@@ -412,16 +416,16 @@ class CaptchaEngineTest {
 
         assertNotNull(challenge.getImage1());
         assertNotNull(challenge.getImage2());
-        assertNotNull(challenge.getDebugAngle());
+        assertNotNull(rotateData(challenge).debugAngle());
 
         VerifyResult ok = engine.verify(challenge.getId(),
-                CaptchaAnswer.rotate(challenge.getDebugAngle()));
+                CaptchaAnswer.rotate(rotateData(challenge).debugAngle()));
         assertTrue(ok.isSuccess(), ok.getMessage());
 
         // 错误角度应失败
         CaptchaChallenge wrongChallenge = engine.create(CaptchaType.ROTATE, Map.of(), true);
         VerifyResult wrong = engine.verify(wrongChallenge.getId(),
-                CaptchaAnswer.rotate(wrongChallenge.getDebugAngle() + 30));
+                CaptchaAnswer.rotate(rotateData(wrongChallenge).debugAngle() + 30));
         assertFalse(wrong.isSuccess());
     }
 
@@ -431,10 +435,10 @@ class CaptchaEngineTest {
         CaptchaChallenge challenge = engine.create(CaptchaType.CURVE, Map.of(), true);
 
         assertNotNull(challenge.getImage1());
-        assertNotNull(challenge.getDebugCurve());
+        assertNotNull(curveData(challenge).debugCurve());
         assertEquals("curve", challenge.getType());
 
-        List<NormalizedPoint> curve = challenge.getDebugCurve().stream()
+        List<NormalizedPoint> curve = curveData(challenge).debugCurve().stream()
                 .map(p -> new NormalizedPoint(
                         p.getX() / (double) challenge.getWidth(),
                         p.getY() / (double) challenge.getHeight()))
@@ -451,7 +455,7 @@ class CaptchaEngineTest {
     void curveRejectsWrongEndPoint() {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.CURVE, Map.of(), true);
-        List<NormalizedPoint> curve = challenge.getDebugCurve().stream()
+        List<NormalizedPoint> curve = curveData(challenge).debugCurve().stream()
                 .map(p -> new NormalizedPoint(
                         p.getX() / (double) challenge.getWidth(),
                         p.getY() / (double) challenge.getHeight()))
@@ -462,5 +466,25 @@ class CaptchaEngineTest {
         VerifyResult result = engine.verify(challenge.getId(), CaptchaAnswer.curve(wrong));
         assertFalse(result.isSuccess());
         assertEquals("WRONG", result.getCode());
+    }
+
+    /** 读取滑块类型特定化载荷 */
+    private static SliderChallengeData sliderData(CaptchaChallenge<?> challenge) {
+        return (SliderChallengeData) challenge.getData();
+    }
+
+    /** 读取点选类型特定化载荷 */
+    private static ClickChallengeData clickData(CaptchaChallenge<?> challenge) {
+        return (ClickChallengeData) challenge.getData();
+    }
+
+    /** 读取旋转类型特定化载荷 */
+    private static RotateChallengeData rotateData(CaptchaChallenge<?> challenge) {
+        return (RotateChallengeData) challenge.getData();
+    }
+
+    /** 读取曲线类型特定化载荷 */
+    private static CurveChallengeData curveData(CaptchaChallenge<?> challenge) {
+        return (CurveChallengeData) challenge.getData();
     }
 }

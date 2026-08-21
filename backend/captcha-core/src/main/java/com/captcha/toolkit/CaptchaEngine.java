@@ -44,8 +44,8 @@ import java.util.UUID;
  */
 public class CaptchaEngine {
 
-    /** 验证码类型 → 生成器映射 */
-    private final Map<CaptchaType, CaptchaGenerator> generators;
+    /** 验证码类型 → 生成器映射（各类型携带各自的泛型载荷） */
+    private final Map<CaptchaType, CaptchaGenerator<?>> generators;
 
     /** 验证码会话存储 */
     private final CaptchaSessionStore store;
@@ -145,7 +145,7 @@ public class CaptchaEngine {
                                    BackgroundProvider clickBackgroundProvider,
                                    WordFactory wordFactory,
                                    CaptchaTicketStore ticketStore) {
-        Map<CaptchaType, CaptchaGenerator> map = new EnumMap<>(CaptchaType.class);
+        Map<CaptchaType, CaptchaGenerator<?>> map = new EnumMap<>(CaptchaType.class);
         if (userFactories != null) {
             for (CaptchaFactory factory : userFactories) {
                 map.put(factory.type(), factory.create(config));
@@ -166,7 +166,7 @@ public class CaptchaEngine {
     }
 
     /** 私有构造：统一接收已组装好的生成器映射与依赖 */
-    private CaptchaEngine(Map<CaptchaType, CaptchaGenerator> generators,
+    private CaptchaEngine(Map<CaptchaType, CaptchaGenerator<?>> generators,
                           CaptchaSessionStore store,
                           CaptchaTicketStore ticketStore,
                           CaptchaImageCodec codec,
@@ -196,9 +196,9 @@ public class CaptchaEngine {
     }
 
     /** 构建生成器映射：用户工厂优先，缺失类型用内置工厂补齐 */
-    private static Map<CaptchaType, CaptchaGenerator> buildGenerators(List<CaptchaFactory> factories,
-                                                                      CaptchaConfig config) {
-        Map<CaptchaType, CaptchaGenerator> map = new EnumMap<>(CaptchaType.class);
+    private static Map<CaptchaType, CaptchaGenerator<?>> buildGenerators(
+            List<CaptchaFactory> factories, CaptchaConfig config) {
+        Map<CaptchaType, CaptchaGenerator<?>> map = new EnumMap<>(CaptchaType.class);
         if (factories != null) {
             for (CaptchaFactory factory : factories) {
                 map.put(factory.type(), factory.create(config));
@@ -218,7 +218,7 @@ public class CaptchaEngine {
      * @param params 扩展参数，例如滑块 shape
      * @param debug  是否尝试附加答案（最终受 captcha.debug-enabled 控制）
      */
-    public CaptchaChallenge create(CaptchaType type, Map<String, String> params, boolean debug) {
+    public CaptchaChallenge<?> create(CaptchaType type, Map<String, String> params, boolean debug) {
         return create(type, params, debug, null);
     }
 
@@ -230,10 +230,10 @@ public class CaptchaEngine {
      * @param debug              是否尝试附加答案（最终受 captcha.debug-enabled 控制）
      * @param deviceFingerprint  设备指纹（可为 null；限流开启且指纹缺失时不计数）
      */
-    public CaptchaChallenge create(CaptchaType type, Map<String, String> params, boolean debug,
-                                   String deviceFingerprint) {
+    public CaptchaChallenge<?> create(CaptchaType type, Map<String, String> params, boolean debug,
+                                      String deviceFingerprint) {
         enforceDeviceRateLimit(deviceFingerprint);
-        CaptchaGenerator generator = generators.get(type);
+        CaptchaGenerator<?> generator = generators.get(type);
         if (generator == null) {
             throw new CaptchaException("不支持的验证码类型: " + type);
         }
@@ -246,10 +246,10 @@ public class CaptchaEngine {
         }
         GenerateRequest request = new GenerateRequest(
                 UUID.randomUUID().toString(), effectiveParams, debug, deviceFingerprint);
-        GeneratedCaptcha generated = generator.generate(request);
+        GeneratedCaptcha<?> generated = generator.generate(request);
         store.put(generated.getSession());
 
-        CaptchaChallenge challenge = new CaptchaChallenge();
+        CaptchaChallenge<Object> challenge = new CaptchaChallenge<>();
         challenge.setId(generated.getSession().getId());
         challenge.setType(type.getCode());
         challenge.setImage1(codec.encode(generated.getImage1(), "png"));
@@ -258,18 +258,8 @@ public class CaptchaEngine {
         }
         challenge.setWidth(generated.getWidth());
         challenge.setHeight(generated.getHeight());
-        challenge.setShape(generated.getShape());
-        challenge.setPrompt(generated.getPrompt());
-        challenge.setPieceOffsetX(generated.getPieceOffsetX());
+        challenge.setData(generated.getData());
         challenge.setMetadata(generated.getMetadata());
-
-        if (debug && debugEnabled) {
-            challenge.setDebugX(generated.getDebugX());
-            challenge.setDebugTargets(generated.getDebugTargets());
-            challenge.setDebugFakeTargets(generated.getDebugFakeTargets());
-            challenge.setDebugAngle(generated.getDebugAngle());
-            challenge.setDebugCurve(generated.getDebugCurve());
-        }
         return challenge;
     }
 
@@ -284,7 +274,7 @@ public class CaptchaEngine {
         if (!isDeviceAllowed(answer)) {
             return VerifyResult.fail(CaptchaMessages.RATE_LIMIT_EXCEEDED, "RATE_LIMITED", messages);
         }
-        CaptchaGenerator generator = generators.get(session.getType());
+        CaptchaGenerator<?> generator = generators.get(session.getType());
         if (generator == null) {
             return VerifyResult.badRequest(CaptchaMessages.VERIFY_UNSUPPORTED_TYPE, messages);
         }
@@ -341,7 +331,7 @@ public class CaptchaEngine {
 
     /** 返回滑块支持的拼图形状名称列表 */
     public List<String> supportedShapes() {
-        CaptchaGenerator generator = generators.get(CaptchaType.SLIDER);
+        CaptchaGenerator<?> generator = generators.get(CaptchaType.SLIDER);
         if (generator instanceof SliderCaptchaGenerator slider) {
             return new ArrayList<>(slider.getShapeNames());
         }

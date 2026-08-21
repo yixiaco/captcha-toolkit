@@ -11,6 +11,7 @@ import com.captcha.toolkit.i18n.MessageProvider;
 import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
+import com.captcha.toolkit.model.CurveChallengeData;
 import com.captcha.toolkit.model.GeneratedCaptcha;
 import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.PointVo;
@@ -36,7 +37,7 @@ import java.util.Random;
  * <p>在背景图上随机生成一条平滑引导曲线（起点/终点带标记），用户沿曲线完整绘制；
  * 服务端保存期望曲线采样点，校验绘制覆盖率与起终点是否一致。</p>
  */
-public class CurveCaptchaGenerator extends AbstractCaptchaGenerator {
+public class CurveCaptchaGenerator extends AbstractCaptchaGenerator<CurveChallengeData> {
 
     /** 曲线配置 */
     private final CurveConfig options;
@@ -91,7 +92,7 @@ public class CurveCaptchaGenerator extends AbstractCaptchaGenerator {
     }
 
     @Override
-    protected GeneratedCaptcha doGenerate(GenerateRequest request) {
+    protected GeneratedCaptcha<CurveChallengeData> doGenerate(GenerateRequest request) {
         int width = options.getWidth();
         int height = options.getHeight();
         BufferedImage raw = backgroundProvider.provide(width, height)
@@ -105,15 +106,13 @@ public class CurveCaptchaGenerator extends AbstractCaptchaGenerator {
         CaptchaSession session = CaptchaSession.curve(
                 request.getId(), width, height, curve,
                 options.getExpireSeconds() * 1000);
-        GeneratedCaptcha result = new GeneratedCaptcha();
+        GeneratedCaptcha<CurveChallengeData> result = new GeneratedCaptcha<>();
         result.setSession(session);
         result.setImage1(image);
         result.setWidth(width);
         result.setHeight(height);
-        result.setShape("curve");
-        if (request.isDebug()) {
-            result.setDebugCurve(new ArrayList<>(curve));
-        }
+        result.setData(new CurveChallengeData(
+                request.isDebug() ? new ArrayList<>(curve) : null));
         return result;
     }
 

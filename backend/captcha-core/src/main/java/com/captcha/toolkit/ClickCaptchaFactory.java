@@ -46,7 +46,7 @@ public class ClickCaptchaFactory implements CaptchaFactory {
     }
 
     @Override
-    public CaptchaGenerator create(CaptchaConfig config) {
+    public CaptchaGenerator<?> create(CaptchaConfig config) {
         return new ClickCaptchaGenerator(config.getClick(), backgroundProvider, wordFactory,
                 new ClickBehaviorValidator(config.getBehavior()), config.getMessageProvider());
     }
