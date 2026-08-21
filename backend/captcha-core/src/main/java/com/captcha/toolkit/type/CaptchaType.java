@@ -21,7 +21,10 @@ public enum CaptchaType {
     CURVE("curve"),
 
     /** 滑动曲线 */
-    SLIDE_CURVE("slide-curve");
+    SLIDE_CURVE("slide-curve"),
+
+    /** 滑块摆动图块 */
+    SWING_TILE("swing-tile");
 
     /** 对外使用的类型编码 */
     private final String code;

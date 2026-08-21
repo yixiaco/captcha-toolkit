@@ -1,25 +1,25 @@
 package com.captcha.toolkit;
 
-import com.captcha.toolkit.generator.CaptchaGenerator;
-import com.captcha.toolkit.generator.GenerateRequest;
-import com.captcha.toolkit.generator.SliderCaptchaGenerator;
+import com.captcha.toolkit.config.CaptchaConfig;
+import com.captcha.toolkit.exception.CaptchaException;
+import com.captcha.toolkit.exception.RateLimitExceededException;
 import com.captcha.toolkit.factory.CaptchaFactory;
 import com.captcha.toolkit.factory.ClickCaptchaFactory;
 import com.captcha.toolkit.factory.CurveCaptchaFactory;
 import com.captcha.toolkit.factory.RotateCaptchaFactory;
 import com.captcha.toolkit.factory.SlideCurveCaptchaFactory;
 import com.captcha.toolkit.factory.SliderCaptchaFactory;
-import com.captcha.toolkit.image.CaptchaImageCodec;
-import com.captcha.toolkit.config.CaptchaConfig;
-import com.captcha.toolkit.config.RateLimitConfig;
-import com.captcha.toolkit.exception.RateLimitExceededException;
+import com.captcha.toolkit.factory.SwingTileCaptchaFactory;
+import com.captcha.toolkit.generator.CaptchaGenerator;
+import com.captcha.toolkit.generator.GenerateRequest;
+import com.captcha.toolkit.generator.SliderCaptchaGenerator;
 import com.captcha.toolkit.i18n.CaptchaMessages;
 import com.captcha.toolkit.i18n.MessageProvider;
+import com.captcha.toolkit.image.CaptchaImageCodec;
 import com.captcha.toolkit.limit.DeviceRequestLimiter;
 import com.captcha.toolkit.limit.InMemoryDeviceRequestLimiter;
 import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaChallenge;
-import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.CaptchaTicket;
 import com.captcha.toolkit.model.GeneratedCaptcha;
@@ -168,6 +168,8 @@ public class CaptchaEngine {
                 new CurveCaptchaFactory(sliderBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.SLIDE_CURVE,
                 new SlideCurveCaptchaFactory(sliderBackgroundProvider).create(config));
+        map.putIfAbsent(CaptchaType.SWING_TILE,
+                new SwingTileCaptchaFactory(sliderBackgroundProvider).create(config));
         return new CaptchaEngine(map, store, ticketStore, codec,
                 config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000,
                 config.getMessageProvider(), effectiveRateLimiter(config),
@@ -218,6 +220,7 @@ public class CaptchaEngine {
         map.putIfAbsent(CaptchaType.ROTATE, new RotateCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.CURVE, new CurveCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.SLIDE_CURVE, new SlideCurveCaptchaFactory().create(config));
+        map.putIfAbsent(CaptchaType.SWING_TILE, new SwingTileCaptchaFactory().create(config));
         return map;
     }
 

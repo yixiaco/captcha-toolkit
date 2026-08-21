@@ -14,6 +14,7 @@
 .click-captcha *,
 .curve-captcha *,
 .slide-curve-captcha *,
+.swing-tile-captcha *,
 .floating-trigger *,
 .floating-widget * {
   box-sizing: border-box;
@@ -510,6 +511,14 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
+}
+
+.swing-tile-piece {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  transform-origin: center center;
+  will-change: transform;
 }
 
 .curve-tip {

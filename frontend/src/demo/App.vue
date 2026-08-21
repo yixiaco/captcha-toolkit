@@ -185,6 +185,34 @@
           滑动曲线
         </button>
         <button
+          class="mode-btn swing-tile"
+          @click="open('swing-tile')"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 6h7" />
+            <path d="M6 3l3 3-3 3" />
+            <path d="M12 6c3 1 5 3 6 6s2 5 4 6" />
+            <rect
+              x="13"
+              y="14"
+              width="7"
+              height="7"
+              rx="1.5"
+              transform="rotate(18 16.5 17.5)"
+            />
+          </svg>
+          滑块摆动
+        </button>
+        <button
           class="mode-btn random"
           @click="openRandom"
         >
@@ -247,7 +275,7 @@ const isDev = import.meta.env.DEV;
 const account = ref('');
 const password = ref('');
 const captchaVisible = ref(false);
-const captchaMode = ref<'slider' | 'click' | 'rotate' | 'curve' | 'slide-curve'>('slider');
+const captchaMode = ref<'slider' | 'click' | 'rotate' | 'curve' | 'slide-curve' | 'swing-tile'>('slider');
 const demoLocale = ref<'zh-CN' | 'en'>('zh-CN');
 const demoLocales: Array<{ key: 'zh-CN' | 'en'; label: string }> = [
   { key: 'zh-CN', label: '中文' },
@@ -257,14 +285,14 @@ const shapeFromUrl = ref('');
 const verified = ref(false);
 const verifiedTicket = ref('');
 
-function open(mode: 'slider' | 'click' | 'rotate' | 'curve' | 'slide-curve') {
+function open(mode: 'slider' | 'click' | 'rotate' | 'curve' | 'slide-curve' | 'swing-tile') {
   resetVerified();
   captchaMode.value = mode;
   captchaVisible.value = true;
 }
 
 function openRandom() {
-  const modes = ['slider', 'click', 'rotate', 'curve', 'slide-curve'] as const;
+  const modes = ['slider', 'click', 'rotate', 'curve', 'slide-curve', 'swing-tile'] as const;
   open(modes[Math.floor(Math.random() * modes.length)]);
 }
 
@@ -297,7 +325,7 @@ onMounted(() => {
   }
   if (modeParam === 'slider' || modeParam === 'click'
     || modeParam === 'rotate' || modeParam === 'curve'
-    || modeParam === 'slide-curve') {
+    || modeParam === 'slide-curve' || modeParam === 'swing-tile') {
     open(modeParam);
   } else if (modeParam === 'random') {
     openRandom();

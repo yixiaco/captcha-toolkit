@@ -9,6 +9,7 @@ import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
 import CurveCaptcha from './CurveCaptcha.vue';
 import SlideCurveCaptcha from './SlideCurveCaptcha.vue';
+import SwingTileCaptcha from './SwingTileCaptcha.vue';
 import { createCaptchaApi, defaultRequest } from './api';
 import type {
   CaptchaApi,
@@ -20,6 +21,7 @@ import type {
   RotateChallengeData,
   CurveChallengeData,
   SlideCurveChallengeData,
+  SwingTileChallengeData,
   RequestFunction,
   RequestOptions,
   VerifyResult,
@@ -50,6 +52,7 @@ export {
   RotateCaptcha,
   CurveCaptcha,
   SlideCurveCaptcha,
+  SwingTileCaptcha,
   createCaptchaApi,
   defaultRequest,
   PUZZLE_SHAPES,
@@ -73,6 +76,7 @@ export type {
   RotateChallengeData,
   CurveChallengeData,
   SlideCurveChallengeData,
+  SwingTileChallengeData,
   RequestFunction,
   RequestOptions,
   VerifyResult,

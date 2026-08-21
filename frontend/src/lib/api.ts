@@ -67,6 +67,24 @@ export interface SlideCurveChallengeData {
   debugFakeTargets?: ChallengePoint[]
 }
 
+/** 滑块摆动图块类型特定化载荷 */
+export interface SwingTileChallengeData {
+  /** 贝塞尔路径点（起点 + 控制点 + 终点，像素坐标） */
+  path?: ChallengePoint[]
+  /** 起始方向（度） */
+  startRotation?: number
+  /** 终点方向（度，与目标凹槽一致） */
+  endRotation?: number
+  /** 方向摆动幅度（度） */
+  swingAmplitude?: number
+  /** 图块图片边长（像素，含裁剪留白；与凹槽形状大小一致） */
+  pieceSize?: number
+  /** 调试：真凹槽在路径上的位置（0~1） */
+  debugT?: number
+  /** 调试：假凹槽中心坐标 */
+  debugFakeTargets?: ChallengePoint[]
+}
+
 /**
  * 验证码下发载荷：类型特定化属性统一放在泛型 {@code data} 中，
  * 新增验证码类型时只需定义自己的 data 接口，无需扩展本接口。

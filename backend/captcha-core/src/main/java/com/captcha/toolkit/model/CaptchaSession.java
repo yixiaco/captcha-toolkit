@@ -109,6 +109,17 @@ public class CaptchaSession {
                 null, null, 0, null, ttlMillis);
     }
 
+    /**
+     * 创建滑块摆动图块会话。
+     *
+     * @param x 真凹槽在路径上的位置（0~1）放大 10000 倍后的整数
+     */
+    public static CaptchaSession swingTile(String id, int width, int height,
+                                           int x, long ttlMillis) {
+        return new CaptchaSession(id, CaptchaType.SWING_TILE, null, x, 0, width, height,
+                null, null, 0, null, ttlMillis);
+    }
+
     /** 会话是否已过期 */
     public boolean isExpired() {
         return System.currentTimeMillis() > expiresAt;

@@ -145,6 +145,28 @@ so no swing can align the curve with them.
 | `slide-curve.sample-count` | Swing curve sample points | `24` |
 | `slide-curve.swing-min/max` | Answer swing range | `0.1` / `0.8` |
 
+## Swing Tile
+
+Swing tile reuses the `background.sources` main background: the tile moves along a
+multi-order Bézier curve to the target groove while its orientation swings along
+the path, ending aligned with the real groove. Fake grooves are configurable.
+
+| Setting | Description | Default |
+| --- | --- | --- |
+| `swing-tile.width` / `height` | Image size | `340` / `190` |
+| `swing-tile.tolerance` | Slider position tolerance (normalized 0~1) | `0.03` |
+| `swing-tile.answer-min/max` | Answer position range on the path | `0.35` / `0.8` |
+| `swing-tile.min-elapsed-ms` | Min elapsed time | `800` |
+| `swing-tile.expire-seconds` | Session TTL | `300` |
+| `swing-tile.fake-target-count` | Fake grooves | `2` |
+| `swing-tile.fake-target-min-gap` | Min center gap between grooves | `56` |
+| `swing-tile.control-point-count` | Bézier control points (multi-order) | `2` |
+| `swing-tile.piece-size-ratio` | Tile shape size ratio | `0.12` |
+| `swing-tile.render-scale` | Supersampling factor (same as slider) | `2` |
+| `swing-tile.rotation-swing-amplitude` | Orientation swing (degrees) | `45` |
+| `swing-tile.start-rotation-max` | Start rotation offset (degrees) | `60` |
+| `swing-tile.end-rotation-min/max` | Target groove rotation range (degrees) | `-20` / `20` |
+
 ## Security
 
 - Keep `debug-enabled` off in production

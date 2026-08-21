@@ -47,6 +47,7 @@ npm run build:lib    # build the library (includes .d.ts)
 - `http://localhost:5173/?captcha=rotate` rotate
 - `http://localhost:5173/?captcha=curve` curve drawing
 - `http://localhost:5173/?captcha=slide-curve` slide curve
+- `http://localhost:5173/?captcha=swing-tile` swing tile
 - `http://localhost:5173/?captcha=random` random mode
 
 For slider debugging, append a shape, e.g. `?captcha=slider&shape=classic`.
@@ -58,5 +59,5 @@ curl http://localhost:18080/api/captcha/types
 ```
 
 ```json
-{"types":["click","curve","rotate","slide-curve","slider"],"shapes":{"slider":["classic","leaf","triangle","circle","diamond","star","heart","moon","hexagon"]}}
+{"types":["click","curve","rotate","slide-curve","slider","swing-tile"],"shapes":{"slider":["classic","leaf","triangle","circle","diamond","star","heart","moon","hexagon"]}}
 ```

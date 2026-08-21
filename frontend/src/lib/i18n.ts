@@ -15,6 +15,8 @@ export interface CaptchaMessages {
   rotateTip: string
   /** 滑动曲线提示文案 */
   slideCurveTip: string
+  /** 滑块摆动图块提示文案 */
+  swingTileTip: string
   /** 曲线绘制提示文案 */
   curveTip: string
   /** 点选提示前缀文案 */
@@ -40,6 +42,7 @@ export const CAPTCHA_MESSAGE_KEYS: Array<keyof CaptchaMessages> = [
   'sliderTip',
   'rotateTip',
   'slideCurveTip',
+  'swingTileTip',
   'curveTip',
   'promptPrefix',
   'loadingText',
@@ -57,6 +60,7 @@ export const zhCNMessages: CaptchaMessages = {
   sliderTip: '按住滑块，拖动完成拼图',
   rotateTip: '拖动滑块旋转图片，使其对齐',
   slideCurveTip: '按住滑块，将曲线滑入对应凹槽',
+  swingTileTip: '按住滑块，沿曲线把图块摆入目标凹槽',
   curveTip: '请按住并沿虚线从绿色起点描绘到红色终点',
   promptPrefix: '请依次点选',
   loadingText: '图片加载中...',
@@ -74,6 +78,7 @@ export const enMessages: CaptchaMessages = {
   sliderTip: 'Press and drag the slider to complete the puzzle',
   rotateTip: 'Drag the slider to rotate the image into place',
   slideCurveTip: 'Press and drag to swing the curve into the groove',
+  swingTileTip: 'Press and drag to move the tile along the curve into the groove',
   curveTip: 'Press and trace the dashed curve from the green start to the red end',
   promptPrefix: 'Please click in order',
   loadingText: 'Loading image...',

@@ -147,6 +147,21 @@
             @success="onCaptchaSuccess"
             @fail="onCaptchaFail"
           />
+          <SwingTileCaptcha
+            v-if="mode === 'swing-tile'"
+            :key="`swing-tile-${refreshKey}`"
+            :api="opts.api"
+            :width="opts.width"
+            :height="opts.height"
+            :swing-tile-tip="opts.swingTileTip"
+            :handle-width="opts.handleWidth"
+            :debug="opts.debug"
+            :auto-reload="opts.autoReload"
+            :loading-text="opts.loadingText"
+            :image-alt="opts.imageAlt"
+            @success="onCaptchaSuccess"
+            @fail="onCaptchaFail"
+          />
         </div>
 
         <div
@@ -176,6 +191,7 @@ import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
 import CurveCaptcha from './CurveCaptcha.vue';
 import SlideCurveCaptcha from './SlideCurveCaptcha.vue';
+import SwingTileCaptcha from './SwingTileCaptcha.vue';
 import { CaptchaOptionsKey, useCaptchaOptions } from './options';
 import type { CaptchaMessages } from './i18n';
 import type { VerifyResult } from './api';
@@ -228,6 +244,8 @@ interface Props {
   rotateTip?: string | null
   /** 滑动曲线提示文案 */
   slideCurveTip?: string | null
+  /** 滑块摆动图块提示文案 */
+  swingTileTip?: string | null
   /** 滑动曲线摆动曲线颜色 */
   slideCurveColor?: string | null
   /** 曲线绘制提示文案 */

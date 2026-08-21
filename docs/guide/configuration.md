@@ -139,6 +139,28 @@
 | `slide-curve.sample-count` | 摆动曲线采样点数量 | `24` |
 | `slide-curve.swing-min/max` | 真凹槽摆动答案范围 | `0.1` / `0.8` |
 
+## 滑块摆动图块
+
+滑块摆动图块复用 `background.sources` 主背景图：小图块沿多阶贝塞尔曲线从起点
+运动到目标凹槽，移动过程中方向随路径摆动，终点方向与真凹槽一致；
+假凹槽数量与间距可配置。
+
+| 配置 | 说明 | 默认值 |
+| --- | --- | --- |
+| `swing-tile.width` / `height` | 图片尺寸 | `340` / `190` |
+| `swing-tile.tolerance` | 滑块位置校验容差（归一化 0~1） | `0.03` |
+| `swing-tile.answer-min/max` | 真凹槽在路径上的位置范围 | `0.35` / `0.8` |
+| `swing-tile.min-elapsed-ms` | 最短验证耗时 | `800` |
+| `swing-tile.expire-seconds` | 会话有效期 | `300` |
+| `swing-tile.fake-target-count` | 假凹槽数量 | `2` |
+| `swing-tile.fake-target-min-gap` | 假凹槽最小中心间距 | `56` |
+| `swing-tile.control-point-count` | 贝塞尔控制点数量（多阶曲线） | `2` |
+| `swing-tile.piece-size-ratio` | 图块形状尺寸占图宽比例 | `0.12` |
+| `swing-tile.render-scale` | 抗锯齿超采样倍数（与原滑块一致） | `2` |
+| `swing-tile.rotation-swing-amplitude` | 方向摆动幅度（度） | `45` |
+| `swing-tile.start-rotation-max` | 起始方向随机偏移范围（度） | `60` |
+| `swing-tile.end-rotation-min/max` | 目标凹槽方向范围（度） | `-20` / `20` |
+
 ## 安全说明
 
 - `debug-enabled` 生产环境必须关闭

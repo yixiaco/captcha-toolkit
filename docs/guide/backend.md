@@ -20,7 +20,7 @@
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `{prefix}?type=slider\|click\|rotate\|curve\|slide-curve` | 下发验证码 |
+| GET | `{prefix}?type=slider\|click\|rotate\|curve\|slide-curve\|swing-tile` | 下发验证码 |
 | POST | `{prefix}/verify` | 校验答案 |
 | GET/POST | `{prefix}/ticket/verify` | 业务接口校验一次性票据 |
 | GET | `{prefix}/types` | 查询支持的类型与形状 |
@@ -59,6 +59,7 @@ GET /api/captcha?type=slider&shape=classic&debug=1
 | `rotate` | `debugAngle` | 调试答案角度（度） |
 | `curve` | `debugCurve` | 调试期望曲线采样点（像素坐标） |
 | `slide-curve` | `endpoints` / `amplitude` / `shape`，调试 `debugSwing` / `debugFakeTargets` | 前端绘制摆动曲线所需参数、调试摆动答案与假凹槽坐标 |
+| `swing-tile` | `path` / `startRotation` / `endRotation` / `swingAmplitude` / `pieceSize`，调试 `debugT` / `debugFakeTargets` | 贝塞尔路径与摆动参数、调试真凹槽位置与假凹槽坐标 |
 
 调试字段仅在 `debug=1` 且引擎开启 `debug-enabled` 时返回。
 
