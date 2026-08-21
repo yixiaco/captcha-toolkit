@@ -8,7 +8,12 @@ npm install
 npm run dev
 ```
 
-文档站默认运行在 `http://localhost:5173`（与前端演示站端口相同，请勿同时占用）。
+文档站默认运行在 `http://localhost:5174`，与前端演示站（`5173`）端口区分开。
+
+文档站支持：
+
+- 图片点击放大（medium-zoom）
+- 简体中文 / English 多语言切换（右上角语言菜单）
 
 构建静态站点：
 

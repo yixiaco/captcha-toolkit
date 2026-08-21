@@ -32,6 +32,14 @@ npm run dev
 
 前端开发服务器默认监听 `http://localhost:5173`，并把 `/api` 代理到 `:18080`。
 
+前端为 TypeScript 工程，常用校验命令：
+
+```bash
+npm run type-check   # vue-tsc 类型检查
+npm run lint         # ESLint 校验
+npm run build:lib    # 构建组件库（含 .d.ts 类型声明）
+```
+
 ## 打开演示
 
 浏览器访问：
