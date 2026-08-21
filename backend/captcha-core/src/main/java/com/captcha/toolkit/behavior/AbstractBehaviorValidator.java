@@ -108,14 +108,12 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
             if (current.timeMs() < prev.timeMs()) {
                 return Optional.of("行为轨迹时间乱序");
             }
-            if (current.x() < 0 || current.x() > 1
-                    || current.y() < 0 || current.y() > 1) {
+            if (current.x() < 0 || current.x() > 1 || current.y() < 0 || current.y() > 1) {
                 return Optional.of("行为轨迹坐标越界");
             }
             long dt = current.timeMs() - prev.timeMs();
             if (dt > 0) {
-                double distance = Math.hypot(
-                        current.x() - prev.x(), current.y() - prev.y());
+                double distance = Math.hypot(current.x() - prev.x(), current.y() - prev.y());
                 if (distance > profile.getMaxJumpRatio()) {
                     return Optional.of("行为轨迹跳跃异常");
                 }
