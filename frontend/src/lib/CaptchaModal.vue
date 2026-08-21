@@ -1,6 +1,10 @@
 <template>
   <Teleport to="body">
-    <div v-if="visible" class="modal-mask" @click.self="close">
+    <div
+      v-if="visible"
+      class="modal-mask"
+      @click.self="close"
+    >
       <div class="captcha-modal">
         <div class="modal-head">
           <div class="brand">
@@ -20,7 +24,11 @@
             <span>{{ opts.title }}</span>
           </div>
           <div class="head-actions">
-            <button class="icon-btn" :title="opts.refreshTitle" @click="refresh">
+            <button
+              class="icon-btn"
+              :title="opts.refreshTitle"
+              @click="refresh"
+            >
               <svg
                 viewBox="0 0 24 24"
                 width="16"
@@ -35,7 +43,11 @@
                 <path d="M21 3v6h-6" />
               </svg>
             </button>
-            <button class="icon-btn" :title="opts.closeTitle" @click="close">
+            <button
+              class="icon-btn"
+              :title="opts.closeTitle"
+              @click="close"
+            >
               <svg
                 viewBox="0 0 24 24"
                 width="16"
@@ -102,112 +114,131 @@
           />
         </div>
 
-        <div v-if="opts.brandText || opts.sloganText" class="modal-foot">
-          <span v-if="opts.brandText" class="brand-logo">
+        <div
+          v-if="opts.brandText || opts.sloganText"
+          class="modal-foot"
+        >
+          <span
+            v-if="opts.brandText"
+            class="brand-logo"
+          >
             <span class="brand-name">{{ opts.brandText }}</span>
           </span>
-          <span v-if="opts.sloganText" class="brand-slogan">{{ opts.sloganText }}</span>
+          <span
+            v-if="opts.sloganText"
+            class="brand-slogan"
+          >{{ opts.sloganText }}</span>
         </div>
       </div>
     </div>
   </Teleport>
 </template>
 
-<script setup>
-import { ref, watch } from 'vue'
-import SliderCaptcha from './SliderCaptcha.vue'
-import ClickCaptcha from './ClickCaptcha.vue'
-import RotateCaptcha from './RotateCaptcha.vue'
-import { useCaptchaOptions } from './options'
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import SliderCaptcha from './SliderCaptcha.vue';
+import ClickCaptcha from './ClickCaptcha.vue';
+import RotateCaptcha from './RotateCaptcha.vue';
+import { useCaptchaOptions } from './options';
+import type { VerifyResult } from './api';
+import type { CaptchaMode } from './types';
 
-const props = defineProps({
+interface Props {
   /** 是否显示弹窗 */
-  visible: { type: Boolean, default: false },
+  visible?: boolean
   /** 验证模式：slider / click */
-  mode: { type: String, default: 'slider' },
+  mode?: CaptchaMode | string
   /** 自定义 API 客户端 */
-  api: { type: Object, default: null },
+  api?: object | null
   /** 后端接口前缀 */
-  baseUrl: { type: String, default: null },
+  baseUrl?: string | null
   /** 自定义请求函数 */
-  request: { type: Function, default: null },
+  request?: unknown
   /** 验证图片宽度（px） */
-  width: { type: Number, default: null },
+  width?: number | null
   /** 验证图片高度（px） */
-  height: { type: Number, default: null },
+  height?: number | null
   /** 滑块初始形状 */
-  shape: { type: String, default: null },
+  shape?: string | null
   /** 形状选择器白名单 */
-  shapes: { type: Array, default: null },
+  shapes?: string[] | null
   /** 形状显示名覆盖 */
-  shapeLabels: { type: Object, default: null },
+  shapeLabels?: Record<string, string> | null
   /** 是否显示形状选择器 */
-  showShapePicker: { type: Boolean, default: null },
+  showShapePicker?: boolean | null
   /** 是否请求调试答案 */
-  debug: { type: Boolean, default: null },
+  debug?: boolean | null
   /** 失败后自动刷新 */
-  autoReload: { type: Boolean, default: null },
+  autoReload?: boolean | null
   /** 滑块手柄宽度（px） */
-  handleWidth: { type: Number, default: null },
+  handleWidth?: number | null
   /** 点选提示前缀文案 */
-  promptPrefix: { type: String, default: null },
+  promptPrefix?: string | null
   /** 点选去重最小间距（px） */
-  markMinDistance: { type: Number, default: null },
+  markMinDistance?: number | null
   /** 形状选择器标题文案 */
-  shapeLabel: { type: String, default: null },
+  shapeLabel?: string | null
   /** 随机按钮文案 */
-  randomLabel: { type: String, default: null },
+  randomLabel?: string | null
   /** 拖拽提示文案 */
-  sliderTip: { type: String, default: null },
+  sliderTip?: string | null
   /** 旋转提示文案 */
-  rotateTip: { type: String, default: null },
+  rotateTip?: string | null
   /** 加载提示文案 */
-  loadingText: { type: String, default: null },
+  loadingText?: string | null
   /** 图片 alt 文案 */
-  imageAlt: { type: String, default: null },
+  imageAlt?: string | null
   /** 验证成功后弹窗是否自动关闭 */
-  closeOnSuccess: { type: Boolean, default: null },
+  closeOnSuccess?: boolean | null
   /** 验证成功后自动关闭/回调延迟（ms） */
-  successDelay: { type: Number, default: null },
+  successDelay?: number | null
   /** 弹窗标题文案 */
-  title: { type: String, default: null },
+  title?: string | null
   /** 刷新按钮 title 文案 */
-  refreshTitle: { type: String, default: null },
+  refreshTitle?: string | null
   /** 关闭按钮 title 文案 */
-  closeTitle: { type: String, default: null },
+  closeTitle?: string | null
   /** 左下角品牌文案，空串隐藏 */
-  brandText: { type: String, default: null },
+  brandText?: string | null
   /** 左下角标语文案，空串隐藏 */
-  sloganText: { type: String, default: null },
-})
+  sloganText?: string | null
+}
 
-const emit = defineEmits(['close', 'success'])
+const props = withDefaults(defineProps<Props>(), {
+  visible: false,
+  mode: 'slider',
+});
 
-const opts = useCaptchaOptions(props)
-const refreshKey = ref(0)
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'success', result: VerifyResult): void
+}>();
+
+const opts = useCaptchaOptions(props);
+const refreshKey = ref(0);
 
 watch(
   () => props.visible,
   (value) => {
-    if (value) refreshKey.value++
+    if (value) refreshKey.value++;
   }
-)
+);
 
 function refresh() {
-  refreshKey.value++
+  refreshKey.value++;
 }
 
 function close() {
-  emit('close')
+  emit('close');
 }
 
-function onCaptchaSuccess(result) {
+function onCaptchaSuccess(result: VerifyResult) {
   setTimeout(() => {
     // 把验证结果（含一次性票据 ticket）透传给宿主业务代码
-    emit('success', result)
+    emit('success', result);
     if (opts.closeOnSuccess) {
-      emit('close')
+      emit('close');
     }
-  }, opts.successDelay)
+  }, opts.successDelay);
 }
 </script>

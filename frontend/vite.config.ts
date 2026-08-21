@@ -1,12 +1,17 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from 'node:url';
+import vue from '@vitejs/plugin-vue';
+import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
 
 export default defineConfig(({ mode }) => {
   // 默认构建为可发布组件库；--mode demo 时构建演示站点
-  const isDemo = mode === 'demo'
+  const isDemo = mode === 'demo';
   return {
-    plugins: [vue()],
+    plugins: [
+      vue(),
+      // 组件库构建时生成 .d.ts 类型声明；演示站构建不需要
+      ...(isDemo ? [] : [dts({ include: ['src/lib'], insertTypesEntry: true })]),
+    ],
     server: {
       port: 5173,
       open: false,
@@ -24,7 +29,7 @@ export default defineConfig(({ mode }) => {
         }
       : {
           lib: {
-            entry: fileURLToPath(new URL('./src/lib/index.js', import.meta.url)),
+            entry: fileURLToPath(new URL('./src/lib/index.ts', import.meta.url)),
             name: 'CaptchaToolkit',
             fileName: 'captcha-toolkit',
           },
@@ -37,5 +42,5 @@ export default defineConfig(({ mode }) => {
           },
           sourcemap: true,
         },
-  }
-})
+  };
+});

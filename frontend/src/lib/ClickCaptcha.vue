@@ -1,11 +1,22 @@
 <template>
-  <div class="click-captcha" :class="{ 'is-success': status === 'success' }">
+  <div
+    class="click-captcha"
+    :class="{ 'is-success': status === 'success' }"
+  >
     <div class="click-prompt">
       <span>{{ opts.promptPrefix }}</span>
-      <span v-for="ch in prompt" :key="ch" class="prompt-char">{{ ch }}</span>
+      <span
+        v-for="ch in prompt"
+        :key="ch"
+        class="prompt-char"
+      >{{ ch }}</span>
     </div>
 
-    <div class="img-wrap" :class="{ shake: shaking }" :style="{ height: imgHeight + 'px' }">
+    <div
+      class="img-wrap"
+      :class="{ shake: shaking }"
+      :style="{ height: imgHeight + 'px' }"
+    >
       <img
         v-if="image1"
         ref="imageRef"
@@ -14,7 +25,7 @@
         :alt="opts.imageAlt"
         draggable="false"
         @pointerdown="onPointerDown"
-      />
+      >
 
       <div
         v-for="mark in marks"
@@ -28,184 +39,201 @@
         {{ mark.index }}
       </div>
 
-      <div v-if="status === 'loading'" class="loading-mask">
-        <div class="spinner"></div>
+      <div
+        v-if="status === 'loading'"
+        class="loading-mask"
+      >
+        <div class="spinner" />
         <span>{{ opts.loadingText }}</span>
       </div>
 
       <transition name="fade">
-        <div v-if="status === 'success'" class="success-mask">
-          <div class="success-icon">✓</div>
+        <div
+          v-if="status === 'success'"
+          class="success-mask"
+        >
+          <div class="success-icon">
+            ✓
+          </div>
         </div>
       </transition>
     </div>
   </div>
 </template>
 
-<script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useCaptchaOptions } from './options'
-import { createTrace, pushPoint, buildCompressedTrace, removeLastEvent } from './trace'
+<script setup lang="ts">
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useCaptchaOptions } from './options';
+import type { VerifyResult } from './api';
+import type { CaptchaStatus, ClientType } from './types';
+import { createTrace, pushPoint, buildCompressedTrace, removeLastEvent } from './trace';
+import type { BehaviorTrace } from './trace';
 
-const props = defineProps({
+interface Props {
   /** 自定义 API 客户端 */
-  api: { type: Object, default: null },
+  api?: object | null
   /** 后端接口前缀 */
-  baseUrl: { type: String, default: null },
+  baseUrl?: string | null
   /** 自定义请求函数 */
-  request: { type: Function, default: null },
+  request?: unknown
   /** 验证图片宽度（px） */
-  width: { type: Number, default: null },
+  width?: number | null
   /** 验证图片高度（px） */
-  height: { type: Number, default: null },
+  height?: number | null
   /** 点选提示前缀文案 */
-  promptPrefix: { type: String, default: null },
+  promptPrefix?: string | null
   /** 点选去重最小间距（px） */
-  markMinDistance: { type: Number, default: null },
+  markMinDistance?: number | null
   /** 是否请求调试答案 */
-  debug: { type: Boolean, default: null },
+  debug?: boolean | null
   /** 失败后自动刷新 */
-  autoReload: { type: Boolean, default: null },
+  autoReload?: boolean | null
   /** 加载提示文案 */
-  loadingText: { type: String, default: null },
+  loadingText?: string | null
   /** 图片 alt 文案 */
-  imageAlt: { type: String, default: null },
+  imageAlt?: string | null
   /** 客户端类型：web / h5 / mini_program */
-  clientType: { type: String, default: null },
-})
+  clientType?: ClientType | null
+}
 
-const emit = defineEmits(['success', 'fail', 'error'])
+const props = defineProps<Props>();
 
-const opts = useCaptchaOptions(props)
+const emit = defineEmits<{
+  (e: 'success', result: VerifyResult): void
+  (e: 'fail', result: VerifyResult): void
+  (e: 'error', error: unknown): void
+}>();
 
-const imageRef = ref(null)
-const status = ref('loading')
-const image1 = ref('')
-const captchaId = ref('')
-const prompt = ref([])
-const marks = ref([])
-const shaking = ref(false)
-const submitting = ref(false)
-const imgHeight = ref(opts.height)
+const opts = useCaptchaOptions(props);
+
+const imageRef = ref<HTMLImageElement | null>(null);
+const status = ref<CaptchaStatus>('loading');
+const image1 = ref('');
+const captchaId = ref('');
+const prompt = ref<string[]>([]);
+const marks = ref<Array<{ x: number; y: number; index: number }>>([]);
+const shaking = ref(false);
+const submitting = ref(false);
+const imgHeight = ref(opts.height);
 /** 当前点选的行为轨迹 */
-let trace = null
+let trace: BehaviorTrace | null = null;
 /** 是否正处于一次未完成的按下（用于与松开事件配对） */
-let pressAccepted = false
+let pressAccepted = false;
 /** 是否已挂载窗口级 pointermove 监听（避免重复挂载） */
-let moveListening = false
+let moveListening = false;
 
 /** 挂载窗口级移动监听，记录点击之间的接近轨迹 */
 function startMoveListening() {
   if (!moveListening) {
-    window.addEventListener('pointermove', onPointerMove)
-    moveListening = true
+    window.addEventListener('pointermove', onPointerMove);
+    moveListening = true;
   }
 }
 
 /** 卸载窗口级移动监听（提交或组件销毁时调用） */
 function stopMoveListening() {
   if (moveListening) {
-    window.removeEventListener('pointermove', onPointerMove)
-    moveListening = false
+    window.removeEventListener('pointermove', onPointerMove);
+    moveListening = false;
   }
 }
 
 async function loadCaptcha() {
-  status.value = 'loading'
-  image1.value = ''
-  marks.value = []
-  stopMoveListening()
-  trace = null
-  pressAccepted = false
+  status.value = 'loading';
+  image1.value = '';
+  marks.value = [];
+  stopMoveListening();
+  trace = null;
+  pressAccepted = false;
   try {
     const res = await opts.api.getCaptcha({
       type: 'click',
       debug: opts.debug ? '1' : undefined,
-    })
-    captchaId.value = res.id
-    image1.value = res.image1
-    prompt.value = res.prompt || []
+    });
+    captchaId.value = res.id;
+    image1.value = res.image1;
+    prompt.value = res.prompt || [];
     // 以后端实际图片高度为准（宽度由父容器 100% 决定）
-    imgHeight.value = res.height || opts.height
-    status.value = 'idle'
-    startMoveListening()
-    await nextTick()
+    imgHeight.value = res.height || opts.height;
+    status.value = 'idle';
+    startMoveListening();
+    await nextTick();
     if (opts.debug && imageRef.value) {
-      imageRef.value.dataset.captchaId = res.id
+      imageRef.value.dataset.captchaId = res.id;
       if (res.debugTargets) {
         imageRef.value.dataset.debugTargets = JSON.stringify(
           res.debugTargets.map((p) => ({ x: p.x, y: p.y }))
-        )
+        );
       }
     }
   } catch (error) {
-    console.error('加载点选验证码失败', error)
-    emit('error', error)
-    status.value = 'idle'
+    console.error('加载点选验证码失败', error);
+    emit('error', error);
+    status.value = 'idle';
   }
 }
 
 /** 首次交互时创建轨迹，并把当前指针位置记为起点 */
-function ensureTrace(event) {
+function ensureTrace(event: PointerEvent) {
   if (!trace) {
-    trace = createTrace(imageRef.value)
-    pushPoint(trace, event.clientX, event.clientY, 0, imageRef.value)
+    trace = createTrace(imageRef.value);
+    pushPoint(trace, event.clientX, event.clientY, 0, imageRef.value!);
   }
 }
 
 /** 记录指针移动（点击之间的接近轨迹） */
-function onPointerMove(event) {
-  if (status.value !== 'idle' || submitting.value) return
-  ensureTrace(event)
-  pushPoint(trace, event.clientX, event.clientY, 1, imageRef.value)
+function onPointerMove(event: PointerEvent) {
+  if (status.value !== 'idle' || submitting.value) return;
+  ensureTrace(event);
+  pushPoint(trace!, event.clientX, event.clientY, 1, imageRef.value!);
 }
 
 /** 按下：去重通过后才记录点击事件，并监听松开 */
-function onPointerDown(event) {
-  if (status.value !== 'idle' || submitting.value) return
-  const rect = imageRef.value.getBoundingClientRect()
-  const x = event.clientX - rect.left
-  const y = event.clientY - rect.top
-  if (marks.value.some((m) => Math.hypot(m.x - x, m.y - y) < opts.markMinDistance)) return
+function onPointerDown(event: PointerEvent) {
+  if (status.value !== 'idle' || submitting.value) return;
+  const rect = imageRef.value!.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  if (marks.value.some((m) => Math.hypot(m.x - x, m.y - y) < opts.markMinDistance)) return;
 
-  ensureTrace(event)
-  pushPoint(trace, event.clientX, event.clientY, 3, imageRef.value)
-  pressAccepted = true
-  window.addEventListener('pointerup', onPointerUp)
-  window.addEventListener('pointercancel', onPointerUp)
+  ensureTrace(event);
+  pushPoint(trace!, event.clientX, event.clientY, 3, imageRef.value!);
+  pressAccepted = true;
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
 }
 
 /** 松开：在图片内才算一次有效点击，点满目标数后提交 */
-function onPointerUp(event) {
-  if (!pressAccepted) return
-  pressAccepted = false
-  window.removeEventListener('pointerup', onPointerUp)
-  window.removeEventListener('pointercancel', onPointerUp)
+function onPointerUp(event: PointerEvent) {
+  if (!pressAccepted) return;
+  pressAccepted = false;
+  window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
 
-  const rect = imageRef.value.getBoundingClientRect()
-  const x = event.clientX - rect.left
-  const y = event.clientY - rect.top
+  const rect = imageRef.value!.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
   if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
     // 松手在图片外：撤销这次未完成的按下，不污染轨迹
-    removeLastEvent(trace, 3)
-    return
+    removeLastEvent(trace!, 3);
+    return;
   }
-  pushPoint(trace, event.clientX, event.clientY, 2, imageRef.value)
-  marks.value.push({ x, y, index: marks.value.length + 1 })
+  pushPoint(trace!, event.clientX, event.clientY, 2, imageRef.value!);
+  marks.value.push({ x, y, index: marks.value.length + 1 });
 
   if (marks.value.length >= prompt.value.length) {
-    submit()
+    submit();
   }
 }
 
 /** 点满目标字后一次性提交后端校验 */
 async function submit() {
-  submitting.value = true
-  stopMoveListening()
-  const td = await buildCompressedTrace(trace)
-  trace = null
+  submitting.value = true;
+  stopMoveListening();
+  const td = await buildCompressedTrace(trace!);
+  trace = null;
   try {
-    const rect = imageRef.value.getBoundingClientRect()
+    const rect = imageRef.value!.getBoundingClientRect();
     const res = await opts.api.verify({
       id: captchaId.value,
       type: 'click',
@@ -215,38 +243,38 @@ async function submit() {
       })),
       clientType: opts.clientType,
       td,
-    })
+    });
     if (res.success) {
-      status.value = 'success'
-      emit('success', res)
+      status.value = 'success';
+      emit('success', res);
     } else {
-      emit('fail', res)
-      marks.value = []
-      shaking.value = true
+      emit('fail', res);
+      marks.value = [];
+      shaking.value = true;
       setTimeout(() => {
-        shaking.value = false
+        shaking.value = false;
         if (opts.autoReload) {
-          loadCaptcha()
+          loadCaptcha();
         }
-      }, 450)
+      }, 450);
     }
   } catch (error) {
-    console.error('点选验证请求失败', error)
-    emit('error', error)
+    console.error('点选验证请求失败', error);
+    emit('error', error);
   } finally {
-    submitting.value = false
+    submitting.value = false;
   }
 }
 
 onMounted(() => {
-  loadCaptcha()
-})
+  loadCaptcha();
+});
 
 onBeforeUnmount(() => {
-  stopMoveListening()
-  window.removeEventListener('pointerup', onPointerUp)
-  window.removeEventListener('pointercancel', onPointerUp)
-})
+  stopMoveListening();
+  window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
+});
 
-defineExpose({ reload: loadCaptcha })
+defineExpose({ reload: loadCaptcha });
 </script>

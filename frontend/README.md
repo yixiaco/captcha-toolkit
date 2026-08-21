@@ -1,4 +1,4 @@
-# 前端组件库（Vue 3 + Vite）
+# 前端组件库（Vue 3 + TypeScript + Vite）
 
 `src/lib/` 是可复用的验证码组件库：滑块拼图 `SliderCaptcha`、文字点选 `ClickCaptcha`、
 弹窗容器 `CaptchaModal`，以及请求适配器 `createCaptchaApi` 与形状注册表 `PUZZLE_SHAPES`。
@@ -14,9 +14,15 @@
 ```bash
 npm install
 npm run dev          # 开发演示站（/api 代理到 http://localhost:18080）
+npm run type-check   # vue-tsc 类型检查
+npm run lint         # ESLint 校验（--max-warnings 0）
+npm run lint:fix     # ESLint 自动修复
 npm run build:lib    # 构建可发布组件库到 dist/
 npm run build:demo   # 构建演示站到 dist-demo/
 ```
+
+组件库源码为 TypeScript，`build:lib` 会同时生成 `.d.ts` 类型声明，
+JS / TS 宿主项目均可直接使用。
 
 ## 嵌入宿主项目
 

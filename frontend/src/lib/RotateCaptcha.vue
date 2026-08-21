@@ -4,14 +4,17 @@
     class="rotate-captcha"
     :class="{ 'is-success': status === 'success' }"
   >
-    <div class="img-wrap" :style="{ width: opts.width + 'px', height: opts.height + 'px' }">
+    <div
+      class="img-wrap"
+      :style="{ width: opts.width + 'px', height: opts.height + 'px' }"
+    >
       <img
         v-if="image1"
         :src="image1"
         class="captcha-img"
         :alt="opts.imageAlt"
         draggable="false"
-      />
+      >
 
       <img
         v-if="image2"
@@ -20,24 +23,42 @@
         alt=""
         draggable="false"
         :style="{ transform: `rotate(${rotation}deg)` }"
-      />
+      >
 
-      <div v-if="status === 'loading'" class="loading-mask">
-        <div class="spinner"></div>
+      <div
+        v-if="status === 'loading'"
+        class="loading-mask"
+      >
+        <div class="spinner" />
         <span>{{ opts.loadingText }}</span>
       </div>
 
       <transition name="fade">
-        <div v-if="status === 'success'" class="success-mask">
-          <div class="success-icon">✓</div>
+        <div
+          v-if="status === 'success'"
+          class="success-mask"
+        >
+          <div class="success-icon">
+            ✓
+          </div>
         </div>
       </transition>
     </div>
 
-    <div class="slider-track" ref="trackRef" :class="{ shake: shaking }">
-      <div class="slider-progress" :style="{ width: pieceLeft + 'px' }"></div>
+    <div
+      ref="trackRef"
+      class="slider-track"
+      :class="{ shake: shaking }"
+    >
+      <div
+        class="slider-progress"
+        :style="{ width: pieceLeft + 'px' }"
+      />
 
-      <div v-if="status === 'idle' && !dragging" class="slider-tip">
+      <div
+        v-if="status === 'idle' && !dragging"
+        class="slider-tip"
+      >
         {{ opts.rotateTip }}
       </div>
 
@@ -78,140 +99,149 @@
   </div>
 </template>
 
-<script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useCaptchaOptions } from './options'
-import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace'
+<script setup lang="ts">
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useCaptchaOptions } from './options';
+import type { VerifyResult } from './api';
+import type { CaptchaStatus, ClientType } from './types';
+import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace';
+import type { BehaviorTrace } from './trace';
 
-const props = defineProps({
+interface Props {
   /** 自定义 API 客户端 */
-  api: { type: Object, default: null },
+  api?: object | null
   /** 后端接口前缀 */
-  baseUrl: { type: String, default: null },
+  baseUrl?: string | null
   /** 自定义请求函数 */
-  request: { type: Function, default: null },
+  request?: unknown
   /** 验证图片宽度（px） */
-  width: { type: Number, default: null },
+  width?: number | null
   /** 验证图片高度（px） */
-  height: { type: Number, default: null },
+  height?: number | null
   /** 旋转提示文案 */
-  rotateTip: { type: String, default: null },
+  rotateTip?: string | null
   /** 滑块手柄宽度（px） */
-  handleWidth: { type: Number, default: null },
+  handleWidth?: number | null
   /** 是否请求调试答案 */
-  debug: { type: Boolean, default: null },
+  debug?: boolean | null
   /** 失败后自动刷新 */
-  autoReload: { type: Boolean, default: null },
+  autoReload?: boolean | null
   /** 加载提示文案 */
-  loadingText: { type: String, default: null },
+  loadingText?: string | null
   /** 图片 alt 文案 */
-  imageAlt: { type: String, default: null },
+  imageAlt?: string | null
   /** 客户端类型：web / h5 / mini_program */
-  clientType: { type: String, default: null },
-})
+  clientType?: ClientType | null
+}
 
-const emit = defineEmits(['success', 'fail', 'error'])
+const props = defineProps<Props>();
 
-const opts = useCaptchaOptions(props)
+const emit = defineEmits<{
+  (e: 'success', result: VerifyResult): void
+  (e: 'fail', result: VerifyResult): void
+  (e: 'error', error: unknown): void
+}>();
 
-const rootRef = ref(null)
-const trackRef = ref(null)
-const status = ref('loading')
-const image1 = ref('')
-const image2 = ref('')
-const captchaId = ref('')
-const pieceLeft = ref(0)
-const rotation = ref(0)
-const dragging = ref(false)
-const shaking = ref(false)
+const opts = useCaptchaOptions(props);
 
-let trackWidth = 0
-let startClientX = 0
-let startLeft = 0
+const rootRef = ref<HTMLElement | null>(null);
+const trackRef = ref<HTMLElement | null>(null);
+const status = ref<CaptchaStatus>('loading');
+const image1 = ref('');
+const image2 = ref('');
+const captchaId = ref('');
+const pieceLeft = ref(0);
+const rotation = ref(0);
+const dragging = ref(false);
+const shaking = ref(false);
+
+let trackWidth = 0;
+let startClientX = 0;
+let startLeft = 0;
 /** 当前拖拽的行为轨迹 */
-let trace = null
+let trace: BehaviorTrace | null = null;
 /** 按下时缓存的容器矩形，避免移动中反复读取布局 */
-let dragRect = null
+let dragRect: DOMRect | null = null;
 /** 上次轨迹采样时间（用于 16ms 节流） */
-let lastTraceAt = 0
+let lastTraceAt = 0;
 
 function maxLeft() {
-  return Math.max(0, trackWidth - opts.handleWidth)
+  return Math.max(0, trackWidth - opts.handleWidth);
 }
 
 /** 记录滑块当前位置（而不是指针位置，避免手柄偏移导致终点对不上） */
-function trackPoint(event, type) {
+function trackPoint(event: PointerEvent, type: 0 | 1 | 2) {
   // 移动事件只按 16ms（约 60fps）采样一次，避免轨迹无限膨胀
-  const now = Date.now()
-  if (type === 1 && lastTraceAt > 0 && now - lastTraceAt < 16) return
-  lastTraceAt = now
-  const rootRect = dragRect || rootRef.value.getBoundingClientRect()
-  const y = Math.min(1, Math.max(0, (event.clientY - rootRect.top) / rootRect.height))
-  const x = trackWidth > 0 ? pieceLeft.value / trackWidth : 0
-  pushNormalizedPoint(trace, x, y, type)
+  const now = Date.now();
+  if (type === 1 && lastTraceAt > 0 && now - lastTraceAt < 16) return;
+  lastTraceAt = now;
+  const rootRect = dragRect || rootRef.value!.getBoundingClientRect();
+  const y = Math.min(1, Math.max(0, (event.clientY - rootRect.top) / rootRect.height));
+  const x = trackWidth > 0 ? pieceLeft.value / trackWidth : 0;
+  pushNormalizedPoint(trace!, x, y, type);
 }
 
 async function loadCaptcha() {
-  status.value = 'loading'
-  image1.value = ''
-  image2.value = ''
-  trace = null
+  status.value = 'loading';
+  image1.value = '';
+  image2.value = '';
+  trace = null;
   try {
     const res = await opts.api.getCaptcha({
       type: 'rotate',
       debug: opts.debug ? '1' : undefined,
-    })
-    captchaId.value = res.id
-    image1.value = res.image1
-    image2.value = res.image2
-    pieceLeft.value = 0
-    rotation.value = 0
-    status.value = 'idle'
+    });
+    captchaId.value = res.id;
+    image1.value = res.image1;
+    image2.value = res.image2 || '';
+    pieceLeft.value = 0;
+    rotation.value = 0;
+    status.value = 'idle';
     if (opts.debug && rootRef.value) {
-      rootRef.value.dataset.captchaId = res.id
+      rootRef.value.dataset.captchaId = res.id;
       if (res.debugAngle != null) {
-        rootRef.value.dataset.debugAngle = String(res.debugAngle)
+        rootRef.value.dataset.debugAngle = String(res.debugAngle);
       }
     }
   } catch (error) {
-    console.error('加载旋转验证码失败', error)
-    emit('error', error)
-    status.value = 'idle'
+    console.error('加载旋转验证码失败', error);
+    emit('error', error);
+    status.value = 'idle';
   }
 }
 
-function onPointerDown(event) {
-  if (status.value !== 'idle') return
-  dragging.value = true
-  trace = createTrace(rootRef.value)
-  dragRect = rootRef.value.getBoundingClientRect()
-  lastTraceAt = 0
-  trackPoint(event, 0)
-  startClientX = event.clientX
-  startLeft = pieceLeft.value
-  window.addEventListener('pointermove', onPointerMove)
-  window.addEventListener('pointerup', onPointerUp)
-  window.addEventListener('pointercancel', onPointerUp)
+function onPointerDown(event: PointerEvent) {
+  if (status.value !== 'idle') return;
+  dragging.value = true;
+  trace = createTrace(rootRef.value);
+  dragRect = rootRef.value!.getBoundingClientRect();
+  lastTraceAt = 0;
+  trackPoint(event, 0);
+  startClientX = event.clientX;
+  startLeft = pieceLeft.value;
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
 }
 
-function onPointerMove(event) {
-  if (!dragging.value) return
-  const next = startLeft + event.clientX - startClientX
-  pieceLeft.value = Math.min(maxLeft(), Math.max(0, next))
-  rotation.value = (pieceLeft.value / maxLeft()) * 360
-  trackPoint(event, 1)
+function onPointerMove(event: PointerEvent) {
+  if (!dragging.value) return;
+  const next = startLeft + event.clientX - startClientX;
+  pieceLeft.value = Math.min(maxLeft(), Math.max(0, next));
+  rotation.value = (pieceLeft.value / maxLeft()) * 360;
+  trackPoint(event, 1);
 }
 
-async function onPointerUp(event) {
-  if (!dragging.value) return
-  dragging.value = false
-  window.removeEventListener('pointermove', onPointerMove)
-  window.removeEventListener('pointerup', onPointerUp)
-  window.removeEventListener('pointercancel', onPointerUp)
-  trackPoint(event, 2)
-  const td = await buildCompressedTrace(trace)
-  trace = null
-  dragRect = null
+async function onPointerUp(event: PointerEvent) {
+  if (!dragging.value) return;
+  dragging.value = false;
+  window.removeEventListener('pointermove', onPointerMove);
+  window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
+  trackPoint(event, 2);
+  const td = await buildCompressedTrace(trace!);
+  trace = null;
+  dragRect = null;
 
   try {
     const res = await opts.api.verify({
@@ -220,45 +250,45 @@ async function onPointerUp(event) {
       angle: rotation.value % 360,
       clientType: opts.clientType,
       td,
-    })
+    });
     if (res.success) {
-      status.value = 'success'
-      emit('success', res)
+      status.value = 'success';
+      emit('success', res);
     } else {
-      emit('fail', res)
-      shaking.value = true
+      emit('fail', res);
+      shaking.value = true;
       setTimeout(() => {
-        shaking.value = false
-        pieceLeft.value = 0
-        rotation.value = 0
+        shaking.value = false;
+        pieceLeft.value = 0;
+        rotation.value = 0;
         if (opts.autoReload) {
-          loadCaptcha()
+          loadCaptcha();
         }
-      }, 450)
+      }, 450);
     }
   } catch (error) {
-    console.error('旋转验证请求失败', error)
-    emit('error', error)
-    shaking.value = true
+    console.error('旋转验证请求失败', error);
+    emit('error', error);
+    shaking.value = true;
     setTimeout(() => {
-      shaking.value = false
-      pieceLeft.value = 0
-      rotation.value = 0
-    }, 450)
+      shaking.value = false;
+      pieceLeft.value = 0;
+      rotation.value = 0;
+    }, 450);
   }
 }
 
 onMounted(async () => {
-  await nextTick()
-  trackWidth = trackRef.value ? trackRef.value.clientWidth : opts.width
-  loadCaptcha()
-})
+  await nextTick();
+  trackWidth = trackRef.value ? trackRef.value.clientWidth : opts.width;
+  loadCaptcha();
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener('pointermove', onPointerMove)
-  window.removeEventListener('pointerup', onPointerUp)
-  window.removeEventListener('pointercancel', onPointerUp)
-})
+  window.removeEventListener('pointermove', onPointerMove);
+  window.removeEventListener('pointerup', onPointerUp);
+  window.removeEventListener('pointercancel', onPointerUp);
+});
 
-defineExpose({ reload: loadCaptcha })
+defineExpose({ reload: loadCaptcha });
 </script>

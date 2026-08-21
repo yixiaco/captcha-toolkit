@@ -4,41 +4,71 @@
     v-bind="attrs"
     :visible="visible"
     :mode="mode"
-    @close="emit('close')"
-    @success="(result) => emit('success', result)"
+    @close="onClose"
+    @success="onSuccess"
   />
   <component
     :is="inlineComponent"
     v-else
     v-bind="attrs"
-    @success="(result) => emit('success', result)"
-    @fail="(result) => emit('fail', result)"
-    @error="(error) => emit('error', error)"
+    @success="onSuccess"
+    @fail="onFail"
+    @error="onError"
   />
 </template>
 
-<script setup>
-import { computed, useAttrs } from 'vue'
-import CaptchaModal from './CaptchaModal.vue'
-import SliderCaptcha from './SliderCaptcha.vue'
-import ClickCaptcha from './ClickCaptcha.vue'
-import RotateCaptcha from './RotateCaptcha.vue'
+<script setup lang="ts">
+import { computed, useAttrs } from 'vue';
+import type { Component } from 'vue';
+import CaptchaModal from './CaptchaModal.vue';
+import SliderCaptcha from './SliderCaptcha.vue';
+import ClickCaptcha from './ClickCaptcha.vue';
+import RotateCaptcha from './RotateCaptcha.vue';
+import type { VerifyResult } from './api';
+import type { CaptchaMode } from './types';
 
-const props = defineProps({
+interface Props {
   /** 展示方式：inline 嵌入页面 / modal 弹窗 */
-  display: { type: String, default: 'modal' },
+  display?: string
   /** 验证模式：slider / click / rotate */
-  mode: { type: String, default: 'slider' },
+  mode?: CaptchaMode | string
   /** 弹窗是否可见（仅 display=modal 生效） */
-  visible: { type: Boolean, default: false },
-})
+  visible?: boolean
+}
 
-const emit = defineEmits(['success', 'close', 'fail', 'error'])
-const attrs = useAttrs()
+const props = withDefaults(defineProps<Props>(), {
+  display: 'modal',
+  mode: 'slider',
+  visible: false,
+});
 
-const inlineComponent = computed(() => {
-  if (props.mode === 'click') return ClickCaptcha
-  if (props.mode === 'rotate') return RotateCaptcha
-  return SliderCaptcha
-})
+const emit = defineEmits<{
+  (e: 'success', result: VerifyResult): void
+  (e: 'close'): void
+  (e: 'fail', result: VerifyResult): void
+  (e: 'error', error: unknown): void
+}>();
+const attrs = useAttrs();
+
+const inlineComponent = computed<Component>(() => {
+  if (props.mode === 'click') return ClickCaptcha;
+  if (props.mode === 'rotate') return RotateCaptcha;
+  return SliderCaptcha;
+});
+
+function onSuccess(result: VerifyResult) {
+  emit('success', result);
+}
+
+function onClose() {
+  emit('close');
+}
+
+function onFail(result: VerifyResult) {
+  emit('fail', result);
+}
+
+function onError(error: unknown) {
+  emit('error', error);
+}
 </script>
