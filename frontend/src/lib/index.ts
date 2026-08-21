@@ -2,6 +2,7 @@
 
 import type { App } from 'vue';
 import CaptchaModal from './CaptchaModal.vue';
+import FloatingCaptcha from './FloatingCaptcha.vue';
 import Captcha from './Captcha.vue';
 import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
@@ -34,6 +35,7 @@ import './style.css';
 
 export {
   CaptchaModal,
+  FloatingCaptcha,
   Captcha,
   SliderCaptcha,
   ClickCaptcha,

@@ -46,7 +46,13 @@ function onVerified(result: VerifyResult) {
 </script>
 ```
 
-Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `CurveCaptcha`.
+Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `CurveCaptcha` / `FloatingCaptcha`.
+
+`Captcha` supports three display modes via `display`:
+
+- `inline`: embed in the page
+- `modal`: centered popup
+- `floating`: a floating button (bottom-right) that expands the captcha panel in place at the button (GeeTest floating style)
 
 ## Main Props
 
@@ -66,6 +72,8 @@ Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `Cu
 | `curveTip` | Curve drawing hint | Chinese default |
 | `curveColor` | Stroke color | `#3b7cff` |
 | `curveWidth` | Stroke width (px) | `3` |
+| `floatingText` | Floating button text | `安全验证` |
+| `floatingPosition` | bottom-right / bottom-left | `bottom-right` |
 
 ## Events
 

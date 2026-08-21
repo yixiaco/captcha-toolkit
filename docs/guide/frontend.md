@@ -45,7 +45,13 @@ function onVerified(result) {
 </script>
 ```
 
-也可按需使用底层组件：`SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `CurveCaptcha`。
+也可按需使用底层组件：`SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `CurveCaptcha` / `FloatingCaptcha`。
+
+`Captcha` 的 `display` 支持三种展示方式：
+
+- `inline`：内嵌到页面
+- `modal`：居中弹窗
+- `floating`：右下角浮动按钮，点击后在按钮位置原地展开验证面板（参考极验“浮动式”弹出样式）
 
 ## 主要 Props
 
@@ -65,6 +71,8 @@ function onVerified(result) {
 | `curveTip` | 曲线绘制提示文案 | 中文默认 |
 | `curveColor` | 用户绘制笔迹颜色 | `#3b7cff` |
 | `curveWidth` | 用户绘制笔迹宽度（px） | `3` |
+| `floatingText` | 浮动按钮文案 | `安全验证` |
+| `floatingPosition` | 浮动位置：bottom-right / bottom-left | `bottom-right` |
 | `loadingText` / `imageAlt` | 加载提示与图片 alt | 中文默认 |
 | `title` / `brandText` / `sloganText` | 弹窗标题/品牌/标语 | 品牌与标语默认隐藏 |
 

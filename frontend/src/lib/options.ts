@@ -59,6 +59,10 @@ export interface CaptchaOptions {
   closeOnSuccess: boolean
   /** 验证成功后自动关闭/回调的延迟（ms） */
   successDelay: number
+  /** 浮动按钮文案 */
+  floatingText: string
+  /** 浮动位置：bottom-right / bottom-left */
+  floatingPosition: 'bottom-right' | 'bottom-left'
   /** 弹窗标题文案 */
   title: string
   /** 刷新按钮 title 文案 */
@@ -115,6 +119,8 @@ export const defaultCaptchaOptions: CaptchaOptions = {
   autoReload: true,
   closeOnSuccess: true,
   successDelay: 750,
+  floatingText: '安全验证',
+  floatingPosition: 'bottom-right',
   title: '安全验证',
   refreshTitle: '换一张',
   closeTitle: '关闭',

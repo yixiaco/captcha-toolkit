@@ -7,6 +7,15 @@
     @close="onClose"
     @success="onSuccess"
   />
+  <FloatingCaptcha
+    v-else-if="display === 'floating'"
+    v-bind="attrs"
+    :mode="mode"
+    @success="onSuccess"
+    @fail="onFail"
+    @error="onError"
+    @close="onClose"
+  />
   <component
     :is="inlineComponent"
     v-else
@@ -21,6 +30,7 @@
 import { computed, useAttrs } from 'vue';
 import type { Component } from 'vue';
 import CaptchaModal from './CaptchaModal.vue';
+import FloatingCaptcha from './FloatingCaptcha.vue';
 import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
@@ -29,7 +39,7 @@ import type { VerifyResult } from './api';
 import type { CaptchaMode } from './types';
 
 interface Props {
-  /** 展示方式：inline 嵌入页面 / modal 弹窗 */
+  /** 展示方式：inline 嵌入页面 / modal 弹窗 / floating 浮动按钮 */
   display?: string
   /** 验证模式：slider / click / rotate */
   mode?: CaptchaMode | string

@@ -215,7 +215,7 @@
       </template>
 
       <div
-        v-else
+        v-else-if="embedDisplay === 'modal'"
         class="embed-panel modal-demo-panel"
       >
         <button
@@ -228,6 +228,32 @@
           弹窗内可通过右上角按钮刷新换一张
         </p>
       </div>
+
+      <template v-else-if="embedDisplay === 'floating'">
+        <div class="embed-type-actions">
+          <button
+            v-for="item in embedModes"
+            :key="item.key"
+            class="embed-type-btn"
+            :class="{ active: inlineMode === item.key }"
+            @click="inlineMode = item.key"
+          >
+            {{ item.label }}
+          </button>
+        </div>
+        <div class="embed-panel modal-demo-panel">
+          <p class="modal-demo-tip">
+            右下角浮动按钮，点击后在按钮位置原地展开验证面板
+          </p>
+        </div>
+        <Captcha
+          display="floating"
+          :mode="inlineMode"
+          :debug="isDev"
+          @success="onVerified"
+          @fail="onFail"
+        />
+      </template>
 
       <transition name="fade">
         <div
@@ -276,10 +302,11 @@ const shapeFromUrl = ref('');
 const verified = ref(false);
 const verifiedTicket = ref('');
 const inlineMode = ref<'slider' | 'click' | 'rotate' | 'curve'>('slider');
-const embedDisplay = ref<'inline' | 'modal'>('inline');
-const embedDisplayModes: Array<{ key: 'inline' | 'modal'; label: string }> = [
+const embedDisplay = ref<'inline' | 'modal' | 'floating'>('inline');
+const embedDisplayModes: Array<{ key: 'inline' | 'modal' | 'floating'; label: string }> = [
   { key: 'inline', label: '内嵌' },
   { key: 'modal', label: '弹窗' },
+  { key: 'floating', label: '浮动' },
 ];
 const embedModes: Array<{ key: 'slider' | 'click' | 'rotate' | 'curve'; label: string }> = [
   { key: 'slider', label: '滑块' },
