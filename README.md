@@ -3,6 +3,19 @@
 前后端结合的极验风格验证码工具，内置 **滑块拼图** 与 **文字点选** 两种验证方式，
 设计目标是“开箱即用、可配置、可扩展”，既能作为独立 demo 运行，也能直接嵌入其他项目。
 
+## 文档
+
+完整文档基于 VitePress，源码在 `docs/`：
+
+```bash
+cd docs
+npm install
+npm run dev
+```
+
+推送到 `master` 分支后由 GitHub Actions 自动部署到 GitHub Pages
+（见 `.github/workflows/deploy-docs.yml`）。
+
 ## 目录结构
 
 ```text
@@ -13,6 +26,7 @@ backend/
 frontend/
   src/lib/                       Vue 3 组件库（可发布 npm / 源码引入）
   src/demo/                      演示站点（组件库的用法示例）
+docs/                            VitePress 文档站
 ```
 
 ## 设计模式与扩展点

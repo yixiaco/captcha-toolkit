@@ -8,6 +8,10 @@ dist-demo/
 # 前端临时构建文件
 frontend/.vite-temp/
 
+# ========== VitePress 文档站 ==========
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
 # ========== 后端（Java / Maven） ==========
 
 # Maven 构建输出（多模块各自的 target 目录）
