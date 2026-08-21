@@ -21,6 +21,18 @@
         通用行为验证组件库演示 · 滑块拼图 / 文字点选
       </p>
 
+      <div class="demo-lang">
+        <button
+          v-for="item in demoLocales"
+          :key="item.key"
+          class="lang-btn"
+          :class="{ active: demoLocale === item.key }"
+          @click="demoLocale = item.key"
+        >
+          {{ item.label }}
+        </button>
+      </div>
+
       <form
         class="demo-form"
         @submit.prevent="onLogin"
@@ -214,6 +226,7 @@
     <CaptchaModal
       :visible="captchaVisible"
       :mode="captchaMode"
+      :locale="demoLocale"
       :shape="shapeFromUrl"
       :debug="isDev"
       :brand-text="'Captcha Toolkit'"
@@ -235,6 +248,11 @@ const account = ref('');
 const password = ref('');
 const captchaVisible = ref(false);
 const captchaMode = ref<'slider' | 'click' | 'rotate' | 'curve' | 'slide-curve'>('slider');
+const demoLocale = ref<'zh-CN' | 'en'>('zh-CN');
+const demoLocales: Array<{ key: 'zh-CN' | 'en'; label: string }> = [
+  { key: 'zh-CN', label: '中文' },
+  { key: 'en', label: 'English' },
+];
 const shapeFromUrl = ref('');
 const verified = ref(false);
 const verifiedTicket = ref('');

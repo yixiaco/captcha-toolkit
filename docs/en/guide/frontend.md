@@ -77,6 +77,41 @@ Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `Cu
 | `floatingText` | Floating button text | `安全验证` |
 | `floatingPosition` | bottom-right / bottom-left | `bottom-right` |
 
+## i18n & Custom Prompts
+
+The library ships with Simplified Chinese (`zh-CN`, default) and English (`en`)
+message dictionaries, switched via `locale`. Requests automatically carry the
+`Accept-Language` header so server-side messages (verification failed, expired,
+etc.) match the frontend language.
+
+```ts
+createApp(App)
+  .use(CaptchaToolkit, {
+    locale: 'en',
+  })
+```
+
+`messages` overrides any message key; individual text props still take priority
+over `messages`:
+
+```ts
+createApp(App)
+  .use(CaptchaToolkit, {
+    locale: 'en',
+    messages: {
+      sliderTip: 'Slide me to unlock',
+      title: 'Verify you are human',
+    },
+  })
+```
+
+Message keys and defaults live in `CaptchaMessages` inside `i18n.ts`. Low-level
+helpers are exported as well:
+
+```ts
+import { resolveCaptchaMessages, defaultMessagesFor } from 'captcha-toolkit-vue'
+```
+
 ## Events
 
 | Event | Description |

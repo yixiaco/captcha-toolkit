@@ -1,9 +1,11 @@
 // 组件库配置：支持 app.use(plugin, options) 全局提供，也支持组件 props 覆盖
 
-import { inject, provide, reactive } from 'vue';
+import { inject, provide, reactive, watch } from 'vue';
 import type { InjectionKey, Reactive } from 'vue';
 import { createCaptchaApi } from './api';
 import type { CaptchaApi, RequestFunction } from './api';
+import { CAPTCHA_MESSAGE_KEYS, resolveCaptchaMessages } from './i18n';
+import type { CaptchaLocale, CaptchaMessages } from './i18n';
 import type { ClientType } from './types';
 
 export interface CaptchaOptions {
@@ -17,6 +19,10 @@ export interface CaptchaOptions {
   width: number
   /** 验证图片高度（px）；组件加载后会以后端返回的 height 为准 */
   height: number
+  /** 提示语言：zh-CN / en */
+  locale: CaptchaLocale
+  /** 自定义提示文案（按消息键覆盖语言默认值） */
+  messages: Partial<CaptchaMessages>
   /** 滑块初始形状，空串表示随机 */
   shape: string
   /** 形状选择器白名单 */
@@ -102,6 +108,8 @@ export const defaultCaptchaOptions: CaptchaOptions = {
   request: null,
   width: 340,
   height: 190,
+  locale: 'zh-CN',
+  messages: {},
   shape: '',
   shapes: ['classic', 'leaf', 'triangle', 'circle', 'diamond', 'star', 'heart'],
   shapeLabels: {},
@@ -134,11 +142,6 @@ export const defaultCaptchaOptions: CaptchaOptions = {
   sloganText: '',
 };
 
-/** 在组件树中提供全局配置 */
-export function provideCaptchaOptions(options: Partial<CaptchaOptions> = {}): void {
-  provide(CaptchaOptionsKey, { ...defaultCaptchaOptions, ...options });
-}
-
 function defined(obj: object): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
@@ -150,6 +153,23 @@ function defined(obj: object): Record<string, unknown> {
 }
 
 /**
+ * 解析提供给组件树的配置：先按 locale/messages 生成对应语言文案，
+ * 再让显式传入的单个文案 prop 覆盖，避免默认中文文案覆盖英文。
+ */
+export function resolveProvidedCaptchaOptions(
+  options: Partial<CaptchaOptions> = {},
+): Partial<CaptchaOptions> {
+  const locale = (options.locale || defaultCaptchaOptions.locale) as CaptchaLocale;
+  const localized = resolveCaptchaMessages(locale, options.messages);
+  return { ...defaultCaptchaOptions, ...localized, ...defined(options) };
+}
+
+/** 在组件树中提供全局配置 */
+export function provideCaptchaOptions(options: Partial<CaptchaOptions> = {}): void {
+  provide(CaptchaOptionsKey, resolveProvidedCaptchaOptions(options));
+}
+
+/**
  * 合并配置优先级：全局默认值 < 局部默认值 < provide 注入 < 组件 props。
  * 返回带 api 客户端的响应式配置对象。
  */
@@ -158,15 +178,59 @@ export function useCaptchaOptions(
   localDefaults: Partial<CaptchaOptions> = {},
 ): Reactive<CaptchaOptions & { api: CaptchaApi }> {
   const injected = inject(CaptchaOptionsKey, {});
-  const merged = {
-    ...defaultCaptchaOptions,
-    ...localDefaults,
-    ...defined(injected),
-    ...defined(props),
-  } as CaptchaOptions & { api: CaptchaApi };
-  const api = merged.api || createCaptchaApi({
-    baseUrl: merged.baseUrl,
-    request: merged.request,
+  const rawProps = props as Record<string, unknown>;
+  const rawInjected = injected as Record<string, unknown>;
+
+  /** 按当前 props / 注入配置计算一份完整的合并结果（不含 api） */
+  function buildMerged(): CaptchaOptions {
+    const locale = (rawProps.locale || rawInjected.locale
+      || defaultCaptchaOptions.locale) as CaptchaLocale;
+    const messages = {
+      ...((rawInjected.messages || {}) as Partial<CaptchaMessages>),
+      ...((rawProps.messages || {}) as Partial<CaptchaMessages>),
+    };
+    const localized = resolveCaptchaMessages(locale, messages);
+    const injectedDefined = defined(injected);
+    // 组件级显式切换了语言时，注入层携带的是旧语言文案，必须丢弃，
+    // 否则默认中文会覆盖组件级英文
+    if (rawProps.locale && rawInjected.locale && rawProps.locale !== rawInjected.locale) {
+      for (const key of CAPTCHA_MESSAGE_KEYS) {
+        delete injectedDefined[key];
+      }
+    }
+    return {
+      ...defaultCaptchaOptions,
+      ...localized,
+      ...localDefaults,
+      ...injectedDefined,
+      ...defined(props),
+    } as CaptchaOptions;
+  }
+
+  /** 按合并结果创建 API 客户端（携带当前语言对应的 Accept-Language） */
+  function buildApi(merged: CaptchaOptions): CaptchaApi {
+    return merged.api || createCaptchaApi({
+      baseUrl: merged.baseUrl,
+      request: merged.request,
+      locale: merged.locale,
+    });
+  }
+
+  const merged = reactive<CaptchaOptions & { api: CaptchaApi }>({
+    ...buildMerged(),
+    api: buildApi(buildMerged()),
   });
-  return reactive({ ...merged, api });
+
+  // locale / messages 变化时重建配置与 API 客户端，支持运行时切换语言
+  watch(
+    () => [rawProps.locale, rawProps.messages, rawInjected.locale, rawInjected.messages],
+    () => {
+      const next = buildMerged();
+      Object.assign(merged, next);
+      merged.api = buildApi(next);
+    },
+    { deep: true },
+  );
+
+  return merged;
 }

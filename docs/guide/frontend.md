@@ -80,6 +80,38 @@ function onVerified(result) {
 
 组件级 props 优先于插件级配置。
 
+## 多语言与自定义提示
+
+组件库内置简体中文（`zh-CN`，默认）与英文（`en`）两套提示文案，可通过
+`locale` 切换；请求会自动携带 `Accept-Language` 请求头，与后端多语言联动
+（验证失败/过期等后端消息与前端 UI 使用同一语言）。
+
+```ts
+createApp(App)
+  .use(CaptchaToolkit, {
+    locale: 'en', // 全局切到英文，后端消息也会返回英文
+  })
+```
+
+`messages` 可按消息键覆盖任意提示，单个文案 prop 的优先级仍高于 `messages`：
+
+```ts
+createApp(App)
+  .use(CaptchaToolkit, {
+    locale: 'en',
+    messages: {
+      sliderTip: 'Slide me to unlock',
+      title: 'Verify you are human',
+    },
+  })
+```
+
+消息键与默认文案见 `i18n.ts` 中的 `CaptchaMessages`；也可直接使用底层函数：
+
+```ts
+import { resolveCaptchaMessages, defaultMessagesFor } from 'captcha-toolkit-vue'
+```
+
 ## 事件
 
 | 事件 | 说明 |

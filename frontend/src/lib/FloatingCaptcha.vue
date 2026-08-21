@@ -180,12 +180,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { provide, ref } from 'vue';
 import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
 import RotateCaptcha from './RotateCaptcha.vue';
 import CurveCaptcha from './CurveCaptcha.vue';
-import { useCaptchaOptions } from './options';
+import { CaptchaOptionsKey, useCaptchaOptions } from './options';
+import type { CaptchaMessages } from './i18n';
 import type { VerifyResult } from './api';
 import type { CaptchaMode } from './types';
 
@@ -198,6 +199,10 @@ interface Props {
   baseUrl?: string | null
   /** 自定义请求函数 */
   request?: unknown
+  /** 提示语言：zh-CN / en，随请求携带 lang 与后端联动 */
+  locale?: string | null
+  /** 自定义提示文案（按消息键覆盖语言默认值） */
+  messages?: Partial<CaptchaMessages> | null
   /** 验证图片宽度（px） */
   width?: number | null
   /** 验证图片高度（px） */
@@ -275,6 +280,8 @@ const emit = defineEmits<{
 }>();
 
 const opts = useCaptchaOptions(props);
+// 让浮动面板内的验证组件自动继承 locale / messages / 自定义文案
+provide(CaptchaOptionsKey, opts);
 const open = ref(false);
 const refreshKey = ref(0);
 

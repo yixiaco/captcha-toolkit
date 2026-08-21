@@ -6,6 +6,8 @@ export interface RequestOptions {
   method?: 'GET' | 'POST'
   query?: Record<string, unknown>
   json?: unknown
+  /** 自定义请求头（如 Accept-Language） */
+  headers?: Record<string, string>
 }
 
 /** 宿主可替换的请求函数，兼容 fetch 风格 */
@@ -124,7 +126,7 @@ async function attachDeviceFingerprint(
  */
 export async function defaultRequest(
   url: string,
-  { method = 'GET', query, json }: RequestOptions = {},
+  { method = 'GET', query, json, headers }: RequestOptions = {},
 ): Promise<any> {
   let target = url;
   if (query) {
@@ -141,7 +143,10 @@ export async function defaultRequest(
   }
   const response = await fetch(target, {
     method,
-    headers: json ? { 'Content-Type': 'application/json' } : undefined,
+    headers: {
+      ...(json ? { 'Content-Type': 'application/json' } : {}),
+      ...headers,
+    },
     body: json ? JSON.stringify(json) : undefined,
   });
   if (!response.ok) {
@@ -156,22 +161,37 @@ export async function defaultRequest(
 export function createCaptchaApi({
   baseUrl = '/api/captcha',
   request = defaultRequest,
+  locale,
 }: {
   baseUrl?: string
   request?: RequestFunction | null
+  /** 提示语言：随请求携带 lang，与后端多语言联动 */
+  locale?: string
 } = {}): CaptchaApi {
   // request 可能被上层配置显式传成 null，统一回退到默认实现
   const requestFn = request || defaultRequest;
+  /** 后端消息语言：通过 Accept-Language 请求头传递 */
+  const acceptLanguage = locale
+    ? (locale.toLowerCase().startsWith('en') ? 'en' : 'zh-CN')
+    : undefined;
   return {
     /** 获取验证码 */
     async getCaptcha<T = Record<string, unknown>>(params = {}): Promise<CaptchaChallenge<T>> {
       const query = await attachDeviceFingerprint(params);
-      return requestFn(baseUrl, { method: 'GET', query });
+      return requestFn(baseUrl, {
+        method: 'GET',
+        query,
+        headers: acceptLanguage ? { 'Accept-Language': acceptLanguage } : undefined,
+      });
     },
     /** 提交答案 */
     async verify(payload) {
       const json = await attachDeviceFingerprint(payload);
-      return requestFn(`${baseUrl}/verify`, { method: 'POST', json });
+      return requestFn(`${baseUrl}/verify`, {
+        method: 'POST',
+        json,
+        headers: acceptLanguage ? { 'Accept-Language': acceptLanguage } : undefined,
+      });
     },
     /** 查询后端支持的类型与形状（通用前端可用它动态渲染） */
     getTypes() {

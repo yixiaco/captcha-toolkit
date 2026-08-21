@@ -30,8 +30,14 @@ import {
   CaptchaOptionsKey,
   defaultCaptchaOptions,
   provideCaptchaOptions,
+  resolveProvidedCaptchaOptions,
 } from './options';
 import type { CaptchaOptions } from './options';
+import {
+  defaultMessagesFor,
+  resolveCaptchaMessages,
+} from './i18n';
+import type { CaptchaLocale, CaptchaMessages } from './i18n';
 import type { CaptchaMode, CaptchaStatus, ClientType } from './types';
 import './style.css';
 
@@ -50,6 +56,9 @@ export {
   getShapeOptions,
   registerShape,
   provideCaptchaOptions,
+  resolveProvidedCaptchaOptions,
+  defaultMessagesFor,
+  resolveCaptchaMessages,
   defaultCaptchaOptions,
   CaptchaOptionsKey,
 };
@@ -70,6 +79,8 @@ export type {
   ShapeConfig,
   ShapeMap,
   CaptchaOptions,
+  CaptchaLocale,
+  CaptchaMessages,
   CaptchaMode,
   CaptchaStatus,
   ClientType,
@@ -77,7 +88,7 @@ export type {
 
 const CaptchaToolkit = {
   install(app: App, options: Partial<CaptchaOptions> = {}) {
-    app.provide(CaptchaOptionsKey, { ...defaultCaptchaOptions, ...options });
+    app.provide(CaptchaOptionsKey, resolveProvidedCaptchaOptions(options));
   },
 };
 
