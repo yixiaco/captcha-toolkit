@@ -16,6 +16,22 @@ export const PUZZLE_SHAPES: ShapeMap = {
   heart: { label: '爱心' },
   moon: { label: '月亮' },
   hexagon: { label: '六边形' },
+  bat: { label: '蝙蝠' },
+  elephant: { label: '大象' },
+  dolphin: { label: '海豚' },
+  butterfly: { label: '蝴蝶' },
+  whale: { label: '鲸鱼' },
+  owl: { label: '猫头鹰' },
+  bird: { label: '鸟' },
+  frog: { label: '青蛙' },
+  bear: { label: '熊' },
+  duck: { label: '鸭子' },
+  eagle: { label: '鹰' },
+  fish: { label: '鱼' },
+  pig: { label: '猪' },
+  airplane: { label: '飞机' },
+  fire: { label: '火热' },
+  school: { label: '学校' },
 };
 
 /** 注册自定义形状（key 需与后端 shape 名称一致） */

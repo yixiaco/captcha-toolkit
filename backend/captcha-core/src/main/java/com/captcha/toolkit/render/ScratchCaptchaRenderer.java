@@ -30,7 +30,10 @@ public class ScratchCaptchaRenderer {
 
     /** 可埋入的图形（排除 classic 拼图块外观，避免与滑块混淆） */
     private static final List<String> SCRATCH_SHAPES = List.of(
-            "leaf", "triangle", "circle", "diamond", "star", "heart", "moon", "hexagon");
+            "leaf", "triangle", "circle", "diamond", "star", "heart", "moon", "hexagon",
+            "bat", "elephant", "dolphin", "butterfly", "whale", "owl", "bird",
+            "frog", "bear", "duck", "eagle", "fish", "pig",
+            "airplane", "fire", "school");
 
     /** 刮刮乐渲染配置 */
     private final ScratchConfig options;

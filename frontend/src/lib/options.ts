@@ -247,5 +247,16 @@ export function useCaptchaOptions(
     { deep: true },
   );
 
+  // 其他 props（如 shapes / width / debug 等）运行时变化时同样重建配置
+  watch(
+    () => rawProps,
+    () => {
+      const next = buildMerged();
+      Object.assign(merged, next);
+      merged.api = buildApi(next);
+    },
+    { deep: true },
+  );
+
   return merged;
 }

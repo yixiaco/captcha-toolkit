@@ -38,6 +38,22 @@ captcha:
       - heart
       - moon
       - hexagon
+      - bat
+      - elephant
+      - dolphin
+      - butterfly
+      - whale
+      - owl
+      - bird
+      - frog
+      - bear
+      - duck
+      - eagle
+      - fish
+      - pig
+      - airplane
+      - fire
+      - school
     piece-size-ratio: 0.10714285714285714
     margin: 10
     render-scale: 2

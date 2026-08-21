@@ -108,4 +108,24 @@ class PuzzleShapesTest {
         assertTrue(ratio > 0.1 && ratio < 0.7,
                 "树叶面积占比应合理（非空也非整块），实际 ratio=" + ratio);
     }
+
+    @Test
+    void allShapesFitInBoxWithoutDegenerating() {
+        for (PuzzleShape shape : PuzzleShapes.all()) {
+            Path2D path = shape.create(0, 0, 100);
+            Rectangle2D bounds = path.getBounds2D();
+            if ("classic".equals(shape.getName())) {
+                // classic 是带外凸圆弧的拼图块，允许少量越界
+                assertTrue(bounds.getMinX() >= -20 && bounds.getMinY() >= -20
+                                && bounds.getMaxX() <= 120 && bounds.getMaxY() <= 120,
+                        shape.getName() + " 边界应在允许范围内: " + bounds);
+            } else {
+                assertTrue(bounds.getMinX() >= -0.01 && bounds.getMinY() >= -0.01
+                                && bounds.getMaxX() <= 100.01 && bounds.getMaxY() <= 100.01,
+                        shape.getName() + " 应完整位于方块内: " + bounds);
+            }
+            assertTrue(bounds.getWidth() > 0 && bounds.getHeight() > 0,
+                    shape.getName() + " 不应是空或退化路径: " + bounds);
+        }
+    }
 }

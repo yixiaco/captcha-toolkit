@@ -3,6 +3,8 @@ package com.captcha.toolkit.util;
 import java.awt.geom.Path2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 轻量 SVG 路径解析器。
@@ -27,7 +29,8 @@ public final class SvgPathParser {
      */
     public static Path2D parse(String d) {
         List<String> tokens = tokenize(d);
-        Path2D path = new Path2D.Double();
+        // 多个闭合子路径（如外轮廓 + 内镂空）用 EVEN_ODD 规则，嵌套区域自动抠洞
+        Path2D path = new Path2D.Double(Path2D.WIND_EVEN_ODD);
         Cursor cursor = new Cursor();
         int i = 0;
         char current = 0;
@@ -168,6 +171,152 @@ public final class SvgPathParser {
         }
         return path;
     }
+
+    /**
+     * 从完整 SVG 中提取“最外围的闭合轮廓”。
+     *
+     * <p>图标经常是“外轮廓闭合路径 + 内部未闭合线条/门窗 rect”的组合，
+     * 这里解析所有 path/rect/circle/ellipse/polygon 元素，只保留闭合轮廓，
+     * 并按填充面积取最大者，从而忽略内部细节。</p>
+     *
+     * @param svg SVG 文档文本
+     * @return 最外围闭合轮廓；找不到闭合轮廓时抛出 {@link IllegalArgumentException}
+     */
+    public static Path2D outermostContour(String svg) {
+        List<Path2D> contours = new ArrayList<>();
+        Matcher pathMatcher = Pattern.compile(
+                "<path\\b[^>]*\\bd\\s*=\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE)
+                .matcher(svg);
+        while (pathMatcher.find()) {
+            String d = pathMatcher.group(1);
+            if (!d.matches("(?s).*[Zz].*")) {
+                continue;
+            }
+            contours.add(parse(d));
+        }
+        contours.addAll(parseRects(svg));
+        contours.addAll(parseCircles(svg));
+        contours.addAll(parseEllipses(svg));
+        contours.addAll(parsePolygons(svg));
+
+        if (contours.isEmpty()) {
+            throw new IllegalArgumentException("SVG 中没有闭合轮廓");
+        }
+        Path2D largest = null;
+        double largestBoundsArea = -1;
+        for (Path2D contour : contours) {
+            java.awt.geom.Rectangle2D bounds = contour.getBounds2D();
+            double boundsArea = bounds.getWidth() * bounds.getHeight();
+            if (boundsArea > largestBoundsArea) {
+                largestBoundsArea = boundsArea;
+                largest = contour;
+            }
+        }
+        return largest;
+    }
+
+    /** 解析 <rect> 元素为闭合矩形 */
+    private static List<Path2D> parseRects(String svg) {
+        List<Path2D> rects = new ArrayList<>();
+        Matcher matcher = Pattern.compile(
+                "<rect\\b([^>]*)>", Pattern.CASE_INSENSITIVE).matcher(svg);
+        while (matcher.find()) {
+            double x = attr(matcher.group(1), "x", 0);
+            double y = attr(matcher.group(1), "y", 0);
+            double width = attr(matcher.group(1), "width", Double.NaN);
+            double height = attr(matcher.group(1), "height", Double.NaN);
+            if (Double.isNaN(width) || Double.isNaN(height) || width <= 0 || height <= 0) {
+                continue;
+            }
+            Path2D rect = new Path2D.Double(Path2D.WIND_EVEN_ODD);
+            rect.moveTo(x, y);
+            rect.lineTo(x + width, y);
+            rect.lineTo(x + width, y + height);
+            rect.lineTo(x, y + height);
+            rect.closePath();
+            rects.add(rect);
+        }
+        return rects;
+    }
+
+    /** 解析 <circle> 元素为闭合圆 */
+    private static List<Path2D> parseCircles(String svg) {
+        List<Path2D> circles = new ArrayList<>();
+        Matcher matcher = Pattern.compile(
+                "<circle\\b([^>]*)>", Pattern.CASE_INSENSITIVE).matcher(svg);
+        while (matcher.find()) {
+            double cx = attr(matcher.group(1), "cx", 0);
+            double cy = attr(matcher.group(1), "cy", 0);
+            double r = attr(matcher.group(1), "r", Double.NaN);
+            if (Double.isNaN(r) || r <= 0) {
+                continue;
+            }
+            Path2D circle = new Path2D.Double(Path2D.WIND_EVEN_ODD);
+            circle.append(new java.awt.geom.Ellipse2D.Double(
+                    cx - r, cy - r, r * 2, r * 2), false);
+            circles.add(circle);
+        }
+        return circles;
+    }
+
+    /** 解析 <ellipse> 元素为闭合椭圆 */
+    private static List<Path2D> parseEllipses(String svg) {
+        List<Path2D> ellipses = new ArrayList<>();
+        Matcher matcher = Pattern.compile(
+                "<ellipse\\b([^>]*)>", Pattern.CASE_INSENSITIVE).matcher(svg);
+        while (matcher.find()) {
+            double cx = attr(matcher.group(1), "cx", 0);
+            double cy = attr(matcher.group(1), "cy", 0);
+            double rx = attr(matcher.group(1), "rx", Double.NaN);
+            double ry = attr(matcher.group(1), "ry", Double.NaN);
+            if (Double.isNaN(rx) || Double.isNaN(ry) || rx <= 0 || ry <= 0) {
+                continue;
+            }
+            Path2D ellipse = new Path2D.Double(Path2D.WIND_EVEN_ODD);
+            ellipse.append(new java.awt.geom.Ellipse2D.Double(
+                    cx - rx, cy - ry, rx * 2, ry * 2), false);
+            ellipses.add(ellipse);
+        }
+        return ellipses;
+    }
+
+    /** 解析 <polygon> 元素为闭合多边形 */
+    private static List<Path2D> parsePolygons(String svg) {
+        List<Path2D> polygons = new ArrayList<>();
+        Matcher matcher = Pattern.compile(
+                "<polygon\\b[^>]*\\bpoints\\s*=\\s*\"([^\"]+)\"",
+                Pattern.CASE_INSENSITIVE).matcher(svg);
+        while (matcher.find()) {
+            String[] parts = matcher.group(1).trim().split("[,\\s]+");
+            if (parts.length < 6) {
+                continue;
+            }
+            Path2D polygon = new Path2D.Double(Path2D.WIND_EVEN_ODD);
+            polygon.moveTo(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]));
+            for (int i = 2; i + 1 < parts.length; i += 2) {
+                polygon.lineTo(Double.parseDouble(parts[i]), Double.parseDouble(parts[i + 1]));
+            }
+            polygon.closePath();
+            polygons.add(polygon);
+        }
+        return polygons;
+    }
+
+    /** 读取元素属性值；缺失或非法时返回默认值 */
+    private static double attr(String element, String name, double defaultValue) {
+        Matcher matcher = Pattern.compile(
+                "\\b" + name + "\\s*=\\s*\"([^\"]+)\"", Pattern.CASE_INSENSITIVE)
+                .matcher(element);
+        if (!matcher.find()) {
+            return defaultValue;
+        }
+        try {
+            return Double.parseDouble(matcher.group(1));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
 
     /** 解析过程中的当前点与平滑控制点状态 */
     private static final class Cursor {

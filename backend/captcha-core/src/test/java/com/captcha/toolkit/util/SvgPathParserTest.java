@@ -2,8 +2,11 @@ package com.captcha.toolkit.util;
 
 import org.junit.jupiter.api.Test;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -68,6 +71,57 @@ class SvgPathParserTest {
         assertTrue(bounds.getWidth() > 20 && bounds.getHeight() > 20,
                 "月亮路径不应是空或退化路径: " + bounds);
     }
+
+    @Test
+    void rendersMultipleClosedSubpathsWithHole() {
+        // 外方块 + 内方块：两个闭合子路径，even-odd 规则下内部应镂空
+        Path2D path = SvgPathParser.parse(
+                "M0 0H40V40H0Z M10 10H30V30H10Z");
+        Rectangle2D bounds = path.getBounds2D();
+        assertEquals(0, bounds.getMinX(), 1e-9);
+        assertEquals(40, bounds.getMaxX(), 1e-9);
+
+        BufferedImage image = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fill(path);
+        g.dispose();
+
+        // 外框区域有内容，中心内方块为透明镂空
+        assertTrue(((image.getRGB(2, 20) >>> 24) & 0xFF) > 0, "外框应被填充");
+        assertEquals(0, (image.getRGB(20, 20) >>> 24) & 0xFF, "内方块应镂空");
+    }
+
+    @Test
+    void outermostContourIgnoresInnerDetails() {
+        String circleHouseSvg =
+                "<svg viewBox=\"0 0 48 48\">"
+                        + "<path d=\"M44 23H4C4 23 14.5 17 19 12C23.5 7 24.5 4 24.5 4"
+                        + "C24.5 4 25.5 7 30 12C34.5 17 44 23 44 23Z\"/>"
+                        + "<rect x=\"8\" y=\"31\" width=\"32\" height=\"13\"/>"
+                        + "<rect x=\"13\" y=\"23\" width=\"22\" height=\"8\"/>"
+                        + "</svg>";
+        Path2D contour = SvgPathParser.outermostContour(circleHouseSvg);
+        Rectangle2D bounds = contour.getBounds2D();
+        // 最外围轮廓是外拱：x 4~44、y 4~23
+        assertTrue(bounds.getMinX() >= 3.99 && bounds.getMinY() >= 3.99
+                && bounds.getMaxX() <= 44.01 && bounds.getMaxY() <= 23.01,
+                "应取最外围闭合轮廓: " + bounds);
+        // 包围盒面积应大于内部门窗矩形，确保没有选中内部细节
+        assertTrue(bounds.getWidth() * bounds.getHeight() > 416,
+                "最外围轮廓包围盒应大于内部矩形: " + bounds);
+    }
+
+    @Test
+    void outermostContourRejectsOpenOnlySvg() {
+        try {
+            SvgPathParser.outermostContour("<path d=\"M4 4L40 4\"/>");
+            throw new AssertionError("应抛出 IllegalArgumentException");
+        } catch (IllegalArgumentException expected) {
+            // 预期行为
+        }
+    }
+
 
     /** 与 Leaf.svg 一致的路径数据（供解析回归测试复用） */
     static final class LeafPath {

@@ -306,6 +306,7 @@
       :mode="captchaMode"
       :locale="demoLocale"
       :shape="shapeFromUrl"
+      :shapes="demoShapes"
       :debug="isDev"
       :brand-text="'Captcha Toolkit'"
       :slogan-text="'通用行为验证组件'"
@@ -326,6 +327,7 @@ const account = ref('');
 const password = ref('');
 const captchaVisible = ref(false);
 const captchaMode = ref<'slider' | 'click' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile'>('slider');
+const demoShapes = ref<string[]>([]);
 const demoLocale = ref<'zh-CN' | 'en'>('zh-CN');
 const demoLocales: Array<{ key: 'zh-CN' | 'en'; label: string }> = [
   { key: 'zh-CN', label: '中文' },
@@ -367,6 +369,15 @@ function resetVerified() {
 
 // 支持 URL 参数直接打开指定验证方式：?captcha=slider|click|random，滑块可追加 &shape=...
 onMounted(() => {
+  // 形状选择器以后端下发的可用形状为准，新增图形无需改前端默认列表
+  fetch('/api/captcha/types')
+    .then((res) => res.json())
+    .then((data: { shapes?: { slider?: string[] } }) => {
+      demoShapes.value = data.shapes?.slider || [];
+    })
+    .catch(() => {
+      demoShapes.value = [];
+    });
   const params = new URLSearchParams(location.search);
   const modeParam = params.get('captcha');
   const shapeParam = params.get('shape');
