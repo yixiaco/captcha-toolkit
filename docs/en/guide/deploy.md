@@ -30,7 +30,7 @@ Output goes to `docs/.vitepress/dist`.
 Set Settings → Pages → Source to **GitHub Actions**.
 
 ::: warning Base path
-`docs/.vitepress/config.mjs` uses `base: '/captcha_codex/'` to match the repository name.
+`docs/.vitepress/config.mjs` uses `base: '/captcha-toolkit/'` to match the repository name.
 Change it to `/` when deploying to a custom domain.
 :::
 

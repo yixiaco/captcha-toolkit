@@ -35,8 +35,8 @@ npm run build
 使用前需在仓库 Settings → Pages 中把 Source 设为 **GitHub Actions**。
 
 ::: warning 站点路径
-`docs/.vitepress/config.mjs` 中的 `base` 默认为 `/captcha_codex/`，
-与 GitHub 仓库名一致；部署到自定义域名时改为 `/`。
+`docs/.vitepress/config.mjs` 中的 `base` 为 `/captcha-toolkit/`，
+需与 GitHub 仓库名保持一致；部署到自定义域名时改为 `/`。
 :::
 
 ## 项目部署建议

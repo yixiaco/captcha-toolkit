@@ -90,8 +90,8 @@ const enSidebar = [
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  // GitHub Pages 项目站点按仓库名部署；部署到自定义域名时改成 /
-  base: '/captcha_codex/',
+  // GitHub Pages 项目站点按仓库名部署；当前仓库为 captcha-toolkit，部署到自定义域名时改成 /
+  base: '/captcha-toolkit/',
   ignoreDeadLinks: true,
   lastUpdated: true,
   markdown: {
