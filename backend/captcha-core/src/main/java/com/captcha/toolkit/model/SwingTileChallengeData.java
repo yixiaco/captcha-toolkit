@@ -1,5 +1,7 @@
 package com.captcha.toolkit.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.List;
 
 /**
@@ -13,6 +15,7 @@ import java.util.List;
  * @param debugT          调试：真凹槽在路径上的位置（0~1，仅 debug 模式返回）
  * @param debugFakeTargets 调试：假凹槽中心坐标（仅 debug 模式返回）
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record SwingTileChallengeData(
         List<PointVo> path,
         Double startRotation,

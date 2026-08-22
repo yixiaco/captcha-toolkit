@@ -42,7 +42,6 @@ GET /api/captcha?type=slider&shape=classic&debug=1
   "width": 340,
   "height": 190,
   "data": {
-    "shape": "classic",
     "pieceOffsetX": 8,
     "debugX": 168
   }
@@ -54,7 +53,7 @@ GET /api/captcha?type=slider&shape=classic&debug=1
 
 | 类型 | `data` 字段 | 说明 |
 | --- | --- | --- |
-| `slider` | `shape` / `pieceOffsetX` / `debugX` | 拼图形状、拼图块留白、调试答案 x |
+| `slider` | `pieceOffsetX` / `debugX` | 拼图块留白、调试答案 x（拼图形状仅在服务端会话保存，不下发） |
 | `click` | `promptImage` / `targetCount` / `debugTargets` | 提示词整图（透明背景）、目标字数、调试目标坐标 |
 | `rotate` | `debugAngle` | 调试答案角度（度） |
 | `angle` | `discSize`，调试 `debugAngle` | 圆形图直径（像素）、调试答案角度（度，0~360） |
@@ -63,7 +62,8 @@ GET /api/captcha?type=slider&shape=classic&debug=1
 | `slide-curve` | `endpoints` / `amplitude` / `shape`，调试 `debugSwing` / `debugFakeTargets` | 前端绘制摆动曲线所需参数、调试摆动答案与假凹槽坐标 |
 | `swing-tile` | `path` / `startRotation` / `endRotation` / `swingAmplitude` / `pieceSize`，调试 `debugT` / `debugFakeTargets` | 贝塞尔路径与摆动参数、调试真凹槽位置与假凹槽坐标 |
 
-调试字段仅在 `debug=1` 且引擎开启 `debug-enabled` 时返回。
+调试模式只能由后端 `debug-enabled` 开启；前端的 `debug=1` 只是透传的请求参数，
+调试字段仅在两者同时满足时返回，前端无法单独通过传参拿到答案。
 
 ### 校验答案
 

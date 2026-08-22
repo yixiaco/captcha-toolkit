@@ -1,5 +1,6 @@
 package com.captcha.toolkit.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.Map;
  * @param <T> 类型特定化数据（如 {@link SliderChallengeData} / {@link ClickChallengeData}）
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CaptchaChallenge<T> {
 
     /** 验证码会话 id，前端提交答案时原样带回 */

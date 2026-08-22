@@ -1,5 +1,7 @@
 package com.captcha.toolkit.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.List;
 
 /**
@@ -10,6 +12,7 @@ import java.util.List;
  * @param debugTargets    调试：目标坐标（仅 debug 模式返回）
  * @param debugFakeTargets 调试：假目标坐标（预留，仅 debug 模式返回）
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record ClickChallengeData(
         String promptImage,
         Integer targetCount,

@@ -259,15 +259,17 @@ public class CaptchaEngine {
         if (generator == null) {
             throw new CaptchaException("不支持的验证码类型: " + type);
         }
-        // 拼图形状只在前后端都处于 debug 模式时允许显式指定，否则由后端随机决定
+        // debug 是否真正生效由引擎配置决定：debug-enabled 关闭时，
+        // 即使调用方传入 debug=true，也不能返回任何答案/形状信息
+        boolean effectiveDebug = debug && debugEnabled;
         Map<String, String> effectiveParams = params == null
                 ? new java.util.LinkedHashMap<>()
                 : new java.util.LinkedHashMap<>(params);
-        if (!(debug && debugEnabled)) {
+        if (!effectiveDebug) {
             effectiveParams.remove("shape");
         }
         GenerateRequest request = new GenerateRequest(
-                UUID.randomUUID().toString(), effectiveParams, debug, deviceFingerprint);
+                UUID.randomUUID().toString(), effectiveParams, effectiveDebug, deviceFingerprint);
         GeneratedCaptcha<?> generated = generator.generate(request);
         store.put(generated.getSession());
 
@@ -284,7 +286,10 @@ public class CaptchaEngine {
         challenge.setWidth(generated.getWidth());
         challenge.setHeight(generated.getHeight());
         challenge.setData(generated.getData());
-        challenge.setMetadata(generated.getMetadata());
+        // 只有扩展元数据非空才下发，避免向前端暴露空的 metadata 对象
+        if (!generated.getMetadata().isEmpty()) {
+            challenge.setMetadata(generated.getMetadata());
+        }
         return challenge;
     }
 

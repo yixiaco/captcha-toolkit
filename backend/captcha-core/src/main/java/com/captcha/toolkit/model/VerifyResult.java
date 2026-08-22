@@ -1,5 +1,6 @@
 package com.captcha.toolkit.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.captcha.toolkit.i18n.MessageProvider;
 import lombok.Data;
 
@@ -9,6 +10,7 @@ import java.util.Locale;
  * 验证结果（面向调用方/前端的响应模型）。
  */
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VerifyResult {
 
     /** 校验是否成功 */

@@ -24,6 +24,7 @@ import com.captcha.toolkit.shape.PuzzleShapeRegistry;
 import com.captcha.toolkit.store.InMemoryCaptchaSessionStore;
 import com.captcha.toolkit.type.CaptchaType;
 import com.captcha.toolkit.word.WordFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -43,6 +45,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 测试环境把最短耗时置 0，避免真实等待。
  */
 class CaptchaEngineTest {
+
+    /** 最近一次引擎使用的会话存储，测试可通过会话读取服务端形状 */
+    private InMemoryCaptchaSessionStore sessionStore;
 
     private CaptchaEngine newEngine() {
         CaptchaConfig config = new CaptchaConfig();
@@ -58,7 +63,8 @@ class CaptchaEngineTest {
         CaptchaImageCodec codec = new DataUriImageCodec();
         FallbackBackgroundProvider background = new FallbackBackgroundProvider(
                 List.of(new SceneBackgroundProvider()));
-        return CaptchaEngine.of(config, new InMemoryCaptchaSessionStore(), codec,
+        sessionStore = new InMemoryCaptchaSessionStore();
+        return CaptchaEngine.of(config, sessionStore, codec,
                 List.of(), background);
     }
 
@@ -393,7 +399,7 @@ class CaptchaEngineTest {
         for (int i = 0; i < 12; i++) {
             CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
                     Map.of("shape", "random"), true);
-            shapes.add(sliderData(challenge).shape());
+            shapes.add(sliderShape(challenge));
         }
         assertTrue(shapes.size() > 1, "shape=random 应出现多种形状: " + shapes);
     }
@@ -404,7 +410,7 @@ class CaptchaEngineTest {
         CaptchaEngine debugEngine = newEngine();
         CaptchaChallenge explicit = debugEngine.create(CaptchaType.SLIDER,
                 Map.of("shape", "classic"), true);
-        assertEquals("classic", sliderData(explicit).shape());
+        assertEquals("classic", sliderShape(explicit));
 
         // 仅前端 debug、后端未开启 debug：形状由后端随机决定，忽略前端指定
         CaptchaConfig config = new CaptchaConfig();
@@ -412,17 +418,112 @@ class CaptchaEngineTest {
         config.getSlider().setMinElapsedMs(0);
         BackgroundProvider background = new FallbackBackgroundProvider(
                 List.of(new SceneBackgroundProvider()));
+        InMemoryCaptchaSessionStore nonDebugStore = new InMemoryCaptchaSessionStore();
         CaptchaEngine nonDebugEngine = CaptchaEngine.of(config,
-                new InMemoryCaptchaSessionStore(), new DataUriImageCodec(),
+                nonDebugStore, new DataUriImageCodec(),
                 List.of(), background);
         Set<String> shapes = new HashSet<>();
         for (int i = 0; i < 12; i++) {
             CaptchaChallenge challenge = nonDebugEngine.create(CaptchaType.SLIDER,
                     Map.of("shape", "classic"), true);
-            shapes.add(sliderData(challenge).shape());
+            shapes.add(sliderShape(nonDebugStore, challenge));
         }
         assertTrue(shapes.size() > 1,
                 "后端非 debug 时应忽略前端指定形状: " + shapes);
+    }
+
+    @Test
+    void disabledDebugNeverExposesAnswerFieldsEvenWhenRequested() {
+        // 引擎关闭 debug-enabled 时，即使调用方传 debug=true，
+        // 所有类型都不能返回答案/提示字段
+        CaptchaConfig config = new CaptchaConfig();
+        config.setDebugEnabled(false);
+        config.getSlider().setMinElapsedMs(0);
+        config.getClick().setMinElapsedMs(0);
+        config.getRotate().setMinElapsedMs(0);
+        config.getAngle().setMinElapsedMs(0);
+        config.getScratch().setMinElapsedMs(0);
+        config.getCurve().setMinElapsedMs(0);
+        config.getSlideCurve().setMinElapsedMs(0);
+        config.getSwingTile().setMinElapsedMs(0);
+        CaptchaEngine engine = CaptchaEngine.of(config, new InMemoryCaptchaSessionStore(),
+                new DataUriImageCodec(), List.of(),
+                new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())));
+
+        CaptchaChallenge<?> slider = engine.create(CaptchaType.SLIDER, Map.of(), true);
+        assertNull(sliderData(slider).debugX());
+        assertNull(sliderData(slider).debugFakeTargets());
+
+        CaptchaChallenge<?> click = engine.create(CaptchaType.CLICK, Map.of(), true);
+        assertNull(clickData(click).debugTargets());
+        assertNull(clickData(click).debugFakeTargets());
+
+        CaptchaChallenge<?> rotate = engine.create(CaptchaType.ROTATE, Map.of(), true);
+        assertNull(rotateData(rotate).debugAngle());
+
+        CaptchaChallenge<?> angle = engine.create(CaptchaType.ANGLE, Map.of(), true);
+        assertNull(angleData(angle).debugAngle());
+
+        CaptchaChallenge<?> scratch = engine.create(CaptchaType.SCRATCH, Map.of(), true);
+        assertNull(scratchData(scratch).debugX());
+        assertNull(scratchData(scratch).debugTargets());
+        assertNull(scratchData(scratch).debugPatterns());
+
+        CaptchaChallenge<?> curve = engine.create(CaptchaType.CURVE, Map.of(), true);
+        assertNull(curveData(curve).debugCurve());
+
+        CaptchaChallenge<?> slideCurve = engine.create(CaptchaType.SLIDE_CURVE, Map.of(), true);
+        assertNull(slideCurveData(slideCurve).debugSwing());
+        assertNull(slideCurveData(slideCurve).debugFakeTargets());
+
+        CaptchaChallenge<?> swingTile = engine.create(CaptchaType.SWING_TILE, Map.of(), true);
+        assertNull(swingTileData(swingTile).debugT());
+        assertNull(swingTileData(swingTile).debugFakeTargets());
+    }
+
+    @Test
+    void nonDebugRequestNeverExposesAnswerFields() {
+        // 前端未传 debug=1：即使引擎开启了 debug-enabled，也不返回答案字段
+        CaptchaEngine engine = newEngine();
+
+        CaptchaChallenge<?> slider = engine.create(CaptchaType.SLIDER, Map.of(), false);
+        assertNull(sliderData(slider).debugX());
+
+        CaptchaChallenge<?> click = engine.create(CaptchaType.CLICK, Map.of(), false);
+        assertNull(clickData(click).debugTargets());
+
+        CaptchaChallenge<?> rotate = engine.create(CaptchaType.ROTATE, Map.of(), false);
+        assertNull(rotateData(rotate).debugAngle());
+
+        CaptchaChallenge<?> angle = engine.create(CaptchaType.ANGLE, Map.of(), false);
+        assertNull(angleData(angle).debugAngle());
+
+        CaptchaChallenge<?> scratch = engine.create(CaptchaType.SCRATCH, Map.of(), false);
+        assertNull(scratchData(scratch).debugX());
+
+        CaptchaChallenge<?> curve = engine.create(CaptchaType.CURVE, Map.of(), false);
+        assertNull(curveData(curve).debugCurve());
+
+        CaptchaChallenge<?> slideCurve = engine.create(CaptchaType.SLIDE_CURVE, Map.of(), false);
+        assertNull(slideCurveData(slideCurve).debugSwing());
+
+        CaptchaChallenge<?> swingTile = engine.create(CaptchaType.SWING_TILE, Map.of(), false);
+        assertNull(swingTileData(swingTile).debugT());
+    }
+
+    @Test
+    void nonDebugResponseJsonOmitsNullDebugFields() throws Exception {
+        // 非 debug 下发序列化后不应出现任何 debug 键（空值也不能保留）
+        CaptchaEngine engine = newEngine();
+        ObjectMapper mapper = new ObjectMapper();
+        List<CaptchaType> types = List.of(CaptchaType.SLIDER, CaptchaType.CLICK,
+                CaptchaType.ROTATE, CaptchaType.ANGLE, CaptchaType.SCRATCH,
+                CaptchaType.CURVE, CaptchaType.SLIDE_CURVE, CaptchaType.SWING_TILE);
+        for (CaptchaType type : types) {
+            CaptchaChallenge<?> challenge = engine.create(type, Map.of(), false);
+            String json = mapper.writeValueAsString(challenge);
+            assertFalse(json.contains("\"debug"), type + " 非 debug 响应不应包含 debug 键: " + json);
+        }
     }
 
     @Test
@@ -601,6 +702,17 @@ class CaptchaEngineTest {
     /** 读取滑块类型特定化载荷 */
     private static SliderChallengeData sliderData(CaptchaChallenge<?> challenge) {
         return (SliderChallengeData) challenge.getData();
+    }
+
+    /** 读取服务端会话中保存的拼图形状（不下发给前端） */
+    private String sliderShape(CaptchaChallenge<?> challenge) {
+        return sliderShape(sessionStore, challenge);
+    }
+
+    /** 从指定会话存储读取拼图形状（服务端内部信息，不通过下发载荷暴露） */
+    private static String sliderShape(InMemoryCaptchaSessionStore store,
+                                      CaptchaChallenge<?> challenge) {
+        return store.get(challenge.getId()).getShape();
     }
 
     /** 读取点选类型特定化载荷 */

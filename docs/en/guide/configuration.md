@@ -8,7 +8,7 @@ All settings live under `captcha.*` and are bound by Spring Boot.
 | --- | --- | --- |
 | `enabled` | Register HTTP endpoints | `true` |
 | `api-prefix` | API prefix | `/api/captcha` |
-| `debug-enabled` | Allow debug answers | `false` |
+| `debug-enabled` | Allow debug answers (the only switch; the frontend debug flag cannot enable it alone) | `false` |
 | `ticket-expire-seconds` | Ticket TTL (s) | `120` |
 | `locale` | Default message language (e.g. `zh_CN` / `en`) | `zh_CN` |
 

@@ -110,7 +110,6 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator<SliderChall
         result.setWidth(renderer.getWidth());
         result.setHeight(renderer.getHeight());
         result.setData(new SliderChallengeData(
-                shape,
                 renderer.getPieceOffsetX(),
                 request.isDebug() ? renderer.getX() : null,
                 request.isDebug() ? renderer.getFakeTargets().stream()

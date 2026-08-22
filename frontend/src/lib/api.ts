@@ -21,8 +21,6 @@ export interface ChallengePoint {
 
 /** 滑块拼图类型特定化载荷 */
 export interface SliderChallengeData {
-  /** 拼图形状名 */
-  shape?: string
   /** 拼图块内部左侧留白 */
   pieceOffsetX?: number
   /** 调试：滑块答案 x */

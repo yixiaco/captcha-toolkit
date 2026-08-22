@@ -1,5 +1,7 @@
 package com.captcha.toolkit.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.List;
 
 /**
@@ -11,6 +13,7 @@ import java.util.List;
  * @param debugTargets 调试：目标图案在 debugPatterns 中的下标
  * @param debugPatterns 调试：全部图案（形状 + 归一化中心坐标），仅 debug 模式返回
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record ScratchChallengeData(
         String promptImage,
         Integer targetCount,
@@ -25,6 +28,7 @@ public record ScratchChallengeData(
      * @param x     归一化中心横坐标
      * @param y     归一化中心纵坐标
      */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record ScratchDebugPattern(String shape, double x, double y) {
     }
 }

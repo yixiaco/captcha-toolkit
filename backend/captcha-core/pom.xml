@@ -21,10 +21,21 @@
             <artifactId>filters</artifactId>
             <version>${jhlabs.version}</version>
         </dependency>
+        <!-- Jackson 序列化注解：控制下发载荷在非 debug 模式下省略 null 调试字段 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
         <!-- 模型校验注解（@NotNull/@NotBlank），由 Starter 引入实现，核心不依赖 Spring -->
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+        <!-- 测试：验证 JSON 序列化时省略 null 调试字段 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>test</scope>
         </dependency>
         <!-- Lombok：减少配置类 getter/setter 样板代码 -->
         <dependency>

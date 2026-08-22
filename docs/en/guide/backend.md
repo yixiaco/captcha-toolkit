@@ -40,7 +40,6 @@ Example response (debug mode includes the answer):
   "width": 340,
   "height": 190,
   "data": {
-    "shape": "classic",
     "pieceOffsetX": 8,
     "debugX": 168
   }
@@ -53,7 +52,7 @@ challenge model:
 
 | Type | `data` fields | Description |
 | --- | --- | --- |
-| `slider` | `shape` / `pieceOffsetX` / `debugX` | Shape, piece offset, debug answer x |
+| `slider` | `pieceOffsetX` / `debugX` | Piece offset, debug answer x (shape stays server-side in the session and is not returned) |
 | `click` | `promptImage` / `targetCount` / `debugTargets` | Single transparent prompt image, target character count, debug target coordinates |
 | `rotate` | `debugAngle` | Debug answer angle (degrees) |
 | `angle` | `discSize`, debug `debugAngle` | Disc diameter (px), debug answer angle (degrees, 0~360) |
@@ -62,7 +61,9 @@ challenge model:
 | `slide-curve` | `endpoints` / `amplitude` / `shape`, debug `debugSwing` / `debugFakeTargets` | Swing curve rendering params, debug swing answer and fake grooves |
 | `swing-tile` | `path` / `startRotation` / `endRotation` / `swingAmplitude` / `pieceSize`, debug `debugT` / `debugFakeTargets` | Bézier path and swing params, debug answer position and fake grooves |
 
-Debug fields are only returned when `debug=1` and `debug-enabled` is on.
+Debug mode can only be enabled by the backend `debug-enabled` setting; the frontend
+`debug=1` parameter is only a pass-through request flag. Debug fields are returned only
+when both are satisfied, so the frontend cannot obtain answers by passing the flag alone.
 
 ### Verify Answers
 
