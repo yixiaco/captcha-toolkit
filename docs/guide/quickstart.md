@@ -46,6 +46,7 @@ npm run build:lib    # 构建组件库（含 .d.ts 类型声明）
 
 - `http://localhost:5173/?captcha=slider` 滑块拼图
 - `http://localhost:5173/?captcha=click` 文字点选
+- `http://localhost:5173/?captcha=click-shape` 图形点选
 - `http://localhost:5173/?captcha=rotate` 图片旋转
 - `http://localhost:5173/?captcha=angle` 角度验证
 - `http://localhost:5173/?captcha=scratch` 刮刮乐
@@ -65,7 +66,7 @@ curl "http://localhost:18080/api/captcha/types?debug=1"
 返回后端支持的类型与滑块形状：
 
 ```json
-{"types":["angle","click","curve","rotate","scratch","slide-curve","slider","swing-tile"],"shapes":{"slider":[{"name":"classic","label":"经典"},{"name":"leaf","label":"叶子"},...],"swing-tile":[{"name":"classic","label":"经典"},...]}}
+{"types":["angle","click","click-shape","curve","rotate","scratch","slide-curve","slider","swing-tile"],"shapes":{"slider":[{"name":"classic","label":"经典"},{"name":"leaf","label":"叶子"},...],"swing-tile":[{"name":"classic","label":"经典"},...]}}
 
 不带 `debug=1` 时 `shapes` 各类型均为空列表，避免把可用图形白名单暴露给前端。
 ```

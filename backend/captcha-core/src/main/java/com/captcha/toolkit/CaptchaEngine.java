@@ -6,6 +6,7 @@ import com.captcha.toolkit.exception.RateLimitExceededException;
 import com.captcha.toolkit.factory.CaptchaFactory;
 import com.captcha.toolkit.factory.AngleCaptchaFactory;
 import com.captcha.toolkit.factory.ClickCaptchaFactory;
+import com.captcha.toolkit.factory.ClickShapeCaptchaFactory;
 import com.captcha.toolkit.factory.CurveCaptchaFactory;
 import com.captcha.toolkit.factory.RotateCaptchaFactory;
 import com.captcha.toolkit.factory.ScratchCaptchaFactory;
@@ -167,6 +168,8 @@ public class CaptchaEngine {
                 new SliderCaptchaFactory(sliderBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.CLICK,
                 new ClickCaptchaFactory(clickBackgroundProvider, wordFactory).create(config));
+        map.putIfAbsent(CaptchaType.SHAPE_CLICK,
+                new ClickShapeCaptchaFactory(clickBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.ROTATE,
                 new RotateCaptchaFactory(sliderBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.ANGLE,
@@ -226,6 +229,7 @@ public class CaptchaEngine {
         }
         map.putIfAbsent(CaptchaType.SLIDER, new SliderCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.CLICK, new ClickCaptchaFactory().create(config));
+        map.putIfAbsent(CaptchaType.SHAPE_CLICK, new ClickShapeCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.ROTATE, new RotateCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.ANGLE, new AngleCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.SCRATCH, new ScratchCaptchaFactory().create(config));

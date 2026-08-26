@@ -54,6 +54,7 @@ class CaptchaEngineTest {
         config.setDebugEnabled(true);
         config.getSlider().setMinElapsedMs(0);
         config.getClick().setMinElapsedMs(0);
+        config.getClickShape().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
         config.getAngle().setMinElapsedMs(0);
         config.getScratch().setMinElapsedMs(0);
@@ -74,6 +75,7 @@ class CaptchaEngineTest {
         config.setDebugEnabled(true);
         config.getSlider().setMinElapsedMs(0);
         config.getClick().setMinElapsedMs(0);
+        config.getClickShape().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
         config.getAngle().setMinElapsedMs(0);
         config.getScratch().setMinElapsedMs(0);
@@ -257,10 +259,33 @@ class CaptchaEngineTest {
     }
 
     @Test
+    void clickShapeGeneratesAndVerifies() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SHAPE_CLICK, Map.of(), true);
+
+        assertNotNull(challenge.getImage1());
+        assertEquals("click-shape", challenge.getType());
+        ClickChallengeData data = clickData(challenge);
+        assertNotNull(data.promptImage());
+        assertTrue(data.promptImage().startsWith("data:image/png;base64,"));
+        assertEquals(3, data.targetCount());
+        assertEquals(3, data.debugTargets().size());
+
+        List<NormalizedPoint> points = data.debugTargets().stream()
+                .map(p -> new NormalizedPoint(
+                        p.getX() / (double) challenge.getWidth(),
+                        p.getY() / (double) challenge.getHeight()))
+                .toList();
+        VerifyResult ok = engine.verify(challenge.getId(), CaptchaAnswer.click(points));
+        assertTrue(ok.isSuccess(), ok.getMessage());
+    }
+
+    @Test
     void clickUsesConfiguredTargetText() {
         CaptchaConfig config = new CaptchaConfig();
         config.setDebugEnabled(true);
         config.getClick().setMinElapsedMs(0);
+        config.getClickShape().setMinElapsedMs(0);
         config.getClick().setTargetText(List.of("星巴克", "麦当劳"));
         CaptchaEngine engine = CaptchaEngine.of(config,
                 new InMemoryCaptchaSessionStore(), new DataUriImageCodec(),
@@ -286,6 +311,7 @@ class CaptchaEngineTest {
         CaptchaConfig config = new CaptchaConfig();
         config.setDebugEnabled(true);
         config.getClick().setMinElapsedMs(0);
+        config.getClickShape().setMinElapsedMs(0);
         BackgroundProvider background = new FallbackBackgroundProvider(
                 List.of(new SceneBackgroundProvider()));
         // 宿主可注入任意词组工厂（例如从数据库/远程接口动态取词组）
@@ -460,6 +486,7 @@ class CaptchaEngineTest {
         config.setDebugEnabled(false);
         config.getSlider().setMinElapsedMs(0);
         config.getClick().setMinElapsedMs(0);
+        config.getClickShape().setMinElapsedMs(0);
         config.getRotate().setMinElapsedMs(0);
         config.getAngle().setMinElapsedMs(0);
         config.getScratch().setMinElapsedMs(0);
@@ -477,6 +504,10 @@ class CaptchaEngineTest {
         CaptchaChallenge<?> click = engine.create(CaptchaType.CLICK, Map.of(), true);
         assertNull(clickData(click).debugTargets());
         assertNull(clickData(click).debugFakeTargets());
+
+        CaptchaChallenge<?> clickShape = engine.create(CaptchaType.SHAPE_CLICK, Map.of(), true);
+        assertNull(clickData(clickShape).debugTargets());
+        assertNull(clickData(clickShape).debugFakeTargets());
 
         CaptchaChallenge<?> rotate = engine.create(CaptchaType.ROTATE, Map.of(), true);
         assertNull(rotateData(rotate).debugAngle());
@@ -512,6 +543,9 @@ class CaptchaEngineTest {
         CaptchaChallenge<?> click = engine.create(CaptchaType.CLICK, Map.of(), false);
         assertNull(clickData(click).debugTargets());
 
+        CaptchaChallenge<?> clickShape = engine.create(CaptchaType.SHAPE_CLICK, Map.of(), false);
+        assertNull(clickData(clickShape).debugTargets());
+
         CaptchaChallenge<?> rotate = engine.create(CaptchaType.ROTATE, Map.of(), false);
         assertNull(rotateData(rotate).debugAngle());
 
@@ -537,6 +571,7 @@ class CaptchaEngineTest {
         CaptchaEngine engine = newEngine();
         ObjectMapper mapper = new ObjectMapper();
         List<CaptchaType> types = List.of(CaptchaType.SLIDER, CaptchaType.CLICK,
+                CaptchaType.SHAPE_CLICK,
                 CaptchaType.ROTATE, CaptchaType.ANGLE, CaptchaType.SCRATCH,
                 CaptchaType.CURVE, CaptchaType.SLIDE_CURVE, CaptchaType.SWING_TILE);
         for (CaptchaType type : types) {

@@ -1,11 +1,11 @@
 package com.captcha.toolkit.render;
 
-import com.captcha.toolkit.config.ScratchConfig;
+import com.captcha.toolkit.config.ClickShapeConfig;
 import com.captcha.toolkit.model.ScratchPatternSpec;
-import com.captcha.toolkit.shape.ShapeGeometry;
-import com.captcha.toolkit.shape.ShapePart;
 import com.captcha.toolkit.shape.PuzzleShape;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
+import com.captcha.toolkit.shape.ShapeGeometry;
+import com.captcha.toolkit.shape.ShapePart;
 import com.captcha.toolkit.util.ImageUtil;
 
 import java.awt.BasicStroke;
@@ -17,58 +17,53 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * 刮刮乐渲染器。
+ * 图形点选渲染器：把指定图形列表按顺序埋入背景图，目标图形保持点击顺序。
  *
- * <p>在背景图上随机埋入多个图形：颜色从图案中心背景采样，
- * 再做低明度差、小幅色相偏移与半透明叠加，让机器视觉难以直接分割；
- * 图形位置只保存在会话里，不下发给前端。</p>
+ * <p>图形颜色从背景采样并做低对比调整（与刮刮乐同一套融合逻辑），
+ * 机器视觉难以直接分割；图形坐标只保存在会话里，不下发给前端。</p>
  */
-public class ScratchCaptchaRenderer {
+public class ClickShapeCaptchaRenderer {
 
-    /** 刮刮乐渲染配置 */
-    private final ScratchConfig options;
+    /** 图形点选配置 */
+    private final ClickShapeConfig options;
 
     /** 图形形状注册表 */
     private final PuzzleShapeRegistry registry;
 
-    /** 可埋入的图形名称（排除 classic 拼图块外观，避免与滑块混淆） */
-    private final List<String> scratchShapes;
-
     /** 随机数源 */
     private final Random random = new Random();
 
-    /**
-     * @param options 刮刮乐配置
-     */
-    public ScratchCaptchaRenderer(ScratchConfig options) {
-        this(options, new PuzzleShapeRegistry());
-    }
-
-    /**
-     * @param options  刮刮乐配置
-     * @param registry 图形形状注册表（支持宿主自定义形状）
-     */
-    public ScratchCaptchaRenderer(ScratchConfig options, PuzzleShapeRegistry registry) {
-        this.options = options;
-        this.registry = registry;
-        this.scratchShapes = registry.names().stream()
-                .filter(name -> !"classic".equals(name))
-                .toList();
-    }
-
-    /** 渲染结果：背景图 + 全部图案布局 */
-    public record ScratchRenderResult(
+    /** 渲染结果：背景图 + 图形布局（顺序与传入的 shapes 一致） */
+    public record RenderResult(
             BufferedImage background,
             List<ScratchPatternSpec> patterns) {
     }
 
     /**
-     * 渲染刮刮乐背景图，并返回图案布局。
-     *
-     * @param raw 原始背景图
-     * @return 背景图与图案布局
+     * @param options 图形点选配置
      */
-    public ScratchRenderResult render(BufferedImage raw) {
+    public ClickShapeCaptchaRenderer(ClickShapeConfig options) {
+        this(options, new PuzzleShapeRegistry());
+    }
+
+    /**
+     * @param options  图形点选配置
+     * @param registry 图形形状注册表（支持宿主自定义形状）
+     */
+    public ClickShapeCaptchaRenderer(ClickShapeConfig options,
+                                     PuzzleShapeRegistry registry) {
+        this.options = options;
+        this.registry = registry;
+    }
+
+    /**
+     * 渲染图形点选背景图，并返回图形布局。
+     *
+     * @param raw    原始背景图
+     * @param shapes 全部图形名称（目标在前、按点击顺序，干扰在后）
+     * @return 背景图与图形布局
+     */
+    public RenderResult render(BufferedImage raw, List<String> shapes) {
         int w = options.getWidth();
         int h = options.getHeight();
         int scale = Math.max(1, options.getRenderScale());
@@ -78,9 +73,9 @@ public class ScratchCaptchaRenderer {
 
         double maxSizePx = w * options.getPatternSizeRatio();
         double minDist = maxSizePx + options.getPatternMinGap();
-        List<ScratchPatternSpec> specs = new ArrayList<>();
-        for (int i = 0; i < options.getPatternCount(); i++) {
-            specs.add(placePattern(specs, maxSizePx, minDist));
+        List<ScratchPatternSpec> specs = new ArrayList<>(shapes.size());
+        for (String shape : shapes) {
+            specs.add(place(shape, specs, maxSizePx, minDist));
         }
 
         BufferedImage out = new BufferedImage(hiW, hiH, BufferedImage.TYPE_INT_RGB);
@@ -91,30 +86,19 @@ public class ScratchCaptchaRenderer {
             drawPattern(g, thumb, spec, scale);
         }
         g.dispose();
-        return new ScratchRenderResult(ImageUtil.scaleDown(out, w, h), specs);
+        return new RenderResult(ImageUtil.scaleDown(out, w, h), specs);
     }
 
-    /**
-     * 渲染提示词图片：把需要刮出的图形横向排成一行（透明背景），
-     * 前端直接显示这张图即可，无需知道图形名称。
-     *
-     * @param shapes 需要刮出的图形名称（按提示顺序）
-     * @return 透明背景的提示词图片
-     */
-    public BufferedImage renderPromptImage(List<String> shapes) {
-        return ShapePromptRenderer.render(registry, shapes);
-    }
-
-    /** 随机放置一个图案：与已有图案保持最小中心间距 */
-    private ScratchPatternSpec placePattern(
-            List<ScratchPatternSpec> existing, double maxSizePx, double minDist) {
+    /** 随机放置一个图形：与已有图形保持最小中心间距 */
+    private ScratchPatternSpec place(
+            String shape, List<ScratchPatternSpec> existing,
+            double maxSizePx, double minDist) {
         int w = options.getWidth();
         int h = options.getHeight();
         double sizeRatio = options.getPatternSizeMinRatio() + random.nextDouble()
                 * (options.getPatternSizeRatio() - options.getPatternSizeMinRatio());
         double sizePx = w * sizeRatio;
         double half = sizePx / 2;
-        String shape = scratchShapes.get(random.nextInt(scratchShapes.size()));
         for (int attempt = 0; attempt < 300; attempt++) {
             double cx = half + random.nextDouble() * Math.max(1, w - sizePx);
             double cy = half + random.nextDouble() * Math.max(1, h - sizePx);
@@ -129,17 +113,17 @@ public class ScratchCaptchaRenderer {
             }
             if (!tooClose) {
                 return new ScratchPatternSpec(shape, cx / w, cy / h,
-                        sizeRatio, random.nextDouble() * 40 - 20);
+                        sizeRatio, random.nextDouble() * options.getRotationMax() * 2
+                                - options.getRotationMax());
             }
         }
-        // 兜底：按序号网格摆放，保证图案总数不缩水
+        // 兜底：按序号网格摆放，保证图形总数不缩水
         double cx = half + (existing.size() % 3) * (w - sizePx) / 2.0;
         double cy = half + (existing.size() / 3) * (h - sizePx) / 2.0;
-        return new ScratchPatternSpec(shape, cx / w, cy / h,
-                sizeRatio, 0);
+        return new ScratchPatternSpec(shape, cx / w, cy / h, sizeRatio, 0);
     }
 
-    /** 绘制单个图案：背景采样颜色 + 低对比填充 + 极淡描边 */
+    /** 绘制单个图形：背景采样颜色 + 低对比填充 + 极淡描边 */
     private void drawPattern(Graphics2D g, BufferedImage thumb,
                              ScratchPatternSpec spec, int scale) {
         int w = options.getWidth();

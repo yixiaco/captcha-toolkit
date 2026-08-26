@@ -82,6 +82,17 @@ captcha:
     dash-count: 12
     dot-count: 160
     occlusion-probability: 0.6
+  click-shape:
+    target-count: 3
+    distractor-count: 5
+    pattern-size-ratio: 0.13
+    pattern-size-min-ratio: 0.06
+    pattern-min-gap: 40
+    rotation-max: 20
+    tolerance: 18
+    min-elapsed-ms: 800
+    expire-seconds: 300
+    render-scale: 2
   rotate:
     width: 340
     height: 190

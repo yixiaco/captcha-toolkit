@@ -25,6 +25,8 @@ export interface CaptchaMessages {
   curveTip: string
   /** 点选提示前缀文案 */
   promptPrefix: string
+  /** 图形点选提示前缀文案 */
+  clickShapeTip: string
   /** 图片加载中提示文案 */
   loadingText: string
   /** 加载失败提示文案 */
@@ -55,6 +57,7 @@ export const CAPTCHA_MESSAGE_KEYS: Array<keyof CaptchaMessages> = [
   'swingTileTip',
   'curveTip',
   'promptPrefix',
+  'clickShapeTip',
   'loadingText',
   'loadFailedText',
   'retryText',
@@ -77,6 +80,7 @@ export const zhCNMessages: CaptchaMessages = {
   swingTileTip: '按住滑块，沿曲线把图块摆入目标凹槽',
   curveTip: '请按住并沿虚线从绿色起点描绘到红色终点',
   promptPrefix: '请依次点选',
+  clickShapeTip: '请依次点选图形',
   loadingText: '图片加载中...',
   loadFailedText: '加载失败，请重试',
   retryText: '重试',
@@ -99,6 +103,7 @@ export const enMessages: CaptchaMessages = {
   swingTileTip: 'Press and drag to move the tile along the curve into the groove',
   curveTip: 'Press and trace the dashed curve from the green start to the red end',
   promptPrefix: 'Please click in order',
+  clickShapeTip: 'Please click the shapes in order',
   loadingText: 'Loading image...',
   loadFailedText: 'Failed to load. Please retry.',
   retryText: 'Retry',

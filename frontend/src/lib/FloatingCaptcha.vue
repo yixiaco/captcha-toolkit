@@ -129,6 +129,24 @@
               @success="onCaptchaSuccess"
               @fail="onCaptchaFail"
             />
+            <ClickCaptcha
+              v-else-if="mode === 'click-shape'"
+              :key="`click-shape-${refreshKey}`"
+              :api="opts.api"
+              :width="opts.width"
+              :height="opts.height"
+              type="click-shape"
+              :prompt-prefix="opts.clickShapeTip"
+              :mark-min-distance="opts.markMinDistance"
+              :debug="opts.debug"
+              :auto-reload="opts.autoReload"
+              :loading-text="opts.loadingText"
+              :load-failed-text="opts.loadFailedText"
+              :retry-text="opts.retryText"
+              :image-alt="opts.imageAlt"
+              @success="onCaptchaSuccess"
+              @fail="onCaptchaFail"
+            />
             <RotateCaptcha
               v-else-if="mode === 'rotate'"
               :key="`rotate-${refreshKey}`"

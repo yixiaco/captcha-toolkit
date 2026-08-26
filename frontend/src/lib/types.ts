@@ -1,7 +1,7 @@
 // 组件库共享类型
 
 /** 验证码类型 */
-export type CaptchaMode = 'slider' | 'click' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile'
+export type CaptchaMode = 'slider' | 'click' | 'click-shape' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile'
 
 /** 客户端类型：决定后端行为校验画像 */
 export type ClientType = 'web' | 'h5' | 'mini_program'

@@ -94,6 +94,8 @@ interface Props {
   promptPrefix?: string | null
   /** 点选去重最小间距（px） */
   markMinDistance?: number | null
+  /** 验证码类型编码（click / click-shape） */
+  type?: string | null
   /** 是否请求调试答案 */
   debug?: boolean | null
   /** 失败后自动刷新 */
@@ -176,7 +178,7 @@ async function loadCaptcha() {
   pressAccepted = false;
   try {
     const res = await opts.api.getCaptcha<ClickChallengeData>({
-      type: 'click',
+      type: props.type || 'click',
       debug: opts.debug ? '1' : undefined,
     });
     captchaId.value = res.id;
@@ -266,7 +268,7 @@ async function submit() {
     const rect = imageRef.value!.getBoundingClientRect();
     const res = await opts.api.verify({
       id: captchaId.value,
-      type: 'click',
+      type: props.type || 'click',
       points: marks.value.map((m) => ({
         x: m.x / rect.width,
         y: m.y / rect.height,

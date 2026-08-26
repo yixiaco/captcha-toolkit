@@ -116,6 +116,36 @@
           点选文字
         </button>
         <button
+          class="mode-btn click-shape"
+          @click="open('click-shape')"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle
+              cx="8"
+              cy="8"
+              r="3"
+            />
+            <rect
+              x="13"
+              y="13"
+              width="7"
+              height="7"
+              rx="1.5"
+            />
+            <path d="M17 4l3 3M17 7l3-3" />
+          </svg>
+          点选图形
+        </button>
+        <button
           class="mode-btn rotate"
           @click="open('rotate')"
         >
@@ -327,7 +357,7 @@ const isDev = import.meta.env.DEV;
 const account = ref('');
 const password = ref('');
 const captchaVisible = ref(false);
-const captchaMode = ref<'slider' | 'click' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile'>('slider');
+const captchaMode = ref<'slider' | 'click' | 'click-shape' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile'>('slider');
 const demoShapes = ref<string[]>([]);
 const demoShapeLabels = ref<Record<string, string>>({});
 const demoLocale = ref<'zh-CN' | 'en'>('zh-CN');
@@ -339,7 +369,7 @@ const shapeFromUrl = ref('');
 const verified = ref(false);
 const verifiedTicket = ref('');
 
-function open(mode: 'slider' | 'click' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile') {
+function open(mode: 'slider' | 'click' | 'click-shape' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile') {
   resetVerified();
   captchaMode.value = mode;
   captchaVisible.value = true;
@@ -348,7 +378,7 @@ function open(mode: 'slider' | 'click' | 'rotate' | 'angle' | 'scratch' | 'curve
 }
 
 function openRandom() {
-  const modes = ['slider', 'click', 'rotate', 'angle', 'scratch', 'curve', 'slide-curve', 'swing-tile'] as const;
+  const modes = ['slider', 'click', 'click-shape', 'rotate', 'angle', 'scratch', 'curve', 'slide-curve', 'swing-tile'] as const;
   open(modes[Math.floor(Math.random() * modes.length)]);
 }
 
@@ -398,7 +428,7 @@ onMounted(() => {
     && shapeParam) {
     shapeFromUrl.value = shapeParam;
   }
-  if (modeParam === 'slider' || modeParam === 'click'
+  if (modeParam === 'slider' || modeParam === 'click' || modeParam === 'click-shape'
     || modeParam === 'rotate' || modeParam === 'curve'
     || modeParam === 'angle' || modeParam === 'scratch'
     || modeParam === 'slide-curve'

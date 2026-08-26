@@ -5,6 +5,7 @@ import com.captcha.toolkit.config.AngleConfig;
 import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.CaptchaConfig;
 import com.captcha.toolkit.config.ClickConfig;
+import com.captcha.toolkit.config.ClickShapeConfig;
 import com.captcha.toolkit.config.CurveConfig;
 import com.captcha.toolkit.config.RateLimitConfig;
 import com.captcha.toolkit.config.RotateConfig;
@@ -71,6 +72,9 @@ public class CaptchaProperties {
     /** 点选验证码配置 */
     private ClickConfig click = new ClickConfig();
 
+    /** 图形点选验证码配置 */
+    private ClickShapeConfig clickShape = new ClickShapeConfig();
+
     /** 图片旋转验证码配置 */
     private RotateConfig rotate = new RotateConfig();
 
@@ -108,6 +112,7 @@ public class CaptchaProperties {
         config.setTicketExpireSeconds(ticketExpireSeconds);
         BeanUtils.copyProperties(slider, config.getSlider());
         BeanUtils.copyProperties(click, config.getClick());
+        BeanUtils.copyProperties(clickShape, config.getClickShape());
         BeanUtils.copyProperties(rotate, config.getRotate());
         BeanUtils.copyProperties(angle, config.getAngle());
         BeanUtils.copyProperties(scratch, config.getScratch());

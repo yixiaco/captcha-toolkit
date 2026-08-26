@@ -14,6 +14,9 @@ public enum CaptchaType {
     /** 文字点选 */
     CLICK("click"),
 
+    /** 图形点选 */
+    SHAPE_CLICK("click-shape"),
+
     /** 图片旋转 */
     ROTATE("rotate"),
 

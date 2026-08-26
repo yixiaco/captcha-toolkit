@@ -20,6 +20,7 @@
     :is="inlineComponent"
     v-else
     v-bind="attrs"
+    :type="inlineClickType"
     @success="onSuccess"
     @fail="onFail"
     @error="onError"
@@ -66,7 +67,7 @@ const emit = defineEmits<{
 const attrs = useAttrs();
 
 const inlineComponent = computed<Component>(() => {
-  if (props.mode === 'click') return ClickCaptcha;
+  if (props.mode === 'click' || props.mode === 'click-shape') return ClickCaptcha;
   if (props.mode === 'rotate') return RotateCaptcha;
   if (props.mode === 'angle') return AngleCaptcha;
   if (props.mode === 'scratch') return ScratchCaptcha;
@@ -74,6 +75,13 @@ const inlineComponent = computed<Component>(() => {
   if (props.mode === 'slide-curve') return SlideCurveCaptcha;
   if (props.mode === 'swing-tile') return SwingTileCaptcha;
   return SliderCaptcha;
+});
+
+/** 点选类组件的类型编码（文字点选 / 图形点选） */
+const inlineClickType = computed<string | undefined>(() => {
+  if (props.mode === 'click-shape') return 'click-shape';
+  if (props.mode === 'click') return 'click';
+  return undefined;
 });
 
 function onSuccess(result: VerifyResult) {

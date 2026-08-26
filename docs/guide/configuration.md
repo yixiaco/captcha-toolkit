@@ -102,6 +102,24 @@
 | `click.min-spacing` | 字符最小间距 | `40` |
 | `click.char-pool` | 汉字字库 | CJK 常用汉字 |
 
+## 图形点选
+
+与文字点选同一套点选规则：背景图埋入内置图形（目标 + 干扰），
+用户按提示依次点击目标图形；图形颜色从背景采样做低对比融合。
+
+| 配置 | 说明 | 默认值 |
+| --- | --- | --- |
+| `click-shape.width` / `height` | 图片尺寸 | `340` / `190` |
+| `click-shape.target-count` | 目标图形数量 | `3` |
+| `click-shape.distractor-count` | 干扰图形数量 | `5` |
+| `click-shape.tolerance` | 点击容差（服务端像素） | `18` |
+| `click-shape.pattern-size-ratio` | 图形尺寸占图宽比例上限 | `0.13` |
+| `click-shape.pattern-size-min-ratio` | 图形尺寸占图宽比例下限 | `0.06` |
+| `click-shape.pattern-min-gap` | 图形最小中心间距 | `40` |
+| `click-shape.rotation-max` | 图形最大旋转角度（度） | `20` |
+| `click-shape.render-scale` | 抗锯齿超采样倍数 | `2` |
+| `click-shape.min-elapsed-ms` | 最短验证耗时 | `800` |
+
 ## 旋转
 
 | 配置 | 说明 | 默认值 |

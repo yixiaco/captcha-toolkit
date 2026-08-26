@@ -20,7 +20,7 @@
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `{prefix}?type=slider\|click\|rotate\|angle\|scratch\|curve\|slide-curve\|swing-tile` | 下发验证码 |
+| GET | `{prefix}?type=slider\|click\|click-shape\|rotate\|angle\|scratch\|curve\|slide-curve\|swing-tile` | 下发验证码 |
 | POST | `{prefix}/verify` | 校验答案 |
 | GET/POST | `{prefix}/ticket/verify` | 业务接口校验一次性票据 |
 | GET | `{prefix}/types?debug=1` | 查询支持的类型与形状（debug 才返回形状列表，否则为空列表） |
@@ -55,6 +55,7 @@ GET /api/captcha?type=slider&shape=classic&debug=1
 | --- | --- | --- |
 | `slider` | `pieceOffsetX` / `debugX` | 拼图块留白、调试答案 x（拼图形状仅在服务端会话保存，不下发） |
 | `click` | `promptImage` / `targetCount` / `debugTargets` | 提示词整图（透明背景）、目标字数、调试目标坐标 |
+| `click-shape` | `promptImage` / `targetCount` / `debugTargets` | 提示词整图（内置图形）、目标数量、调试目标坐标 |
 | `rotate` | `debugAngle` | 调试答案角度（度） |
 | `angle` | `discSize`，调试 `debugAngle` | 圆形图直径（像素）、调试答案角度（度，0~360） |
 | `scratch` | `promptImage` / `targetCount`，调试 `debugX` / `debugTargets` / `debugPatterns` | 提示词整图（透明背景）、目标图形数、调试答案位置与图案布局 |

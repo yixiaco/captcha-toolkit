@@ -94,6 +94,14 @@ public class CaptchaSession {
                 targets, prompt, 0, null, null, null, ttlMillis);
     }
 
+    /** 创建图形点选会话 */
+    public static CaptchaSession shapeClick(String id, int width, int height,
+                                            List<PointVo> targets, List<String> prompt,
+                                            long ttlMillis) {
+        return new CaptchaSession(id, CaptchaType.SHAPE_CLICK, null, 0, 0, width, height,
+                targets, prompt, 0, null, null, null, ttlMillis);
+    }
+
     /** 创建旋转会话 */
     public static CaptchaSession rotate(String id, int width, int height,
                                         double rotation, long ttlMillis) {

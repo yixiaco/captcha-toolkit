@@ -59,6 +59,8 @@ export interface CaptchaOptions {
   curveWidth: number
   /** 点选提示前缀文案 */
   promptPrefix: string
+  /** 图形点选提示前缀文案 */
+  clickShapeTip: string
   /** 点选去重最小间距（px），防止重复点击同一位置 */
   markMinDistance: number
   /** 客户端类型：web / h5 / mini_program，影响后端行为校验画像 */
@@ -138,6 +140,7 @@ export const defaultCaptchaOptions: CaptchaOptions = {
   curveColor: '#3b7cff',
   curveWidth: 3,
   promptPrefix: '请依次点选',
+  clickShapeTip: '请依次点选图形',
   markMinDistance: 16,
   clientType: detectClientType(),
   loadingText: '图片加载中...',

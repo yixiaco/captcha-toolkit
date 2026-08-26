@@ -5,7 +5,6 @@ import com.captcha.toolkit.behavior.BehaviorValidator;
 import com.captcha.toolkit.behavior.ClickBehaviorValidator;
 import com.captcha.toolkit.config.BehaviorConfig;
 import com.captcha.toolkit.config.ClickConfig;
-import com.captcha.toolkit.i18n.CaptchaMessages;
 import com.captcha.toolkit.i18n.MessageProvider;
 import com.captcha.toolkit.i18n.ResourceBundleMessageProvider;
 import com.captcha.toolkit.model.CaptchaAnswer;
@@ -13,9 +12,7 @@ import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.ClickChallengeData;
 import com.captcha.toolkit.model.GeneratedCaptcha;
-import com.captcha.toolkit.model.NormalizedPoint;
 import com.captcha.toolkit.model.PointVo;
-import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.image.DataUriImageCodec;
 import com.captcha.toolkit.util.CaptchaFonts;
@@ -39,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -56,7 +52,8 @@ import java.util.Random;
  *   <li>整图再做一次波浪形变，并叠加干扰线/噪点</li>
  * </ul>
  */
-public class ClickCaptchaGenerator extends AbstractCaptchaGenerator<ClickChallengeData> {
+public class ClickCaptchaGenerator
+        extends AbstractClickCaptchaGenerator<ClickChallengeData> {
 
     /** 点选配置 */
     private final ClickConfig options;
@@ -66,9 +63,6 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator<ClickChallen
 
     /** 目标词组工厂 */
     private final WordFactory wordFactory;
-    /** 点选行为轨迹校验器 */
-    private final BehaviorValidator behaviorValidator;
-
     /** 随机数源 */
     private final Random random = new Random();
 
@@ -167,11 +161,10 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator<ClickChallen
                                  WordFactory wordFactory,
                                  BehaviorValidator behaviorValidator,
                                  MessageProvider messages) {
-        super(messages);
+        super(messages, behaviorValidator);
         this.options = options;
         this.backgroundProvider = backgroundProvider;
         this.wordFactory = wordFactory;
-        this.behaviorValidator = behaviorValidator;
     }
 
     @Override
@@ -201,33 +194,13 @@ public class ClickCaptchaGenerator extends AbstractCaptchaGenerator<ClickChallen
     }
 
     @Override
-    protected VerifyResult doVerify(CaptchaSession session, CaptchaAnswer answer) {
-        List<NormalizedPoint> points = answer == null ? null : answer.getPoints();
-        if (points == null || points.size() != session.getTargets().size()) {
-            return VerifyResult.badRequest(CaptchaMessages.VERIFY_BAD_PARAM, messages);
-        }
-        Optional<String> behaviorError = behaviorValidator.validate(
-                answer.getTd(), answer, session);
-        if (behaviorError.isPresent()) {
-            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR", messages);
-        }
-        // 点选答案是归一化坐标；先换算回服务端像素再做距离校验，保持容差语义不变
-        for (int i = 0; i < points.size(); i++) {
-            NormalizedPoint actual = points.get(i);
-            PointVo expected = session.getTargets().get(i);
-            double actualX = actual.x() * session.getWidth();
-            double actualY = actual.y() * session.getHeight();
-            if (Math.hypot(actualX - expected.getX(), actualY - expected.getY())
-                    > options.getTolerance()) {
-                return VerifyResult.fail(CaptchaMessages.CLICK_WRONG, "WRONG", messages);
-            }
-        }
-        return VerifyResult.ok(CaptchaMessages.VERIFY_OK, messages);
+    protected long minElapsedMs() {
+        return options.getMinElapsedMs();
     }
 
     @Override
-    protected long minElapsedMs() {
-        return options.getMinElapsedMs();
+    protected double tolerance() {
+        return options.getTolerance();
     }
 
     /**
