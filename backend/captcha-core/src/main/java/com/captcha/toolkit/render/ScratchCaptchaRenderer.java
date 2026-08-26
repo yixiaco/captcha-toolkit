@@ -4,16 +4,17 @@ import com.jhlabs.image.InvertAlphaFilter;
 import com.jhlabs.image.ShadowFilter;
 import com.captcha.toolkit.config.ScratchConfig;
 import com.captcha.toolkit.model.ScratchPatternSpec;
+import com.captcha.toolkit.shape.ShapeGeometry;
+import com.captcha.toolkit.shape.ShapePart;
 import com.captcha.toolkit.shape.PuzzleShape;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
 import com.captcha.toolkit.util.ImageUtil;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -119,8 +120,8 @@ public class ScratchCaptchaRenderer {
             PuzzleShape shape = registry.resolve(shapes.get(i));
             double x = padding + i * (shapeSize + gap);
             double y = padding;
-            Path2D path = shape.create(x + 2, y + 2, shapeSize - 4);
-            drawShapeWithInnerShadow(g, path, new Color(9, 88, 217), 1,
+            ShapeGeometry geometry = shape.geometry(x + 2, y + 2, shapeSize - 4);
+            drawShapeWithInnerShadow(g, geometry, new Color(9, 88, 217), 1,
                     width, height, false);
         }
         g.dispose();
@@ -172,47 +173,52 @@ public class ScratchCaptchaRenderer {
         double cx = spec.x() * w * scale;
         double cy = spec.y() * h * scale;
         PuzzleShape shape = registry.resolve(spec.shape());
-        Path2D path = shape.create(cx - sizePx / 2, cy - sizePx / 2, sizePx);
-        path.transform(AffineTransform.getRotateInstance(
-                Math.toRadians(spec.rotation()), cx, cy));
+        ShapeGeometry geometry = shape.geometry(
+                cx - sizePx / 2, cy - sizePx / 2, sizePx);
+        geometry = geometry.rotated(spec.rotation(), cx, cy);
 
         Color base = sampleColor(thumb, cx, cy, Math.max(2, scale * 2));
         Color fill = blendColor(base);
-        drawShapeWithInnerShadow(g, path, fill, scale, hiW, hiH, true);
+        drawShapeWithInnerShadow(g, geometry, fill, scale, hiW, hiH, true);
+        // 纯填充图形补一圈淡描边形成微弱边缘；描边图形已有自身线宽，不再叠加
         g.setStroke(new BasicStroke(Math.max(1f, scale * 0.7f)));
         g.setColor(withAlpha(fill, 0.35f));
-        g.draw(path);
+        for (ShapePart part : geometry.parts()) {
+            if (part.filled() && !part.stroked()) {
+                g.draw(part.path());
+            }
+        }
     }
 
-    /** 绘制带内阴影的图形：填充 + alpha 反转模糊阴影裁剪在图形内部 */
+    /** 绘制带内阴影的图形：填充/描边 + alpha 反转模糊阴影裁剪在图形内部 */
     private void drawShapeWithInnerShadow(
-            Graphics2D g, Path2D path, Color fill, int scale,
+            Graphics2D g, ShapeGeometry geometry, Color fill, int scale,
             int canvasWidth, int canvasHeight, boolean whiteLayer) {
-        // 内阴影蒙版：白色图形 → alpha 反转 + 模糊，裁剪在图形内形成凹陷立体感
-        BufferedImage mask = new BufferedImage(canvasWidth, canvasHeight, BufferedImage.TYPE_INT_ARGB);
+        // 内阴影蒙版：白色图形 → alpha 反转 + 模糊，再裁剪回图形内形成凹陷立体感
+        BufferedImage mask = new BufferedImage(
+                canvasWidth, canvasHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D mg = mask.createGraphics();
-        mg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        mg.setClip(path);
-        mg.setColor(Color.WHITE);
-        mg.fill(path);
+        enableAntialias(mg);
+        ShapeRenderer.draw(mg, geometry, Color.WHITE);
         mg.dispose();
         float shadowRadius = Math.max(1f, scale * 2f);
         ShadowFilter shadowFilter = new ShadowFilter(
                 shadowRadius, 2 * scale, -1 * scale, 0.55f);
         BufferedImage innerShadow = shadowFilter.filter(
                 new InvertAlphaFilter().filter(mask, null), null);
+        // 阴影只保留在图形区域内部（多路径/描边图形同样成立）
+        Graphics2D sg = innerShadow.createGraphics();
+        sg.setComposite(AlphaComposite.DstIn);
+        sg.drawImage(mask, 0, 0, null);
+        sg.dispose();
 
-        g.setClip(path);
-        g.setColor(fill);
-        g.fill(path);
+        ShapeRenderer.draw(g, geometry, fill);
         if (whiteLayer) {
             // 白色透明层：与滑块拼图凹槽一致的浅色磨砂效果，让图形更清晰
-            g.setColor(new Color(255, 255, 255,
+            ShapeRenderer.draw(g, geometry, new Color(255, 255, 255,
                     (int) Math.round(255 * options.getHoleWhiteAlpha())));
-            g.fill(path);
         }
         g.drawImage(innerShadow, 0, 0, null);
-        g.setClip(null);
     }
 
     /** 采样图案中心附近背景的平均颜色 */

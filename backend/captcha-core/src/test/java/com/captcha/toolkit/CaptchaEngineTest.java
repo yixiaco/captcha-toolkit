@@ -176,6 +176,26 @@ class CaptchaEngineTest {
     }
 
     @Test
+    void sliderButterflyStrokedShapeGenerates() {
+        CaptchaConfig config = new CaptchaConfig();
+        config.setDebugEnabled(true);
+        config.getSlider().setMinElapsedMs(0);
+        config.getSlider().setEnabledShapes(List.of("butterfly"));
+        InMemoryCaptchaSessionStore store = new InMemoryCaptchaSessionStore();
+        CaptchaEngine engine = CaptchaEngine.of(config, store,
+                new DataUriImageCodec(), List.of(),
+                new FallbackBackgroundProvider(List.of(new SceneBackgroundProvider())));
+        CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,
+                Map.of("shape", "butterfly"), true);
+
+        // 描边线稿形状（非闭合触角）应能正常生成大图与拼图块
+        assertNotNull(challenge.getImage1());
+        assertNotNull(challenge.getImage2());
+        assertNotNull(sliderData(challenge).debugX());
+        assertEquals("butterfly", sliderShape(store, challenge));
+    }
+
+    @Test
     void sliderAcceptsNormalizedAnswer() {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER,

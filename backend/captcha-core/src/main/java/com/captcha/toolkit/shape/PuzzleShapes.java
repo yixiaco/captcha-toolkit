@@ -197,8 +197,35 @@ public final class PuzzleShapes {
 
     /** 蝴蝶 */
     public static PuzzleShape butterfly() {
-        return fromSvg("butterfly", "蝴蝶", "M5.0002 12.0003C8.66389 7.70613 19.0814 18.8191 24.0002 25C28.9191 18.8191 39.3366 7.70599 43.0002 12.0001C43.6787 12.6507 44.4427 14.877 42.0002 18C41.3217 18.9759 40.186 21.7059 41.0002 26C41.0002 27.1386 39.8852 28.9519 35.0002 27C37.3749 28.6266 41.8498 33.0962 39.0002 37C36.2864 40.4158 29.9649 44.4569 26.0002 35L24.0002 31L22.0002 35C18.0356 44.4569 11.7141 40.4158 9.00024 37C6.15071 33.0962 10.6255 28.6268 13.0001 27.0003C8.1152 28.9521 7.00011 27.1389 7.00011 26.0003C7.81438 21.7061 6.67867 18.9762 6.00012 18.0003C3.55766 14.8773 4.32174 12.6509 5.0002 12.0003Z");
+        return fromSvgGeometry("butterfly", "蝴蝶", BUTTERFLY_SVG);
     }
+
+    /**
+     * 参考 蝴蝶_butterfly.svg（viewBox 48×48）：
+     * 蝴蝶轮廓为描边闭合路径，两条触角为描边非闭合路径，线宽均为 4。
+     */
+    private static final String BUTTERFLY_SVG =
+            "<path d=\"M5.0002 12.0003C8.66389 7.70613 19.0814 18.8191 24.0002 25"
+                    + "C28.9191 18.8191 39.3366 7.70599 43.0002 12.0001"
+                    + "C43.6787 12.6507 44.4427 14.877 42.0002 18"
+                    + "C41.3217 18.9759 40.186 21.7059 41.0002 26"
+                    + "C41.0002 27.1386 39.8852 28.9519 35.0002 27"
+                    + "C37.3749 28.6266 41.8498 33.0962 39.0002 37"
+                    + "C36.2864 40.4158 29.9649 44.4569 26.0002 35"
+                    + "L24.0002 31L22.0002 35"
+                    + "C18.0356 44.4569 11.7141 40.4158 9.00024 37"
+                    + "C6.15071 33.0962 10.6255 28.6268 13.0001 27.0003"
+                    + "C8.1152 28.9521 7.00011 27.1389 7.00011 26.0003"
+                    + "C7.81438 21.7061 6.67867 18.9762 6.00012 18.0003"
+                    + "C3.55766 14.8773 4.32174 12.6509 5.0002 12.0003Z\""
+                    + " fill=\"none\" stroke=\"#333\" stroke-width=\"4\""
+                    + " stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+                    + "<path d=\"M24.0322 23C23.534 17.8642 28.9135 7 33 7\""
+                    + " stroke=\"#333\" stroke-width=\"4\""
+                    + " stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+                    + "<path d=\"M23.9678 23C24.466 17.8642 19.0865 7 15 7\""
+                    + " stroke=\"#333\" stroke-width=\"4\""
+                    + " stroke-linecap=\"round\" stroke-linejoin=\"round\"/>";
 
     /** 鲸鱼 */
     public static PuzzleShape whale() {
@@ -263,25 +290,40 @@ public final class PuzzleShapes {
     /** 从参考 SVG 路径创建内置形状（等比适配方块） */
     private static PuzzleShape fromSvg(String name, String label, String pathData) {
         Path2D template = SvgPathParser.parse(pathData);
-        return named(name, label, (x, y, size) -> {
-            Path2D path = new Path2D.Double();
-            path.append(template.getPathIterator(null), false);
-            fitToBox(path, x, y, size);
-            return path;
-        });
+        return namedGeometry(name, label, (x, y, size) -> ShapeGeometry.filled(
+                fitPath(template, x, y, size)));
     }
 
-    /** 返回全部内置形状 */
-    public static List<PuzzleShape> all() {
-        return List.of(classic(), leaf(), triangle(), circle(), diamond(), star(), heart(),
-                moon(), hexagon(),
-                bat(), elephant(), dolphin(), butterfly(), whale(), owl(), bird(),
-                frog(), bear(), duck(), eagle(), fish(), pig(),
-                airplane(), fire(), school());
+    /** 从参考 SVG 文档创建内置形状（支持多路径、非闭合线条与描边） */
+    private static PuzzleShape fromSvgGeometry(String name, String label, String svg) {
+        ShapeGeometry template = SvgPathParser.parseGeometry(svg);
+        return namedGeometry(name, label,
+                (x, y, size) -> fitGeometry(template, x, y, size));
     }
 
-    /** 包装名称、标签与绘制工厂为一个不可变形状 */
-    private static PuzzleShape named(String name, String label, ShapeFactory factory) {
+    /** 把模板路径等比缩放并居中到 (x, y, size) 方块内 */
+    private static Path2D fitPath(Path2D template, double x, double y, double size) {
+        Path2D path = new Path2D.Double();
+        path.append(template.getPathIterator(null), false);
+        fitToBox(path, x, y, size);
+        return path;
+    }
+
+    /** 把模板几何等比缩放并居中到方块内（边界已包含描边外扩，保证线条不裁切） */
+    private static ShapeGeometry fitGeometry(
+            ShapeGeometry template, double x, double y, double size) {
+        Rectangle2D bounds = template.bounds();
+        double scale = Math.min(size / bounds.getWidth(), size / bounds.getHeight());
+        ShapeGeometry scaled = template.scaled(scale);
+        Rectangle2D scaledBounds = scaled.bounds();
+        double dx = x + (size - scaledBounds.getWidth()) / 2.0 - scaledBounds.getMinX();
+        double dy = y + (size - scaledBounds.getHeight()) / 2.0 - scaledBounds.getMinY();
+        return scaled.translated(dx, dy);
+    }
+
+    /** 包装名称、标签与几何工厂为一个不可变形状 */
+    private static PuzzleShape namedGeometry(
+            String name, String label, GeometryFactory factory) {
         return new PuzzleShape() {
             @Override
             public String getName() {
@@ -294,10 +336,25 @@ public final class PuzzleShapes {
             }
 
             @Override
-            public Path2D create(double x, double y, double size) {
+            public ShapeGeometry geometry(double x, double y, double size) {
                 return factory.create(x, y, size);
             }
         };
+    }
+
+    /** 旧版路径工厂包装为纯填充几何模型 */
+    private static PuzzleShape named(String name, String label, ShapeFactory factory) {
+        return namedGeometry(name, label, (x, y, size) ->
+                ShapeGeometry.filled(factory.create(x, y, size)));
+    }
+
+    /** 返回全部内置形状 */
+    public static List<PuzzleShape> all() {
+        return List.of(classic(), leaf(), triangle(), circle(), diamond(), star(), heart(),
+                moon(), hexagon(),
+                bat(), elephant(), dolphin(), butterfly(), whale(), owl(), bird(),
+                frog(), bear(), duck(), eagle(), fish(), pig(),
+                airplane(), fire(), school());
     }
 
     /**
@@ -342,5 +399,12 @@ public final class PuzzleShapes {
 
         /** 在 (x, y) 处绘制边长为 size 的形状路径 */
         Path2D create(double x, double y, double size);
+    }
+
+    @FunctionalInterface
+    private interface GeometryFactory {
+
+        /** 在 (x, y) 处绘制边长为 size 的形状几何模型 */
+        ShapeGeometry create(double x, double y, double size);
     }
 }

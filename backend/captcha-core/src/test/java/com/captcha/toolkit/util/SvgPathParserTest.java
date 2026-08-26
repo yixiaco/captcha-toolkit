@@ -1,5 +1,6 @@
 package com.captcha.toolkit.util;
 
+import com.captcha.toolkit.shape.ShapeGeometry;
 import org.junit.jupiter.api.Test;
 
 import java.awt.Color;
@@ -122,6 +123,71 @@ class SvgPathParserTest {
         }
     }
 
+    @Test
+    void parseGeometryKeepsFillStrokeAndOpenPaths() {
+        String svg = "<svg viewBox=\"0 0 48 48\">"
+                + "<path d=\"M5 5L43 5L43 43L5 43Z\""
+                + " fill=\"none\" stroke=\"#333\" stroke-width=\"4\"/>"
+                + "<path d=\"M24 24C24 18 28 10 33 8\""
+                + " stroke=\"#333\" stroke-width=\"4\"/>"
+                + "<rect x=\"10\" y=\"10\" width=\"28\" height=\"28\"/>"
+                + "</svg>";
+
+        ShapeGeometry geometry = SvgPathParser.parseGeometry(svg);
+        assertEquals(3, geometry.parts().size());
+
+        // 显式 fill="none" + stroke：只描边不填充
+        assertTrue(geometry.parts().get(0).stroked());
+        assertTrue(!geometry.parts().get(0).filled());
+        assertEquals(4, geometry.parts().get(0).strokeWidth(), 1e-9);
+
+        // 无 Z 的路径：非闭合线条，同样是纯描边
+        assertTrue(geometry.parts().get(1).stroked());
+        assertTrue(!geometry.parts().get(1).filled());
+
+        // 无 fill/stroke 属性的元素按 SVG 规范默认填充
+        assertTrue(geometry.parts().get(2).filled());
+        assertTrue(!geometry.parts().get(2).stroked());
+
+        // 边界应包含描边宽度的一半外扩（最左 5 - 2 = 3）
+        Rectangle2D bounds = geometry.bounds();
+        assertTrue(bounds.getMinX() >= 2.99 && bounds.getMinY() >= 2.99
+                        && bounds.getMaxX() <= 45.01 && bounds.getMaxY() <= 45.01,
+                "几何边界应包含描边外扩: " + bounds);
+    }
+
+    @Test
+    void parseGeometrySupportsLineAndPolyline() {
+        String svg = "<svg>"
+                + "<line x1=\"2\" y1=\"2\" x2=\"46\" y2=\"2\""
+                + " stroke=\"#333\" stroke-width=\"3\"/>"
+                + "<polyline points=\"4,4 20,20 40,10\""
+                + " stroke=\"#333\" stroke-width=\"2\" fill=\"none\"/>"
+                + "</svg>";
+
+        ShapeGeometry geometry = SvgPathParser.parseGeometry(svg);
+        assertEquals(2, geometry.parts().size());
+        assertTrue(geometry.parts().get(0).stroked());
+        assertEquals(3, geometry.parts().get(0).strokeWidth(), 1e-9);
+        assertTrue(geometry.parts().get(1).stroked());
+        assertEquals(2, geometry.parts().get(1).strokeWidth(), 1e-9);
+    }
+
+    @Test
+    void parseGeometryParsesButterflyReference() {
+        ShapeGeometry geometry = SvgPathParser.parseGeometry(ButterflySvg.REFERENCE);
+        assertEquals(3, geometry.parts().size());
+        for (var part : geometry.parts()) {
+            assertTrue(part.stroked(), "蝴蝶各单元应为描边");
+            assertTrue(!part.filled(), "蝴蝶各单元不应填充");
+            assertEquals(4, part.strokeWidth(), 1e-9);
+        }
+        Rectangle2D bounds = geometry.bounds();
+        assertTrue(bounds.getMinX() >= 0 && bounds.getMinY() >= 0
+                        && bounds.getMaxX() <= 48.5 && bounds.getMaxY() <= 48.5,
+                "蝴蝶边界应落在 viewBox 内并包含描边外扩: " + bounds);
+    }
+
 
     /** 与 Leaf.svg 一致的路径数据（供解析回归测试复用） */
     static final class LeafPath {
@@ -158,6 +224,35 @@ class SvgPathParserTest {
                         + "z";
 
         private MoonPath() {
+        }
+    }
+
+    /** 与 蝴蝶_butterfly.svg 一致的文档数据（供解析回归测试复用） */
+    static final class ButterflySvg {
+        static final String REFERENCE =
+                "<path d=\"M5.0002 12.0003C8.66389 7.70613 19.0814 18.8191 24.0002 25"
+                        + "C28.9191 18.8191 39.3366 7.70599 43.0002 12.0001"
+                        + "C43.6787 12.6507 44.4427 14.877 42.0002 18"
+                        + "C41.3217 18.9759 40.186 21.7059 41.0002 26"
+                        + "C41.0002 27.1386 39.8852 28.9519 35.0002 27"
+                        + "C37.3749 28.6266 41.8498 33.0962 39.0002 37"
+                        + "C36.2864 40.4158 29.9649 44.4569 26.0002 35"
+                        + "L24.0002 31L22.0002 35"
+                        + "C18.0356 44.4569 11.7141 40.4158 9.00024 37"
+                        + "C6.15071 33.0962 10.6255 28.6268 13.0001 27.0003"
+                        + "C8.1152 28.9521 7.00011 27.1389 7.00011 26.0003"
+                        + "C7.81438 21.7061 6.67867 18.9762 6.00012 18.0003"
+                        + "C3.55766 14.8773 4.32174 12.6509 5.0002 12.0003Z\""
+                        + " fill=\"none\" stroke=\"#333\" stroke-width=\"4\""
+                        + " stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+                        + "<path d=\"M24.0322 23C23.534 17.8642 28.9135 7 33 7\""
+                        + " stroke=\"#333\" stroke-width=\"4\""
+                        + " stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+                        + "<path d=\"M23.9678 23C24.466 17.8642 19.0865 7 15 7\""
+                        + " stroke=\"#333\" stroke-width=\"4\""
+                        + " stroke-linecap=\"round\" stroke-linejoin=\"round\"/>";
+
+        private ButterflySvg() {
         }
     }
 }

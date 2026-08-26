@@ -2,6 +2,7 @@ package com.captcha.toolkit.render;
 
 import com.captcha.toolkit.config.SliderConfig;
 import com.captcha.toolkit.exception.CaptchaException;
+import com.captcha.toolkit.shape.ShapeGeometry;
 import com.captcha.toolkit.shape.PuzzleShape;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
 import com.captcha.toolkit.util.ImageUtil;
@@ -12,8 +13,6 @@ import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -169,26 +168,41 @@ public class SliderRenderer {
         int renderHeight = height * renderScale;
         int renderVwh = vwh * renderScale;
         PuzzleShape shape = shapeRegistry.resolve(shapeName);
-        Path2D path = shape.create(x * renderScale, y * renderScale, renderVwh);
+        ShapeGeometry geometry = shape.geometry(
+                x * renderScale, y * renderScale, renderVwh);
         BufferedImage thumbnail = ImageUtil.cover(source, renderWidth, renderHeight);
 
-        // 小图（高清画布）：拼图块 = 原图按路径裁剪
+        // 形状蒙版：填充单元 fill、描边单元按线宽 draw（保留曲线精度）
+        BufferedImage shapeMask = transparent(renderWidth, renderHeight);
+        Graphics2D mg = shapeMask.createGraphics();
+        enableAntialias(mg);
+        ShapeRenderer.draw(mg, geometry, Color.WHITE);
+        mg.dispose();
+
+        // 小图（高清画布）：拼图块 = 原图按形状蒙版裁剪（支持多条路径/描边）
         BufferedImage pieceFull = transparent(renderWidth, renderHeight);
         Graphics2D vg = pieceFull.createGraphics();
-        vg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        vg.setClip(path);
+        enableAntialias(vg);
         vg.drawImage(thumbnail, 0, 0, null);
+        vg.setComposite(AlphaComposite.DstIn);
+        vg.drawImage(shapeMask, 0, 0, null);
         vg.dispose();
 
         // 大图（高清画布）：原图 + 白色半透明缺口蒙版 + 内阴影
         BufferedImage artworkFull = transparent(renderWidth, renderHeight);
         Graphics2D g = artworkFull.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        enableAntialias(g);
         g.drawImage(thumbnail, 0, 0, null);
-        g.setClip(path);
+
+        // 白色半透明镂空层：与原实现一致，SrcAtop 叠加到背景上
+        BufferedImage holeLayer = transparent(renderWidth, renderHeight);
+        Graphics2D hg = holeLayer.createGraphics();
+        enableAntialias(hg);
+        ShapeRenderer.draw(hg, geometry,
+                new Color(255, 255, 255, clampAlpha(options.getHoleAlpha())));
+        hg.dispose();
         g.setComposite(AlphaComposite.SrcAtop);
-        g.setColor(new Color(255, 255, 255, clampAlpha(options.getHoleAlpha())));
-        g.fill(path);
+        g.drawImage(holeLayer, 0, 0, null);
 
         float radius = Math.max(1f, options.getShadowRadius()) * renderScale;
         ShadowFilter shadowFilter = new ShadowFilter(radius,
@@ -196,30 +210,47 @@ public class SliderRenderer {
                 options.getShadowOffsetY() * renderScale,
                 options.getShadowOpacity());
         BufferedImage innerShadow = shadowFilter.filter(alphaFilter.filter(pieceFull, null), null);
+        // 阴影只保留在镂空区域内部（多路径/描边图形同样成立）
+        Graphics2D sg = innerShadow.createGraphics();
+        sg.setComposite(AlphaComposite.DstIn);
+        sg.drawImage(shapeMask, 0, 0, null);
+        sg.dispose();
+        g.setComposite(AlphaComposite.SrcOver);
         g.drawImage(innerShadow, 0, 0, null);
 
         // 假目标：画成和真目标一样的白色缺口 + 内阴影，但小图里没有对应拼图块；
         // 每个假目标有独立大小与旋转（同 y 轴时保证与真目标/彼此不同）
         for (FakeTarget fake : fakeTargets) {
             int fakeRenderSize = Math.max(8, fake.size * renderScale);
-            Path2D fakePath = shape.create(fake.x * renderScale, fake.y * renderScale,
-                    fakeRenderSize);
+            ShapeGeometry fakeGeometry = shape.geometry(
+                    fake.x * renderScale, fake.y * renderScale, fakeRenderSize);
             double centerX = (fake.x + fake.size / 2.0) * renderScale;
             double centerY = (fake.y + fake.size / 2.0) * renderScale;
-            fakePath.transform(AffineTransform.getRotateInstance(
-                    Math.toRadians(fake.rotation), centerX, centerY));
-            BufferedImage fakeHoleFull = transparent(renderWidth, renderHeight);
-            Graphics2D fg = fakeHoleFull.createGraphics();
-            fg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            fg.setClip(fakePath);
-            fg.setColor(Color.WHITE);
-            fg.fill(fakePath);
-            fg.dispose();
-            BufferedImage fakeShadow = shadowFilter.filter(alphaFilter.filter(fakeHoleFull, null), null);
-            g.setClip(fakePath);
+            fakeGeometry = fakeGeometry.rotated(fake.rotation, centerX, centerY);
+
+            BufferedImage fakeMask = transparent(renderWidth, renderHeight);
+            Graphics2D fm = fakeMask.createGraphics();
+            enableAntialias(fm);
+            ShapeRenderer.draw(fm, fakeGeometry, Color.WHITE);
+            fm.dispose();
+
+            BufferedImage fakeHoleLayer = transparent(renderWidth, renderHeight);
+            Graphics2D fhg = fakeHoleLayer.createGraphics();
+            enableAntialias(fhg);
+            ShapeRenderer.draw(fhg, fakeGeometry,
+                    new Color(255, 255, 255, clampAlpha(options.getHoleAlpha())));
+            fhg.dispose();
+
+            BufferedImage fakeShadow = shadowFilter.filter(
+                    alphaFilter.filter(fakeMask, null), null);
+            Graphics2D fsg = fakeShadow.createGraphics();
+            fsg.setComposite(AlphaComposite.DstIn);
+            fsg.drawImage(fakeMask, 0, 0, null);
+            fsg.dispose();
+
             g.setComposite(AlphaComposite.SrcAtop);
-            g.setColor(new Color(255, 255, 255, clampAlpha(options.getHoleAlpha())));
-            g.fill(fakePath);
+            g.drawImage(fakeHoleLayer, 0, 0, null);
+            g.setComposite(AlphaComposite.SrcOver);
             g.drawImage(fakeShadow, 0, 0, null);
         }
         g.dispose();
@@ -228,7 +259,7 @@ public class SliderRenderer {
         artwork = ImageUtil.scaleDown(artworkFull, width, height);
 
         // 小图裁剪成竖条（拼图块 + 投影），并记录内部左侧留白
-        Rectangle2D bounds = path.getBounds2D();
+        Rectangle2D bounds = geometry.bounds();
         int pad = Math.max(1, options.getPiecePadding());
         int cropX = Math.max(0, (x - pad) * renderScale);
         int cropW = (int) Math.ceil(bounds.getWidth() / renderScale) + pad * 2;
@@ -243,6 +274,12 @@ public class SliderRenderer {
     /** 创建透明画布 */
     private BufferedImage transparent(int w, int h) {
         return new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+    }
+
+    /** 打开抗锯齿 */
+    private static void enableAntialias(Graphics2D g) {
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
     }
 
     /** 返回 [min, max] 闭区间内的随机整数 */

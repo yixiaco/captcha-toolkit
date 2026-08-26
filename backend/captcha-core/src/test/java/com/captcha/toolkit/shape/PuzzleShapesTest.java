@@ -1,13 +1,16 @@
 package com.captcha.toolkit.shape;
 
+import com.captcha.toolkit.render.ShapeRenderer;
 import org.junit.jupiter.api.Test;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -127,5 +130,50 @@ class PuzzleShapesTest {
             assertTrue(bounds.getWidth() > 0 && bounds.getHeight() > 0,
                     shape.getName() + " 不应是空或退化路径: " + bounds);
         }
+    }
+
+    @Test
+    void butterflyIsStrokedMultiPathGeometry() {
+        ShapeGeometry geometry = PuzzleShapes.butterfly().geometry(0, 0, 100);
+        assertEquals(3, geometry.parts().size());
+        for (ShapePart part : geometry.parts()) {
+            assertTrue(part.stroked(), "蝴蝶各单元应为描边绘制");
+            assertTrue(!part.filled(), "蝴蝶各单元不应填充");
+            assertTrue(part.strokeWidth() > 0, "描边宽度应大于 0");
+        }
+        // 三条路径描边宽度一致（参考 SVG stroke-width=4）
+        double firstWidth = geometry.parts().get(0).strokeWidth();
+        assertEquals(firstWidth, geometry.parts().get(1).strokeWidth(), 1e-9);
+        assertEquals(firstWidth, geometry.parts().get(2).strokeWidth(), 1e-9);
+
+        // 适配后边界应完整落在方块内（包含描边外扩）
+        Rectangle2D bounds = geometry.bounds();
+        assertTrue(bounds.getMinX() >= -0.01 && bounds.getMinY() >= -0.01
+                        && bounds.getMaxX() <= 100.01 && bounds.getMaxY() <= 100.01,
+                "蝴蝶几何应完整位于方块内: " + bounds);
+    }
+
+    @Test
+    void butterflyRendersVisibleThinStrokes() {
+        ShapeGeometry geometry = PuzzleShapes.butterfly().geometry(0, 0, 100);
+        BufferedImage image = new BufferedImage(
+                100, 100, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+        ShapeRenderer.draw(g, geometry, Color.BLACK);
+        g.dispose();
+
+        long pixels = 0;
+        for (int y = 0; y < 100; y++) {
+            for (int x = 0; x < 100; x++) {
+                if (((image.getRGB(x, y) >>> 24) & 0xFF) > 0) {
+                    pixels++;
+                }
+            }
+        }
+        // 纯描边蝴蝶：应能画出可见内容；粗描边线稿面积不为 0，也不会占满整块
+        assertTrue(pixels > 200, "蝴蝶描边应渲染出可见内容，实际像素=" + pixels);
+        assertTrue(pixels < 8000, "蝴蝶描边不应接近整块填充，实际像素=" + pixels);
     }
 }

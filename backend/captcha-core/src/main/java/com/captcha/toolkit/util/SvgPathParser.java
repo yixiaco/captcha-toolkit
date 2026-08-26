@@ -1,8 +1,12 @@
 package com.captcha.toolkit.util;
 
+import com.captcha.toolkit.shape.ShapeGeometry;
+import com.captcha.toolkit.shape.ShapePart;
+
 import java.awt.geom.Path2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -213,6 +217,189 @@ public final class SvgPathParser {
             }
         }
         return largest;
+    }
+
+    /**
+     * 从完整 SVG 文档解析为形状几何模型。
+     *
+     * <p>支持 path/rect/circle/ellipse/polygon/polyline/line 元素，
+     * 并读取每个元素的 fill / stroke / stroke-width 属性：
+     * 填充元素用 {@link ShapePart#filled}，描边元素（含非闭合线条）
+     * 用 {@link ShapePart#stroked}，同时带填充与描边的元素两者都保留。
+     * 颜色本身不属于几何模型，由渲染器决定。</p>
+     *
+     * @param svg SVG 文档文本
+     * @return 形状几何模型
+     * @throws IllegalArgumentException 当 SVG 中没有可绘制元素时
+     */
+    public static ShapeGeometry parseGeometry(String svg) {
+        List<ShapePart> parts = new ArrayList<>();
+        Matcher matcher = Pattern.compile(
+                "<(path|rect|circle|ellipse|polygon|polyline|line)\\b([^>]*)>",
+                Pattern.CASE_INSENSITIVE).matcher(svg);
+        while (matcher.find()) {
+            String tag = matcher.group(1).toLowerCase(Locale.ROOT);
+            String attrs = matcher.group(2);
+            Path2D path = geometryElement(tag, attrs);
+            if (path == null) {
+                continue;
+            }
+            ShapePart part = partFromAttributes(path, tag, attrs);
+            if (part != null) {
+                parts.add(part);
+            }
+        }
+        if (parts.isEmpty()) {
+            throw new IllegalArgumentException("SVG 中没有可绘制的图形元素");
+        }
+        return ShapeGeometry.of(parts);
+    }
+
+    /** 根据元素标签与属性构建路径；缺少必要属性时返回 null */
+    private static Path2D geometryElement(String tag, String attrs) {
+        return switch (tag) {
+            case "path" -> {
+                String d = attrText(attrs, "d");
+                yield d == null ? null : parse(d);
+            }
+            case "rect" -> buildRect(attrs);
+            case "circle" -> buildCircle(attrs);
+            case "ellipse" -> buildEllipse(attrs);
+            case "polygon" -> buildPolygon(attrs, true);
+            case "polyline" -> buildPolygon(attrs, false);
+            case "line" -> buildLine(attrs);
+            default -> null;
+        };
+    }
+
+    /** 根据 fill / stroke / stroke-width 属性生成绘制单元；完全不可见时返回 null */
+    private static ShapePart partFromAttributes(Path2D path, String tag, String attrs) {
+        String fillAttr = attrText(attrs, "fill");
+        String strokeAttr = attrText(attrs, "stroke");
+        boolean filled;
+        if (fillAttr != null) {
+            filled = !"none".equalsIgnoreCase(fillAttr);
+        } else {
+            // 闭合图形按 SVG 规范默认填充黑色；
+            // 非闭合线条按线稿语义处理为纯描边，避免隐式闭合产生填充楔形
+            filled = !isOpenElement(tag, attrs);
+        }
+        boolean stroked = strokeAttr != null && !"none".equalsIgnoreCase(strokeAttr);
+        if (!filled && !stroked) {
+            return null;
+        }
+        double strokeWidth = attr(attrs, "stroke-width", 1);
+        if (filled && stroked) {
+            return ShapePart.filledAndStroked(path, strokeWidth);
+        }
+        return filled ? ShapePart.filled(path) : ShapePart.stroked(path, strokeWidth);
+    }
+
+    /** 判断元素是否为非闭合线条（line/polyline/无 Z 的 path） */
+    private static boolean isOpenElement(String tag, String attrs) {
+        if ("line".equals(tag) || "polyline".equals(tag)) {
+            return true;
+        }
+        if ("path".equals(tag)) {
+            String d = attrText(attrs, "d");
+            return d == null || !d.matches("(?s).*[Zz].*");
+        }
+        return false;
+    }
+
+    /** 构建矩形路径；宽高缺失或非法时返回 null */
+    private static Path2D buildRect(String attrs) {
+        double x = attr(attrs, "x", 0);
+        double y = attr(attrs, "y", 0);
+        double width = attr(attrs, "width", Double.NaN);
+        double height = attr(attrs, "height", Double.NaN);
+        if (Double.isNaN(width) || Double.isNaN(height) || width <= 0 || height <= 0) {
+            return null;
+        }
+        Path2D rect = new Path2D.Double(Path2D.WIND_EVEN_ODD);
+        rect.moveTo(x, y);
+        rect.lineTo(x + width, y);
+        rect.lineTo(x + width, y + height);
+        rect.lineTo(x, y + height);
+        rect.closePath();
+        return rect;
+    }
+
+    /** 构建圆形路径；半径缺失或非法时返回 null */
+    private static Path2D buildCircle(String attrs) {
+        double cx = attr(attrs, "cx", 0);
+        double cy = attr(attrs, "cy", 0);
+        double r = attr(attrs, "r", Double.NaN);
+        if (Double.isNaN(r) || r <= 0) {
+            return null;
+        }
+        Path2D circle = new Path2D.Double(Path2D.WIND_EVEN_ODD);
+        circle.append(new java.awt.geom.Ellipse2D.Double(
+                cx - r, cy - r, r * 2, r * 2), false);
+        return circle;
+    }
+
+    /** 构建椭圆路径；半径缺失或非法时返回 null */
+    private static Path2D buildEllipse(String attrs) {
+        double cx = attr(attrs, "cx", 0);
+        double cy = attr(attrs, "cy", 0);
+        double rx = attr(attrs, "rx", Double.NaN);
+        double ry = attr(attrs, "ry", Double.NaN);
+        if (Double.isNaN(rx) || Double.isNaN(ry) || rx <= 0 || ry <= 0) {
+            return null;
+        }
+        Path2D ellipse = new Path2D.Double(Path2D.WIND_EVEN_ODD);
+        ellipse.append(new java.awt.geom.Ellipse2D.Double(
+                cx - rx, cy - ry, rx * 2, ry * 2), false);
+        return ellipse;
+    }
+
+    /** 构建多边形（closed=true）或折线（closed=false）；点数不足时返回 null */
+    private static Path2D buildPolygon(String attrs, boolean closed) {
+        String points = attrText(attrs, "points");
+        if (points == null) {
+            return null;
+        }
+        String[] parts = points.trim().split("[,\\s]+");
+        if (parts.length < 4) {
+            return null;
+        }
+        Path2D path = new Path2D.Double(Path2D.WIND_EVEN_ODD);
+        path.moveTo(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]));
+        for (int i = 2; i + 1 < parts.length; i += 2) {
+            path.lineTo(Double.parseDouble(parts[i]), Double.parseDouble(parts[i + 1]));
+        }
+        if (closed) {
+            path.closePath();
+        }
+        return path;
+    }
+
+    /** 构建直线路径；端点缺失时返回 null */
+    private static Path2D buildLine(String attrs) {
+        double x1 = attr(attrs, "x1", Double.NaN);
+        double y1 = attr(attrs, "y1", Double.NaN);
+        double x2 = attr(attrs, "x2", Double.NaN);
+        double y2 = attr(attrs, "y2", Double.NaN);
+        if (Double.isNaN(x1) || Double.isNaN(y1)
+                || Double.isNaN(x2) || Double.isNaN(y2)) {
+            return null;
+        }
+        Path2D line = new Path2D.Double();
+        line.moveTo(x1, y1);
+        line.lineTo(x2, y2);
+        return line;
+    }
+
+    /** 读取元素属性字符串（支持双引号与单引号）；缺失时返回 null */
+    private static String attrText(String element, String name) {
+        Matcher matcher = Pattern.compile(
+                "\\b" + name + "\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)')",
+                Pattern.CASE_INSENSITIVE).matcher(element);
+        if (!matcher.find()) {
+            return null;
+        }
+        return matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
     }
 
     /** 解析 <rect> 元素为闭合矩形 */
