@@ -54,6 +54,9 @@ public class SwingTileRenderer {
     /** 图块图片边长（含裁剪留白，前端按此尺寸显示） */
     private int pieceImageSize;
 
+    /** 当前使用的形状名 */
+    private String shapeName;
+
     /** 起点中心（像素） */
     private PointVo startPoint;
 
@@ -142,6 +145,7 @@ public class SwingTileRenderer {
         this.options = options;
         this.backgroundProvider = backgroundProvider;
         this.shapeRegistry = shapeRegistry;
+        this.shapeName = options.getDefaultShape();
     }
 
     /** 执行一次完整渲染：生成大图、图块与假凹槽 */
@@ -281,7 +285,7 @@ public class SwingTileRenderer {
      */
     private void drawHole(Graphics2D g, int cx, int cy, double rotation, int alpha,
                           int scale, int hw, int hh) {
-        PuzzleShape shape = shapeRegistry.resolve("classic");
+        PuzzleShape shape = shapeRegistry.resolve(shapeName);
         // 直接旋转路径几何（与原滑块一致），避免“旋转坐标系 + setClip”的变换歧义
         Path2D base = shape.create(cx - pieceSize * scale / 2.0,
                 cy - pieceSize * scale / 2.0, pieceSize * scale);
@@ -323,7 +327,7 @@ public class SwingTileRenderer {
         Graphics2D mg = mask.createGraphics();
         mg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         mg.setColor(Color.WHITE);
-        PuzzleShape shape = shapeRegistry.resolve("classic");
+        PuzzleShape shape = shapeRegistry.resolve(shapeName);
         mg.fill(shape.create((cropHi - pieceSize * scale) / 2.0,
                 (cropHi - pieceSize * scale) / 2.0, pieceSize * scale));
         mg.dispose();
@@ -416,6 +420,16 @@ public class SwingTileRenderer {
     /** 返回图块图片边长（含裁剪留白） */
     public int getPieceImageSize() {
         return pieceImageSize;
+    }
+
+    /** 返回当前形状名 */
+    public String getShape() {
+        return shapeName;
+    }
+
+    /** 设置本次渲染使用的形状名 */
+    public void setShape(String shapeName) {
+        this.shapeName = shapeName;
     }
 
     /** 返回起点中心 */

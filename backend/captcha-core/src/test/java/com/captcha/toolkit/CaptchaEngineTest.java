@@ -709,6 +709,28 @@ class CaptchaEngineTest {
     }
 
     @Test
+    void swingTileUsesRequestedShapeInDebug() {
+        CaptchaEngine engine = newEngine();
+        CaptchaChallenge challenge = engine.create(CaptchaType.SWING_TILE,
+                Map.of("shape", "butterfly"), true);
+
+        assertNotNull(challenge.getImage1());
+        assertNotNull(challenge.getImage2());
+        assertEquals("butterfly", sessionStore.get(challenge.getId()).getShape());
+    }
+
+    @Test
+    void supportedShapesExposeSliderAndSwingTile() {
+        CaptchaEngine engine = newEngine();
+        Map<String, List<String>> shapes = engine.supportedShapes();
+
+        assertTrue(shapes.containsKey("slider"));
+        assertTrue(shapes.containsKey("swing-tile"));
+        assertTrue(shapes.get("swing-tile").contains("butterfly"),
+                "摆动图块应支持全部内置形状: " + shapes.get("swing-tile"));
+    }
+
+    @Test
     void swingTileRejectsWrongPosition() {
         CaptchaEngine engine = newEngine();
         CaptchaChallenge challenge = engine.create(CaptchaType.SWING_TILE, Map.of(), true);

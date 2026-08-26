@@ -10,6 +10,8 @@ import com.captcha.toolkit.shape.PuzzleShapeRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -85,5 +87,44 @@ class SwingTileCaptchaGeneratorTest {
                 captcha.getSession(), CaptchaAnswer.slider(null));
         assertFalse(result.isSuccess());
         assertEquals("BAD_REQUEST", result.getCode());
+    }
+
+    @Test
+    void usesRequestedShapeInDebugMode() {
+        SwingTileCaptchaGenerator generator = newGenerator();
+        GeneratedCaptcha<SwingTileChallengeData> captcha = generator.generate(
+                new GenerateRequest("swing-tile-shape",
+                        Map.of("shape", "butterfly"), true));
+
+        assertEquals("butterfly", captcha.getSession().getShape());
+        assertNotNull(captcha.getImage1());
+        assertNotNull(captcha.getImage2());
+    }
+
+    @Test
+    void picksRandomShapeWhenNotSpecified() {
+        SwingTileCaptchaGenerator generator = newGenerator();
+        Set<String> shapes = new HashSet<>();
+        for (int i = 0; i < 12; i++) {
+            GeneratedCaptcha<SwingTileChallengeData> captcha = generator.generate(
+                    new GenerateRequest("swing-tile-random-" + i, Map.of(), true));
+            shapes.add(captcha.getSession().getShape());
+        }
+        assertTrue(shapes.size() > 1,
+                "未指定形状时应从启用白名单随机选择: " + shapes);
+    }
+
+    @Test
+    void pieceSizeFollowsConfiguredRatio() {
+        SwingTileConfig config = testConfig();
+        config.setPieceSizeRatio(0.10);
+        SwingTileCaptchaGenerator generator = new SwingTileCaptchaGenerator(
+                config, new SceneBackgroundProvider(), new PuzzleShapeRegistry());
+        GeneratedCaptcha<SwingTileChallengeData> captcha = generator.generate(
+                new GenerateRequest("swing-tile-size", Map.of(), true));
+
+        // 图块原尺寸 340 * 0.10 = 34，下发尺寸含两侧 8px 留白 = 50；
+        // 原 0.12 时下发尺寸为 57，调整后明显变小
+        assertEquals(50, captcha.getData().pieceSize());
     }
 }

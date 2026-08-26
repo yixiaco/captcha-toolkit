@@ -197,6 +197,7 @@
             :api="opts.api"
             :width="opts.width"
             :height="opts.height"
+            :shape="opts.shape"
             :swing-tile-tip="opts.swingTileTip"
             :handle-width="opts.handleWidth"
             :debug="opts.debug"

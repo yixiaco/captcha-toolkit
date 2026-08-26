@@ -123,9 +123,7 @@ public class CaptchaController {
     public Map<String, Object> types() {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("types", engine.supportedTypes());
-        Map<String, List<String>> shapes = new LinkedHashMap<>();
-        shapes.put("slider", engine.supportedShapes());
-        body.put("shapes", shapes);
+        body.put("shapes", engine.supportedShapes());
         return body;
     }
 

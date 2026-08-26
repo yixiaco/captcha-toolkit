@@ -129,11 +129,13 @@ public class CaptchaSession {
     /**
      * 创建滑块摆动图块会话。
      *
-     * @param x 真凹槽在路径上的位置（0~1）放大 10000 倍后的整数
+     * @param shape 摆动图块使用的形状名
+     * @param x     真凹槽在路径上的位置（0~1）放大 10000 倍后的整数
      */
-    public static CaptchaSession swingTile(String id, int width, int height,
+    public static CaptchaSession swingTile(String id, String shape,
+                                           int width, int height,
                                            int x, long ttlMillis) {
-        return new CaptchaSession(id, CaptchaType.SWING_TILE, null, x, 0, width, height,
+        return new CaptchaSession(id, CaptchaType.SWING_TILE, shape, x, 0, width, height,
                 null, null, 0, null, null, null, ttlMillis);
     }
 

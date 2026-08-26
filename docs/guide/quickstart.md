@@ -65,5 +65,5 @@ curl http://localhost:18080/api/captcha/types
 返回后端支持的类型与滑块形状：
 
 ```json
-{"types":["angle","click","curve","rotate","scratch","slide-curve","slider","swing-tile"],"shapes":{"slider":["classic","leaf","triangle","circle","diamond","star","heart","moon","hexagon"]}}
+{"types":["angle","click","curve","rotate","scratch","slide-curve","slider","swing-tile"],"shapes":{"slider":["classic","leaf","triangle","circle","diamond","star","heart","moon","hexagon","bat","elephant","dolphin","butterfly","whale","owl","bird","frog","bear","duck","eagle","fish","pig","airplane","fire","school"],"swing-tile":["classic","leaf","triangle","circle","diamond","star","heart","moon","hexagon","bat","elephant","dolphin","butterfly","whale","owl","bird","frog","bear","duck","eagle","fish","pig","airplane","fire","school"]}}
 ```

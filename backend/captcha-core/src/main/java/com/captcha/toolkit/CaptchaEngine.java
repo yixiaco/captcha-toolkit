@@ -16,6 +16,7 @@ import com.captcha.toolkit.generator.CaptchaGenerator;
 import com.captcha.toolkit.generator.GenerateRequest;
 import com.captcha.toolkit.generator.ScratchCaptchaGenerator;
 import com.captcha.toolkit.generator.SliderCaptchaGenerator;
+import com.captcha.toolkit.generator.SwingTileCaptchaGenerator;
 import com.captcha.toolkit.i18n.CaptchaMessages;
 import com.captcha.toolkit.i18n.MessageProvider;
 import com.captcha.toolkit.image.CaptchaImageCodec;
@@ -37,6 +38,7 @@ import com.captcha.toolkit.word.WordFactory;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -360,13 +362,18 @@ public class CaptchaEngine {
                 .toList();
     }
 
-    /** 返回滑块支持的拼图形状名称列表 */
-    public List<String> supportedShapes() {
+    /** 返回各类型支持的拼图形状名称列表（key 为验证码类型编码） */
+    public Map<String, List<String>> supportedShapes() {
+        Map<String, List<String>> shapes = new LinkedHashMap<>();
         CaptchaGenerator<?> generator = generators.get(CaptchaType.SLIDER);
         if (generator instanceof SliderCaptchaGenerator slider) {
-            return new ArrayList<>(slider.getShapeNames());
+            shapes.put("slider", new ArrayList<>(slider.getShapeNames()));
         }
-        return List.of();
+        CaptchaGenerator<?> swingTile = generators.get(CaptchaType.SWING_TILE);
+        if (swingTile instanceof SwingTileCaptchaGenerator swing) {
+            shapes.put("swing-tile", new ArrayList<>(swing.getShapeNames()));
+        }
+        return shapes;
     }
 
     /** 手动移除一个未使用/异常的验证码会话 */

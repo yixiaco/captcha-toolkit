@@ -164,7 +164,8 @@ final class BehaviorTestFixtures {
         return new Fixture(
                 new SwingTileBehaviorValidator(enabledConfig()),
                 answer, answer,
-                CaptchaSession.swingTile("swing-tile-boundary", 340, 190, 5000, 300_000L),
+                CaptchaSession.swingTile("swing-tile-boundary", "classic",
+                        340, 190, 5000, 300_000L),
                 dragPoints(0.5), dragMinimal(0.5), 1_000_000L, 1_001_000L);
     }
 

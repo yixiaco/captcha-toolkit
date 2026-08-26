@@ -16,8 +16,10 @@ import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.render.SwingTileRenderer;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
+import com.captcha.toolkit.shape.ShapeSelector;
 import com.captcha.toolkit.type.CaptchaType;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -38,6 +40,9 @@ public class SwingTileCaptchaGenerator
 
     /** 滑块摆动图块行为轨迹校验器 */
     private final BehaviorValidator behaviorValidator;
+
+    /** 拼图形状选择器 */
+    private final ShapeSelector shapeSelector;
 
     /** 使用默认（关闭）行为校验构造生成器 */
     public SwingTileCaptchaGenerator(SwingTileConfig options,
@@ -79,6 +84,8 @@ public class SwingTileCaptchaGenerator
         this.backgroundProvider = backgroundProvider;
         this.shapeRegistry = shapeRegistry;
         this.behaviorValidator = behaviorValidator;
+        this.shapeSelector = new ShapeSelector(
+                shapeRegistry, options.getEnabledShapes(), options.getDefaultShape());
     }
 
     @Override
@@ -88,14 +95,20 @@ public class SwingTileCaptchaGenerator
 
     @Override
     protected GeneratedCaptcha<SwingTileChallengeData> doGenerate(GenerateRequest request) {
+        // 拼图形状默认由后端随机决定；只有 debug 模式下前端才能显式指定
+        String requested = request.getParams().get("shape");
+        String shape = request.isDebug() && requested != null && !requested.isBlank()
+                ? shapeSelector.resolve(requested)
+                : shapeSelector.resolve(null);
         SwingTileRenderer renderer = new SwingTileRenderer(
                 options, backgroundProvider, shapeRegistry);
+        renderer.setShape(shape);
         renderer.run();
 
         // 真凹槽在路径上的位置（0~1）放大 10000 倍存进会话 x
         int scaledAnswer = (int) Math.round(renderer.getAnswerT() * 10000);
         CaptchaSession session = CaptchaSession.swingTile(
-                request.getId(), renderer.getWidth(), renderer.getHeight(),
+                request.getId(), shape, renderer.getWidth(), renderer.getHeight(),
                 scaledAnswer, options.getExpireSeconds() * 1000);
         GeneratedCaptcha<SwingTileChallengeData> result = new GeneratedCaptcha<>();
         result.setSession(session);
@@ -137,5 +150,10 @@ public class SwingTileCaptchaGenerator
     @Override
     protected long minElapsedMs() {
         return options.getMinElapsedMs();
+    }
+
+    /** 返回启用且已注册的形状名称列表 */
+    public List<String> getShapeNames() {
+        return shapeSelector.getShapeNames();
     }
 }

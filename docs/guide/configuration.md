@@ -201,7 +201,9 @@
 | `swing-tile.fake-target-count` | 假凹槽数量 | `2` |
 | `swing-tile.fake-target-min-gap` | 假凹槽最小中心间距 | `56` |
 | `swing-tile.control-point-count` | 贝塞尔控制点数量（多阶曲线） | `2` |
-| `swing-tile.piece-size-ratio` | 图块形状尺寸占图宽比例 | `0.12` |
+| `swing-tile.piece-size-ratio` | 图块形状尺寸占图宽比例 | `0.10` |
+| `swing-tile.default-shape` | 默认形状 | `classic` |
+| `swing-tile.enabled-shapes` | 可用形状白名单 | 全部内置形状 |
 | `swing-tile.render-scale` | 抗锯齿超采样倍数（与原滑块一致） | `2` |
 | `swing-tile.rotation-swing-amplitude` | 方向摆动幅度（度） | `45` |
 | `swing-tile.start-rotation-max` | 起始方向随机偏移范围（度） | `60` |

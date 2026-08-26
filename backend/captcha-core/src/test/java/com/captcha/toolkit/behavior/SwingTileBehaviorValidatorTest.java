@@ -26,7 +26,8 @@ class SwingTileBehaviorValidatorTest {
 
     /** 构造滑块摆动图块会话 */
     private static CaptchaSession session() {
-        return CaptchaSession.swingTile("swing-tile-behavior", 340, 190, 5000, 300_000L);
+        return CaptchaSession.swingTile("swing-tile-behavior", "classic",
+                340, 190, 5000, 300_000L);
     }
 
     /** 构造一条终点 x = endX 的拖拽轨迹 */

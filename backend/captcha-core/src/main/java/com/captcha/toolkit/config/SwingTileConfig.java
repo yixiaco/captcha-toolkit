@@ -2,6 +2,10 @@ package com.captcha.toolkit.config;
 
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * 滑块摆动图块验证码配置：用户拖动滑块，让小图块沿多阶贝塞尔曲线运动到目标凹槽，
  * 移动过程中图块方向随路径摆动，最终对准目标；图中可配置多个假凹槽干扰。
@@ -39,8 +43,19 @@ public class SwingTileConfig {
     /** 贝塞尔曲线控制点数量（1=二次、2=三次、3=四次，默认三次多阶曲线） */
     private int controlPointCount = 2;
 
-    /** 图块尺寸占图片宽度的比例 */
-    private double pieceSizeRatio = 0.12;
+    /** 图块尺寸占图片宽度的比例（比滑块拼图略小，避免图块过大遮挡路径） */
+    private double pieceSizeRatio = 0.10;
+
+    /** 默认形状；shape 参数非法或未启用时回退到它 */
+    private String defaultShape = "classic";
+
+    /** 对外可用的形状白名单（默认覆盖全部内置形状） */
+    private List<String> enabledShapes = new ArrayList<>(Arrays.asList(
+            "classic", "leaf", "triangle", "circle", "diamond", "star", "heart",
+            "moon", "hexagon",
+            "bat", "elephant", "dolphin", "butterfly", "whale", "owl", "bird",
+            "frog", "bear", "duck", "eagle", "fish", "pig",
+            "airplane", "fire", "school"));
 
     /** 抗锯齿超采样倍数（与原滑块渲染保持一致） */
     private int renderScale = 2;

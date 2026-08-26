@@ -129,6 +129,8 @@ interface Props {
   width?: number | null
   /** 验证图片高度（px） */
   height?: number | null
+  /** 拼图形状（仅 debug 生效，后端随机选择时为 random） */
+  shape?: string | null
   /** 滑块摆动图块提示文案 */
   swingTileTip?: string | null
   /** 滑块手柄宽度（px） */
@@ -270,6 +272,8 @@ async function loadCaptcha() {
     const res = await opts.api.getCaptcha<SwingTileChallengeData>({
       type: 'swing-tile',
       debug: opts.debug ? '1' : undefined,
+      // 正常模式不传 shape，由后端随机决定；debug 模式才允许前端指定
+      shape: opts.debug ? opts.shape || 'random' : undefined,
     });
     captchaId.value = res.id;
     image1.value = res.image1;

@@ -367,7 +367,7 @@ function resetVerified() {
   verifiedTicket.value = '';
 }
 
-// 支持 URL 参数直接打开指定验证方式：?captcha=slider|click|random，滑块可追加 &shape=...
+// 支持 URL 参数直接打开指定验证方式：?captcha=slider|click|random，滑块/摆动图块可追加 &shape=...
 onMounted(() => {
   // 形状选择器以后端下发的可用形状为准，新增图形无需改前端默认列表
   fetch('/api/captcha/types')
@@ -381,7 +381,8 @@ onMounted(() => {
   const params = new URLSearchParams(location.search);
   const modeParam = params.get('captcha');
   const shapeParam = params.get('shape');
-  if (modeParam === 'slider' && shapeParam && PUZZLE_SHAPES[shapeParam]) {
+  if ((modeParam === 'slider' || modeParam === 'swing-tile')
+    && shapeParam && PUZZLE_SHAPES[shapeParam]) {
     shapeFromUrl.value = shapeParam;
   }
   if (modeParam === 'slider' || modeParam === 'click'
