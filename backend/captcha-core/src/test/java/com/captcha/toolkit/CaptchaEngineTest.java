@@ -722,12 +722,29 @@ class CaptchaEngineTest {
     @Test
     void supportedShapesExposeSliderAndSwingTile() {
         CaptchaEngine engine = newEngine();
-        Map<String, List<String>> shapes = engine.supportedShapes();
+        Map<String, List<com.captcha.toolkit.model.ShapeInfo>> shapes =
+                engine.supportedShapes(true);
 
         assertTrue(shapes.containsKey("slider"));
         assertTrue(shapes.containsKey("swing-tile"));
-        assertTrue(shapes.get("swing-tile").contains("butterfly"),
+        assertTrue(shapes.get("swing-tile").stream()
+                        .anyMatch(info -> "butterfly".equals(info.name())),
                 "摆动图块应支持全部内置形状: " + shapes.get("swing-tile"));
+        assertTrue(shapes.get("slider").stream()
+                        .anyMatch(info -> "classic".equals(info.name())),
+                "滑块应包含经典形状");
+    }
+
+    @Test
+    void supportedShapesReturnEmptyWithoutDebug() {
+        CaptchaEngine engine = newEngine();
+        Map<String, List<com.captcha.toolkit.model.ShapeInfo>> shapes =
+                engine.supportedShapes(false);
+
+        assertTrue(shapes.get("slider").isEmpty(),
+                "非 debug 模式滑块形状应为空列表");
+        assertTrue(shapes.get("swing-tile").isEmpty(),
+                "非 debug 模式摆动图块形状应为空列表");
     }
 
     @Test

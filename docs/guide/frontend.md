@@ -63,6 +63,7 @@ function onVerified(result) {
 | `width` / `height` | 图片尺寸 | `340` / `190` |
 | `mode` | 验证方式：slider / click / rotate / angle / scratch / curve / slide-curve / swing-tile | `slider` |
 | `shape` | 滑块/摆动图块初始形状（仅 debug 生效，传 random 则后端随机） | `''` |
+| `shapes` / `shapeLabels` | 形状选择器列表与标签（demo 由 `GET {prefix}/types?debug=1` 下发，非 debug 返回空列表） | 接口返回 |
 | `debug` | 是否请求调试答案（仅联调） | `false` |
 | `autoReload` | 失败后自动换一张 | `true` |
 | `handleWidth` | 滑块手柄宽度 | `44` |

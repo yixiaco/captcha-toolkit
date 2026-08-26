@@ -59,11 +59,13 @@ npm run build:lib    # 构建组件库（含 .d.ts 类型声明）
 ## 接口自检
 
 ```bash
-curl http://localhost:18080/api/captcha/types
+curl "http://localhost:18080/api/captcha/types?debug=1"
 ```
 
 返回后端支持的类型与滑块形状：
 
 ```json
-{"types":["angle","click","curve","rotate","scratch","slide-curve","slider","swing-tile"],"shapes":{"slider":["classic","leaf","triangle","circle","diamond","star","heart","moon","hexagon","bat","elephant","dolphin","butterfly","whale","owl","bird","frog","bear","duck","eagle","fish","pig","airplane","fire","school"],"swing-tile":["classic","leaf","triangle","circle","diamond","star","heart","moon","hexagon","bat","elephant","dolphin","butterfly","whale","owl","bird","frog","bear","duck","eagle","fish","pig","airplane","fire","school"]}}
+{"types":["angle","click","curve","rotate","scratch","slide-curve","slider","swing-tile"],"shapes":{"slider":[{"name":"classic","label":"经典"},{"name":"leaf","label":"叶子"},...],"swing-tile":[{"name":"classic","label":"经典"},...]}}
+
+不带 `debug=1` 时 `shapes` 各类型均为空列表，避免把可用图形白名单暴露给前端。
 ```

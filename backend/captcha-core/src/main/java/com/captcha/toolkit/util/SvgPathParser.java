@@ -3,7 +3,9 @@ package com.captcha.toolkit.util;
 import com.captcha.toolkit.shape.ShapeGeometry;
 import com.captcha.toolkit.shape.ShapePart;
 
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
+import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -233,16 +235,25 @@ public final class SvgPathParser {
      * @throws IllegalArgumentException 当 SVG 中没有可绘制元素时
      */
     public static ShapeGeometry parseGeometry(String svg) {
+        // 去掉 defs/clipPath 内的不可见定义，避免把裁剪矩形当成可见图形
+        String visibleSvg = svg
+                .replaceAll("(?is)<clipPath\\b[^>]*>.*?</clipPath>", "")
+                .replaceAll("(?is)<defs\\b[^>]*>.*?</defs>", "");
         List<ShapePart> parts = new ArrayList<>();
         Matcher matcher = Pattern.compile(
                 "<(path|rect|circle|ellipse|polygon|polyline|line)\\b([^>]*)>",
-                Pattern.CASE_INSENSITIVE).matcher(svg);
+                Pattern.CASE_INSENSITIVE).matcher(visibleSvg);
         while (matcher.find()) {
             String tag = matcher.group(1).toLowerCase(Locale.ROOT);
             String attrs = matcher.group(2);
             Path2D path = geometryElement(tag, attrs);
             if (path == null) {
                 continue;
+            }
+            // 应用元素级 transform（translate/scale/rotate/matrix）
+            AffineTransform transform = parseTransform(attrText(attrs, "transform"));
+            if (!transform.isIdentity()) {
+                path.transform(transform);
             }
             ShapePart part = partFromAttributes(path, tag, attrs);
             if (part != null) {
@@ -316,13 +327,83 @@ public final class SvgPathParser {
         if (Double.isNaN(width) || Double.isNaN(height) || width <= 0 || height <= 0) {
             return null;
         }
+        double rx = attr(attrs, "rx", 0);
+        double ry = attr(attrs, "ry", 0);
+        if (rx <= 0 && ry <= 0) {
+            rx = 0;
+            ry = 0;
+        } else if (rx <= 0) {
+            rx = ry;
+        } else if (ry <= 0) {
+            ry = rx;
+        }
+        rx = Math.min(rx, width / 2);
+        ry = Math.min(ry, height / 2);
         Path2D rect = new Path2D.Double(Path2D.WIND_EVEN_ODD);
-        rect.moveTo(x, y);
-        rect.lineTo(x + width, y);
-        rect.lineTo(x + width, y + height);
-        rect.lineTo(x, y + height);
-        rect.closePath();
+        if (rx > 0 || ry > 0) {
+            rect.append(new RoundRectangle2D.Double(
+                    x, y, width, height, rx * 2, ry * 2), false);
+        } else {
+            rect.moveTo(x, y);
+            rect.lineTo(x + width, y);
+            rect.lineTo(x + width, y + height);
+            rect.lineTo(x, y + height);
+            rect.closePath();
+        }
         return rect;
+    }
+
+    /**
+     * 解析 SVG transform 属性（支持 matrix/translate/scale/rotate，按出现顺序叠加）。
+     *
+     * @param transform transform 属性值；为空时返回单位变换
+     * @return 对应的仿射变换
+     */
+    private static AffineTransform parseTransform(String transform) {
+        AffineTransform result = new AffineTransform();
+        if (transform == null || transform.isBlank()) {
+            return result;
+        }
+        Matcher matcher = Pattern.compile("(\\w+)\\s*\\(([^)]*)\\)")
+                .matcher(transform);
+        while (matcher.find()) {
+            String type = matcher.group(1).toLowerCase(Locale.ROOT);
+            String[] args = matcher.group(2).trim().split("[,\\s]+");
+            switch (type) {
+                case "matrix" -> {
+                    if (args.length >= 6) {
+                        result.concatenate(new AffineTransform(
+                                number(args[0]), number(args[1]),
+                                number(args[2]), number(args[3]),
+                                number(args[4]), number(args[5])));
+                    }
+                }
+                case "translate" -> result.translate(
+                        number(args[0]), args.length > 1 ? number(args[1]) : 0);
+                case "scale" -> {
+                    double sx = number(args[0]);
+                    result.scale(sx, args.length > 1 ? number(args[1]) : sx);
+                }
+                case "rotate" -> {
+                    double degrees = number(args[0]);
+                    if (args.length > 2) {
+                        result.rotate(Math.toRadians(degrees),
+                                number(args[1]), number(args[2]));
+                    } else {
+                        result.rotate(Math.toRadians(degrees));
+                    }
+                }
+                default -> {
+                    // skewX/skewY 等罕见变换暂不支持，保持原位置
+                }
+            }
+        }
+        return result;
+    }
+
+    /** 解析 transform 参数中的数值 */
+    private static double number(String token) {
+        return Double.parseDouble(token.trim());
     }
 
     /** 构建圆形路径；半径缺失或非法时返回 null */

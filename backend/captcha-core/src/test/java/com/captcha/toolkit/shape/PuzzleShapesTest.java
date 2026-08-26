@@ -9,6 +9,7 @@ import java.awt.RenderingHints;
 import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -123,8 +124,9 @@ class PuzzleShapesTest {
                                 && bounds.getMaxX() <= 120 && bounds.getMaxY() <= 120,
                         shape.getName() + " 边界应在允许范围内: " + bounds);
             } else {
-                assertTrue(bounds.getMinX() >= -0.01 && bounds.getMinY() >= -0.01
-                                && bounds.getMaxX() <= 100.01 && bounds.getMaxY() <= 100.01,
+                // create() 是几何兜底路径，多单元取 Area 并集时曲线离散化会有亚像素外扩
+                assertTrue(bounds.getMinX() >= -0.1 && bounds.getMinY() >= -0.1
+                                && bounds.getMaxX() <= 100.1 && bounds.getMaxY() <= 100.1,
                         shape.getName() + " 应完整位于方块内: " + bounds);
             }
             assertTrue(bounds.getWidth() > 0 && bounds.getHeight() > 0,
@@ -133,14 +135,22 @@ class PuzzleShapesTest {
     }
 
     @Test
-    void butterflyIsStrokedMultiPathGeometry() {
+    void butterflyIsMixedGeometryWithStrokedAntennae() {
         ShapeGeometry geometry = PuzzleShapes.butterfly().geometry(0, 0, 100);
         assertEquals(3, geometry.parts().size());
+        boolean filledBody = false;
+        int strokedOnly = 0;
         for (ShapePart part : geometry.parts()) {
-            assertTrue(part.stroked(), "蝴蝶各单元应为描边绘制");
-            assertTrue(!part.filled(), "蝴蝶各单元不应填充");
+            if (part.filled() && part.stroked()) {
+                filledBody = true;
+            }
+            if (part.stroked() && !part.filled()) {
+                strokedOnly++;
+            }
             assertTrue(part.strokeWidth() > 0, "描边宽度应大于 0");
         }
+        assertTrue(filledBody, "蝴蝶主体应为填充 + 描边");
+        assertEquals(2, strokedOnly, "两条触角应为纯描边非闭合线条");
         // 三条路径描边宽度一致（参考 SVG stroke-width=4）
         double firstWidth = geometry.parts().get(0).strokeWidth();
         assertEquals(firstWidth, geometry.parts().get(1).strokeWidth(), 1e-9);
@@ -154,7 +164,7 @@ class PuzzleShapesTest {
     }
 
     @Test
-    void butterflyRendersVisibleThinStrokes() {
+    void butterflyRendersVisibleGeometry() {
         ShapeGeometry geometry = PuzzleShapes.butterfly().geometry(0, 0, 100);
         BufferedImage image = new BufferedImage(
                 100, 100, BufferedImage.TYPE_INT_ARGB);
@@ -172,8 +182,59 @@ class PuzzleShapesTest {
                 }
             }
         }
-        // 纯描边蝴蝶：应能画出可见内容；粗描边线稿面积不为 0，也不会占满整块
-        assertTrue(pixels > 200, "蝴蝶描边应渲染出可见内容，实际像素=" + pixels);
-        assertTrue(pixels < 8000, "蝴蝶描边不应接近整块填充，实际像素=" + pixels);
+        // 填充 + 描边蝴蝶：应能画出可见内容，也不会占满整块
+        assertTrue(pixels > 200, "蝴蝶应渲染出可见内容，实际像素=" + pixels);
+        assertTrue(pixels < 8000, "蝴蝶不应接近整块填充，实际像素=" + pixels);
+    }
+
+    @Test
+    void svgLineArtShapesKeepFilledBodyWithWhiteDetails() {
+        for (PuzzleShape shape : List.of(
+                PuzzleShapes.eagle(), PuzzleShapes.frog(), PuzzleShapes.school())) {
+            ShapeGeometry geometry = shape.geometry(0, 0, 100);
+            boolean stroked = false;
+            boolean filled = false;
+            boolean filledOnly = false;
+            boolean strokedOnly = false;
+            for (ShapePart part : geometry.parts()) {
+                stroked |= part.stroked();
+                filled |= part.filled();
+                filledOnly |= part.filled() && !part.stroked();
+                strokedOnly |= part.stroked() && !part.filled();
+            }
+            assertTrue(stroked, shape.getName() + " 应有描边");
+            assertTrue(filled, shape.getName() + " 应有填充主体");
+            if ("school".equals(shape.getName())) {
+                assertTrue(strokedOnly,
+                        "学校应有白色描边细节（门线/屋顶线）");
+            } else {
+                assertTrue(filledOnly,
+                        shape.getName() + " 应有白色填充细节（眼睛/斑点）");
+            }
+
+            Rectangle2D bounds = geometry.bounds();
+            assertTrue(bounds.getMinX() >= -0.01 && bounds.getMinY() >= -0.01
+                            && bounds.getMaxX() <= 100.01 && bounds.getMaxY() <= 100.01,
+                    shape.getName() + " 应完整位于方块内: " + bounds);
+        }
+    }
+
+    @Test
+    void allRegisteredShapesFitInBox() {
+        PuzzleShapeRegistry registry = new PuzzleShapeRegistry();
+        for (String name : registry.names()) {
+            ShapeGeometry geometry = registry.resolve(name).geometry(0, 0, 100);
+            Rectangle2D bounds = geometry.bounds();
+            if ("classic".equals(name)) {
+                // classic 是带外凸圆弧的拼图块，允许少量越界
+                assertTrue(bounds.getMinX() >= -20 && bounds.getMinY() >= -20
+                                && bounds.getMaxX() <= 120 && bounds.getMaxY() <= 120,
+                        name + " 边界应在允许范围内: " + bounds);
+            } else {
+                assertTrue(bounds.getMinX() >= -0.01 && bounds.getMinY() >= -0.01
+                                && bounds.getMaxX() <= 100.01 && bounds.getMaxY() <= 100.01,
+                        name + " 应完整位于方块内: " + bounds);
+            }
+        }
     }
 }

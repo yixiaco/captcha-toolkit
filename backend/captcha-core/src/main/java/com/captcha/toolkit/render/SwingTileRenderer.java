@@ -3,6 +3,7 @@ package com.captcha.toolkit.render;
 import com.captcha.toolkit.config.SwingTileConfig;
 import com.captcha.toolkit.exception.CaptchaException;
 import com.captcha.toolkit.model.PointVo;
+import com.captcha.toolkit.shape.ShapeGeometry;
 import com.captcha.toolkit.shape.PuzzleShape;
 import com.captcha.toolkit.shape.PuzzleShapeRegistry;
 import com.captcha.toolkit.util.ImageUtil;
@@ -14,7 +15,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -286,35 +286,34 @@ public class SwingTileRenderer {
     private void drawHole(Graphics2D g, int cx, int cy, double rotation, int alpha,
                           int scale, int hw, int hh) {
         PuzzleShape shape = shapeRegistry.resolve(shapeName);
-        // 直接旋转路径几何（与原滑块一致），避免“旋转坐标系 + setClip”的变换歧义
-        Path2D base = shape.create(cx - pieceSize * scale / 2.0,
+        // 直接旋转几何模型（与原滑块一致），避免“旋转坐标系 + setClip”的变换歧义
+        ShapeGeometry geometry = shape.geometry(
+                cx - pieceSize * scale / 2.0,
                 cy - pieceSize * scale / 2.0, pieceSize * scale);
-        Path2D rotated = new Path2D.Double();
-        rotated.append(base.getPathIterator(
-                AffineTransform.getRotateInstance(Math.toRadians(rotation), cx, cy)), false);
+        geometry = geometry.rotated(rotation, cx, cy);
 
-        // 高清白色镂空蒙版（用于生成内阴影）
+        // 高清白色镂空蒙版（用于生成内阴影；填充/描边单元统一原生绘制）
         BufferedImage mask = new BufferedImage(hw, hh, BufferedImage.TYPE_INT_ARGB);
         Graphics2D mg = mask.createGraphics();
-        mg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        mg.setClip(rotated);
-        mg.setColor(Color.WHITE);
-        mg.fill(rotated);
+        enableAntialias(mg);
+        ShapeRenderer.draw(mg, geometry, Color.WHITE);
         mg.dispose();
 
         float radius = Math.max(1f, options.getShadowRadius()) * scale;
         ShadowFilter shadow = new ShadowFilter(radius, 2 * scale, -1 * scale,
                 options.getShadowOpacity());
         BufferedImage innerShadow = shadow.filter(alphaFilter.filter(mask, null), null);
+        // 阴影只保留在凹槽区域内部（多路径/描边图形同样成立）
+        Graphics2D sg = innerShadow.createGraphics();
+        sg.setComposite(AlphaComposite.DstIn);
+        sg.drawImage(mask, 0, 0, null);
+        sg.dispose();
 
         // 白色半透明镂空直接叠加在已有背景的高清画布上（SrcAtop），再叠内阴影
-        g.setClip(rotated);
         g.setComposite(AlphaComposite.SrcAtop);
-        g.setColor(new Color(255, 255, 255, alpha));
-        g.fill(rotated);
-        g.drawImage(innerShadow, 0, 0, null);
+        ShapeRenderer.draw(g, geometry, new Color(255, 255, 255, alpha));
         g.setComposite(AlphaComposite.SrcOver);
-        g.setClip(null);
+        g.drawImage(innerShadow, 0, 0, null);
     }
 
     /** 构建图块：按终点方向从高清背景取纹理，旋转后仍与凹槽下背景完全一致 */
@@ -325,11 +324,12 @@ public class SwingTileRenderer {
         // 形状蒙版（终点方向 0 度，居中）
         BufferedImage mask = new BufferedImage(cropHi, cropHi, BufferedImage.TYPE_INT_ARGB);
         Graphics2D mg = mask.createGraphics();
-        mg.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        mg.setColor(Color.WHITE);
+        enableAntialias(mg);
         PuzzleShape shape = shapeRegistry.resolve(shapeName);
-        mg.fill(shape.create((cropHi - pieceSize * scale) / 2.0,
-                (cropHi - pieceSize * scale) / 2.0, pieceSize * scale));
+        ShapeRenderer.draw(mg, shape.geometry(
+                (cropHi - pieceSize * scale) / 2.0,
+                (cropHi - pieceSize * scale) / 2.0,
+                pieceSize * scale), Color.WHITE);
         mg.dispose();
 
         // 纹理：逆旋转背景，使图块在终点方向下与凹槽下背景一致
@@ -485,5 +485,11 @@ public class SwingTileRenderer {
     /** 返回假凹槽列表（只读副本） */
     public List<FakeTarget> getFakeTargets() {
         return new ArrayList<>(fakeTargets);
+    }
+
+    /** 打开抗锯齿 */
+    private static void enableAntialias(Graphics2D g) {
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
     }
 }

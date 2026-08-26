@@ -142,12 +142,16 @@ export interface VerifyResult {
   ticket?: string
 }
 
+/** 形状信息：名称 + 展示标签（仅 debug 模式由 /types 下发） */
+export interface ShapeInfo {
+  name: string
+  label: string
+}
+
 /** 后端支持的类型与形状 */
 export interface CaptchaTypes {
   types: string[]
-  shapes: {
-    slider: string[]
-  }
+  shapes: Record<string, ShapeInfo[]>
 }
 
 /** 验证码 API 客户端 */

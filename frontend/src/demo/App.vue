@@ -307,6 +307,7 @@
       :locale="demoLocale"
       :shape="shapeFromUrl"
       :shapes="demoShapes"
+      :shape-labels="demoShapeLabels"
       :debug="isDev"
       :brand-text="'Captcha Toolkit'"
       :slogan-text="'通用行为验证组件'"
@@ -319,7 +320,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { CaptchaModal, PUZZLE_SHAPES } from '../lib';
+import { CaptchaModal } from '../lib';
 import type { VerifyResult } from '../lib';
 
 const isDev = import.meta.env.DEV;
@@ -328,6 +329,7 @@ const password = ref('');
 const captchaVisible = ref(false);
 const captchaMode = ref<'slider' | 'click' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile'>('slider');
 const demoShapes = ref<string[]>([]);
+const demoShapeLabels = ref<Record<string, string>>({});
 const demoLocale = ref<'zh-CN' | 'en'>('zh-CN');
 const demoLocales: Array<{ key: 'zh-CN' | 'en'; label: string }> = [
   { key: 'zh-CN', label: '中文' },
@@ -341,6 +343,8 @@ function open(mode: 'slider' | 'click' | 'rotate' | 'angle' | 'scratch' | 'curve
   resetVerified();
   captchaMode.value = mode;
   captchaVisible.value = true;
+  // 每次打开弹窗都刷新形状列表，避免后端重启/接口变更后拿到旧数据
+  loadShapes();
 }
 
 function openRandom() {
@@ -367,22 +371,31 @@ function resetVerified() {
   verifiedTicket.value = '';
 }
 
-// 支持 URL 参数直接打开指定验证方式：?captcha=slider|click|random，滑块/摆动图块可追加 &shape=...
-onMounted(() => {
-  // 形状选择器以后端下发的可用形状为准，新增图形无需改前端默认列表
-  fetch('/api/captcha/types')
+/** 从接口拉取形状选择器数据（仅 debug 返回，非 debug 为空列表） */
+function loadShapes() {
+  fetch(`/api/captcha/types${isDev ? '?debug=1' : ''}`, { cache: 'no-store' })
     .then((res) => res.json())
-    .then((data: { shapes?: { slider?: string[] } }) => {
-      demoShapes.value = data.shapes?.slider || [];
+    .then((data: { shapes?: { slider?: Array<{ name: string; label: string }> } }) => {
+      const shapes = data.shapes?.slider || [];
+      demoShapes.value = shapes.map((item) => item.name);
+      demoShapeLabels.value = Object.fromEntries(
+        shapes.map((item) => [item.name, item.label])
+      );
     })
     .catch(() => {
       demoShapes.value = [];
+      demoShapeLabels.value = {};
     });
+}
+
+// 支持 URL 参数直接打开指定验证方式：?captcha=slider|click|random，滑块/摆动图块可追加 &shape=...
+onMounted(() => {
+  loadShapes();
   const params = new URLSearchParams(location.search);
   const modeParam = params.get('captcha');
   const shapeParam = params.get('shape');
   if ((modeParam === 'slider' || modeParam === 'swing-tile')
-    && shapeParam && PUZZLE_SHAPES[shapeParam]) {
+    && shapeParam) {
     shapeFromUrl.value = shapeParam;
   }
   if (modeParam === 'slider' || modeParam === 'click'

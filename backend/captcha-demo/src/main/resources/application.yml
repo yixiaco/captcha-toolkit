@@ -28,32 +28,6 @@ captcha:
     min-elapsed-ms: 500
     expire-seconds: 300
     default-shape: classic
-    enabled-shapes:
-      - classic
-      - leaf
-      - triangle
-      - circle
-      - diamond
-      - star
-      - heart
-      - moon
-      - hexagon
-      - bat
-      - elephant
-      - dolphin
-      - butterfly
-      - whale
-      - owl
-      - bird
-      - frog
-      - bear
-      - duck
-      - eagle
-      - fish
-      - pig
-      - airplane
-      - fire
-      - school
     piece-size-ratio: 0.10714285714285714
     margin: 10
     render-scale: 2
@@ -71,32 +45,6 @@ captcha:
     fake-target-axis-threshold: 12
   swing-tile:
     default-shape: classic
-    enabled-shapes:
-      - classic
-      - leaf
-      - triangle
-      - circle
-      - diamond
-      - star
-      - heart
-      - moon
-      - hexagon
-      - bat
-      - elephant
-      - dolphin
-      - butterfly
-      - whale
-      - owl
-      - bird
-      - frog
-      - bear
-      - duck
-      - eagle
-      - fish
-      - pig
-      - airplane
-      - fire
-      - school
     piece-size-ratio: 0.10
   click:
     background:

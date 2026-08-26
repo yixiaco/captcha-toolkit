@@ -2,8 +2,8 @@ package com.captcha.toolkit.config;
 
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import com.captcha.toolkit.shape.ShapeCatalog;
+
 import java.util.List;
 
 /**
@@ -50,12 +50,7 @@ public class SwingTileConfig {
     private String defaultShape = "classic";
 
     /** 对外可用的形状白名单（默认覆盖全部内置形状） */
-    private List<String> enabledShapes = new ArrayList<>(Arrays.asList(
-            "classic", "leaf", "triangle", "circle", "diamond", "star", "heart",
-            "moon", "hexagon",
-            "bat", "elephant", "dolphin", "butterfly", "whale", "owl", "bird",
-            "frog", "bear", "duck", "eagle", "fish", "pig",
-            "airplane", "fire", "school"));
+    private List<String> enabledShapes = ShapeCatalog.defaultEnabledShapes();
 
     /** 抗锯齿超采样倍数（与原滑块渲染保持一致） */
     private int renderScale = 2;

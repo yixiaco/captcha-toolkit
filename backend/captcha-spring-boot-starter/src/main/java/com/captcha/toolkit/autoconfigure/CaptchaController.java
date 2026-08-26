@@ -118,12 +118,12 @@ public class CaptchaController {
                 .localize(resolveLocale(request.getLang(), acceptLanguage), messageProvider);
     }
 
-    /** 查询后端支持的类型与滑块形状 */
+    /** 查询后端支持的类型与滑块形状（debug 模式才返回形状列表，否则为空列表） */
     @GetMapping("/types")
-    public Map<String, Object> types() {
+    public Map<String, Object> types(@RequestParam(defaultValue = "false") boolean debug) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("types", engine.supportedTypes());
-        body.put("shapes", engine.supportedShapes());
+        body.put("shapes", engine.supportedShapes(debug && properties.isDebugEnabled()));
         return body;
     }
 

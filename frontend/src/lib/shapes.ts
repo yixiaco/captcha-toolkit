@@ -46,9 +46,9 @@ export function getShapeOptions(
 ): Array<{ key: string; label: string }> {
   const keys = Array.isArray(shapes) ? shapes : Object.keys(PUZZLE_SHAPES);
   return keys
-    .filter((key) => PUZZLE_SHAPES[key])
     .map((key) => ({
       key,
-      label: shapeLabels[key] || PUZZLE_SHAPES[key].label,
+      // 接口下发的标签优先，静态表兜底，最后退回形状名
+      label: shapeLabels[key] || PUZZLE_SHAPES[key]?.label || key,
     }));
 }

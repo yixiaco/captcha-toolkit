@@ -78,7 +78,7 @@
 | `slider.min-elapsed-ms` | 最短验证耗时 | `500` |
 | `slider.expire-seconds` | 会话有效期 | `300` |
 | `slider.default-shape` | 默认形状 | `classic` |
-| `slider.enabled-shapes` | 可用形状白名单 | 9 种 |
+| `slider.enabled-shapes` | 可用形状白名单 | 全部内置与 SVG 资源形状 |
 | `slider.fake-target-count` | 假目标数量 | `0` |
 | `slider.fake-target-min-gap` | 假目标最小间距 | `24` |
 | `slider.fake-target-axis-threshold` | 同轴判定阈值 | `12` |
@@ -203,7 +203,7 @@
 | `swing-tile.control-point-count` | 贝塞尔控制点数量（多阶曲线） | `2` |
 | `swing-tile.piece-size-ratio` | 图块形状尺寸占图宽比例 | `0.10` |
 | `swing-tile.default-shape` | 默认形状 | `classic` |
-| `swing-tile.enabled-shapes` | 可用形状白名单 | 全部内置形状 |
+| `swing-tile.enabled-shapes` | 可用形状白名单 | 全部内置与 SVG 资源形状 |
 | `swing-tile.render-scale` | 抗锯齿超采样倍数（与原滑块一致） | `2` |
 | `swing-tile.rotation-swing-amplitude` | 方向摆动幅度（度） | `45` |
 | `swing-tile.start-rotation-max` | 起始方向随机偏移范围（度） | `60` |

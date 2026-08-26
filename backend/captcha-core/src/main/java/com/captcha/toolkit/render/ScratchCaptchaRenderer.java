@@ -29,18 +29,14 @@ import java.util.Random;
  */
 public class ScratchCaptchaRenderer {
 
-    /** 可埋入的图形（排除 classic 拼图块外观，避免与滑块混淆） */
-    private static final List<String> SCRATCH_SHAPES = List.of(
-            "leaf", "triangle", "circle", "diamond", "star", "heart", "moon", "hexagon",
-            "bat", "elephant", "dolphin", "butterfly", "whale", "owl", "bird",
-            "frog", "bear", "duck", "eagle", "fish", "pig",
-            "airplane", "fire", "school");
-
     /** 刮刮乐渲染配置 */
     private final ScratchConfig options;
 
     /** 图形形状注册表 */
     private final PuzzleShapeRegistry registry;
+
+    /** 可埋入的图形名称（排除 classic 拼图块外观，避免与滑块混淆） */
+    private final List<String> scratchShapes;
 
     /** 随机数源 */
     private final Random random = new Random();
@@ -59,6 +55,9 @@ public class ScratchCaptchaRenderer {
     public ScratchCaptchaRenderer(ScratchConfig options, PuzzleShapeRegistry registry) {
         this.options = options;
         this.registry = registry;
+        this.scratchShapes = registry.names().stream()
+                .filter(name -> !"classic".equals(name))
+                .toList();
     }
 
     /** 渲染结果：背景图 + 全部图案布局 */
@@ -137,7 +136,7 @@ public class ScratchCaptchaRenderer {
                 * (options.getPatternSizeRatio() - options.getPatternSizeMinRatio());
         double sizePx = w * sizeRatio;
         double half = sizePx / 2;
-        String shape = SCRATCH_SHAPES.get(random.nextInt(SCRATCH_SHAPES.size()));
+        String shape = scratchShapes.get(random.nextInt(scratchShapes.size()));
         for (int attempt = 0; attempt < 300; attempt++) {
             double cx = half + random.nextDouble() * Math.max(1, w - sizePx);
             double cy = half + random.nextDouble() * Math.max(1, h - sizePx);

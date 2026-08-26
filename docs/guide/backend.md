@@ -23,7 +23,7 @@
 | GET | `{prefix}?type=slider\|click\|rotate\|angle\|scratch\|curve\|slide-curve\|swing-tile` | 下发验证码 |
 | POST | `{prefix}/verify` | 校验答案 |
 | GET/POST | `{prefix}/ticket/verify` | 业务接口校验一次性票据 |
-| GET | `{prefix}/types` | 查询支持的类型与形状 |
+| GET | `{prefix}/types?debug=1` | 查询支持的类型与形状（debug 才返回形状列表，否则为空列表） |
 
 ### 下发验证码
 

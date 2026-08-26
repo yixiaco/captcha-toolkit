@@ -27,6 +27,7 @@ import com.captcha.toolkit.model.CaptchaChallenge;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.CaptchaTicket;
 import com.captcha.toolkit.model.GeneratedCaptcha;
+import com.captcha.toolkit.model.ShapeInfo;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
 import com.captcha.toolkit.store.CaptchaSessionStore;
@@ -36,7 +37,6 @@ import com.captcha.toolkit.type.CaptchaType;
 import com.captcha.toolkit.util.FingerprintHasher;
 import com.captcha.toolkit.word.WordFactory;
 
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -362,18 +362,33 @@ public class CaptchaEngine {
                 .toList();
     }
 
-    /** 返回各类型支持的拼图形状名称列表（key 为验证码类型编码） */
-    public Map<String, List<String>> supportedShapes() {
-        Map<String, List<String>> shapes = new LinkedHashMap<>();
+    /**
+     * 返回各类型支持的拼图形状信息列表（key 为验证码类型编码）。
+     *
+     * @param debug 是否返回完整形状列表；非 debug 时返回空列表，
+     *              避免把可用图形白名单暴露给前端
+     */
+    public Map<String, List<ShapeInfo>> supportedShapes(boolean debug) {
+        Map<String, List<ShapeInfo>> shapes = new LinkedHashMap<>();
+        if (!debug) {
+            shapes.put("slider", List.of());
+            shapes.put("swing-tile", List.of());
+            return shapes;
+        }
         CaptchaGenerator<?> generator = generators.get(CaptchaType.SLIDER);
         if (generator instanceof SliderCaptchaGenerator slider) {
-            shapes.put("slider", new ArrayList<>(slider.getShapeNames()));
+            shapes.put("slider", slider.getShapeOptions());
         }
         CaptchaGenerator<?> swingTile = generators.get(CaptchaType.SWING_TILE);
         if (swingTile instanceof SwingTileCaptchaGenerator swing) {
-            shapes.put("swing-tile", new ArrayList<>(swing.getShapeNames()));
+            shapes.put("swing-tile", swing.getShapeOptions());
         }
         return shapes;
+    }
+
+    /** 返回后端是否开启 debug 模式（决定是否下发答案与形状白名单） */
+    public boolean isDebugEnabled() {
+        return debugEnabled;
     }
 
     /** 手动移除一个未使用/异常的验证码会话 */

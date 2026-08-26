@@ -12,6 +12,7 @@ import com.captcha.toolkit.model.CaptchaAnswer;
 import com.captcha.toolkit.model.CaptchaSession;
 import com.captcha.toolkit.model.GeneratedCaptcha;
 import com.captcha.toolkit.model.PointVo;
+import com.captcha.toolkit.model.ShapeInfo;
 import com.captcha.toolkit.model.SliderChallengeData;
 import com.captcha.toolkit.model.VerifyResult;
 import com.captcha.toolkit.render.BackgroundProvider;
@@ -148,5 +149,12 @@ public class SliderCaptchaGenerator extends AbstractCaptchaGenerator<SliderChall
     /** 返回启用且已注册的形状名称列表 */
     public List<String> getShapeNames() {
         return shapeSelector.getShapeNames();
+    }
+
+    /** 返回启用且已注册的形状信息（名称 + 展示标签） */
+    public List<ShapeInfo> getShapeOptions() {
+        return shapeSelector.getShapeNames().stream()
+                .map(name -> new ShapeInfo(name, shapeRegistry.resolve(name).getLabel()))
+                .toList();
     }
 }

@@ -14,7 +14,7 @@ public class PuzzleShapeRegistry {
     /** 形状名 → 形状 映射（保持注册顺序） */
     private final Map<String, PuzzleShape> shapes = new LinkedHashMap<>();
 
-    /** 使用全部内置形状 */
+    /** 使用全部内置形状 + SVG 资源形状 */
     public PuzzleShapeRegistry() {
         this(List.of());
     }
@@ -24,6 +24,10 @@ public class PuzzleShapeRegistry {
      */
     public PuzzleShapeRegistry(Collection<PuzzleShape> customShapes) {
         for (PuzzleShape shape : PuzzleShapes.all()) {
+            register(shape);
+        }
+        // SVG 资源形状注册在内置形状之后，同名时覆盖内置实现（如 airplane/fire/triangle）
+        for (PuzzleShape shape : SvgShapeLibrary.load()) {
             register(shape);
         }
         if (customShapes != null) {

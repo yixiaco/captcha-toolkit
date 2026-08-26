@@ -2,9 +2,8 @@ package com.captcha.toolkit.config;
 
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import com.captcha.toolkit.shape.ShapeCatalog;
 
 /**
  * 滑块验证码配置，CaptchaConfig 与 CaptchaProperties 共用。
@@ -46,9 +45,7 @@ public class SliderConfig {
     /** 默认形状；shape 参数非法或未启用时回退到它 */
     private String defaultShape = "classic";
     /** 对外可用的形状白名单 */
-    private List<String> enabledShapes = new ArrayList<>(Arrays.asList(
-            "classic", "leaf", "triangle", "circle", "diamond", "star", "heart",
-            "moon", "hexagon"));
+    private List<String> enabledShapes = ShapeCatalog.defaultEnabledShapes();
     /** 小图左右留白，用于容纳柔光投影 */
     private int piecePadding = 8;
     /** 假目标（干扰凹槽）数量：图中会出现多个缺口，但只有真目标能拼合 */

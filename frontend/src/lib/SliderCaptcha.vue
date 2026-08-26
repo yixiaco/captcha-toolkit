@@ -11,24 +11,27 @@
       class="shape-picker"
     >
       <span class="shape-label">{{ opts.shapeLabel }}</span>
-      <button
-        v-for="option in shapeOptions"
-        :key="option.key"
-        class="shape-btn"
-        :class="{ active: selectedShape === option.key }"
-        :data-shape="option.key"
-        @click="selectShape(option.key)"
+      <select
+        class="shape-select"
+        :value="selectedShape"
+        :data-shape="selectedShape || 'random'"
+        @change="onShapeChange"
       >
-        {{ option.label }}
-      </button>
-      <button
-        class="shape-btn"
-        :class="{ active: selectedShape === '' }"
-        data-shape="random"
-        @click="selectShape('')"
-      >
-        {{ opts.randomLabel }}
-      </button>
+        <option
+          value=""
+          data-shape="random"
+        >
+          {{ opts.randomLabel }}
+        </option>
+        <option
+          v-for="option in shapeOptions"
+          :key="option.key"
+          :value="option.key"
+          :data-shape="option.key"
+        >
+          {{ option.label }}
+        </option>
+      </select>
     </div>
 
     <div
@@ -141,7 +144,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
-import { getShapeOptions, PUZZLE_SHAPES } from './shapes';
+import { getShapeOptions } from './shapes';
 import { useCaptchaOptions } from './options';
 import CaptchaLoadError from './CaptchaLoadError.vue';
 import type { SliderChallengeData, VerifyResult } from './api';
@@ -299,9 +302,9 @@ async function loadCaptcha() {
   }
 }
 
-function selectShape(key: string) {
+function onShapeChange(event: Event) {
   if (status.value === 'success') return;
-  selectedShape.value = key;
+  selectedShape.value = (event.target as HTMLSelectElement).value;
   loadCaptcha();
 }
 
@@ -373,7 +376,8 @@ async function onPointerUp(event: PointerEvent) {
 onMounted(async () => {
   await nextTick();
   trackWidth = trackRef.value ? trackRef.value.clientWidth : opts.width;
-  if (opts.shape && PUZZLE_SHAPES[opts.shape]) {
+  // 仅当形状在接口下发的可用列表内时才预选，避免非 debug 模式前端擅自指定形状
+  if (opts.shape && opts.shapes?.includes(opts.shape)) {
     selectedShape.value = opts.shape;
   }
   loadCaptcha();
