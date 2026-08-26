@@ -1,5 +1,6 @@
 保温杯_thermos-cup.svg
 爆米花_popcorn-one.svg
+蝙蝠_bat.svg
 标记_mark.svg
 冰棍4_icecream-five.svg
 冰激凌_icecream-two.svg
@@ -15,6 +16,7 @@
 吹风机_hair-dryer.svg
 大葱_scallion.svg
 大虾_shrimp.svg
+大象_elephant.svg
 蛋糕_cake-five.svg
 蛋糕_cake-four.svg
 蛋糕_cake-one.svg
@@ -30,10 +32,12 @@
 高脚杯_goblet.svg
 果饮_juice.svg
 海滩雨伞_beach-umbrella.svg
+海豚_dolphin.svg
 航海_cruise.svg
 航空_aviation.svg
 航行_sailing.svg
 喝茶_tea-drink.svg
+蝴蝶_butterfly.svg
 户外_outdoor.svg
 火车_train.svg
 火锅_chafing-dish-one.svg
@@ -47,6 +51,7 @@
 降落伞_parachute.svg
 胶手套_glove.svg
 金字塔_pyramid-one.svg
+鲸鱼_whale.svg
 酒瓶_bottle-one.svg
 军舰_frigate.svg
 可乐_cola.svg
@@ -59,6 +64,7 @@
 旅游巴士_tour-bus.svg
 萝卜_radish.svg
 落日_sunset.svg
+猫头鹰_owl.svg
 门票_tickets-one.svg
 米饭_rice.svg
 面包_bread.svg
@@ -67,6 +73,7 @@
 面条_noodles.svg
 奶酪_cheese.svg
 南瓜_pumpkin.svg
+鸟_bird.svg
 柠檬_lemon.svg
 牛油果_avocado-one.svg
 牛油果_avocado.svg
@@ -77,6 +84,7 @@
 苹果_apple-one.svg
 起飞_take-off-one.svg
 青菜_vegetables.svg
+青蛙_frog.svg
 三角形_triangle.svg
 生日蛋糕_birthday-cake.svg
 圣诞树_christmas-tree.svg
@@ -94,16 +102,24 @@
 仙人掌_cactus.svg
 香蕉_banana.svg
 星球_planet.svg
+熊_bear.svg
+学校_school.svg
+鸭子_duck.svg
 椰树_vacation.svg
 椰子树_coconut-tree.svg
+叶子_leaf.svg
 衣架_hanger-two.svg
+鹰_eagle.svg
 影院_theater.svg
 幼苗_seedling.svg
+鱼_fish-one.svg
 宇宙_universal.svg
 浴缸_tub.svg
 圆萝卜_radish-one.svg
 圆形_round.svg
+月亮_moon.svg
 运送车_transport.svg
 帐篷_tent.svg
 帐篷旗帜_tent-banner.svg
+猪_pig.svg
 煮饭_cook.svg

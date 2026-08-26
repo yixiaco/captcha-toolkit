@@ -1,10 +1,13 @@
 package com.captcha.toolkit.shape;
 
+import com.captcha.toolkit.util.SvgPathParser;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +50,21 @@ public final class SvgShapeLibrary {
         }
     }
 
+    /**
+     * 按名称查找资源形状。
+     *
+     * @param name 形状名称
+     * @return 对应形状；不存在时返回 null
+     */
+    public static PuzzleShape shape(String name) {
+        for (PuzzleShape shape : load()) {
+            if (shape.getName().equals(name)) {
+                return shape;
+            }
+        }
+        return null;
+    }
+
     /** 从 classpath 资源读取并解析全部形状 */
     private static List<PuzzleShape> loadFromResources() {
         List<PuzzleShape> shapes = new ArrayList<>();
@@ -70,14 +88,46 @@ public final class SvgShapeLibrary {
                         continue;
                     }
                     String svg = new String(svgIn.readAllBytes(), StandardCharsets.UTF_8);
-                    shapes.add(PuzzleShapes.fromSvgDocument(
-                            shapeName(file), shapeLabel(file), svg));
+                    shapes.add(createShape(shapeName(file), shapeLabel(file), svg));
                 }
             }
         } catch (IOException e) {
             throw new IllegalStateException("加载内置 SVG 形状资源失败", e);
         }
         return shapes;
+    }
+
+    /** 从 SVG 文档创建形状：解析几何模板后按目标方块适配 */
+    private static PuzzleShape createShape(String name, String label, String svg) {
+        ShapeGeometry template = SvgPathParser.parseGeometry(svg);
+        return new PuzzleShape() {
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            @Override
+            public String getLabel() {
+                return label;
+            }
+
+            @Override
+            public ShapeGeometry geometry(double x, double y, double size) {
+                return fitGeometry(template, x, y, size);
+            }
+        };
+    }
+
+    /** 把模板几何等比缩放并居中到方块内（边界已包含描边外扩，保证线条不裁切） */
+    private static ShapeGeometry fitGeometry(
+            ShapeGeometry template, double x, double y, double size) {
+        Rectangle2D bounds = template.bounds();
+        double scale = Math.min(size / bounds.getWidth(), size / bounds.getHeight());
+        ShapeGeometry scaled = template.scaled(scale);
+        Rectangle2D scaledBounds = scaled.bounds();
+        double dx = x + (size - scaledBounds.getWidth()) / 2.0 - scaledBounds.getMinX();
+        double dy = y + (size - scaledBounds.getHeight()) / 2.0 - scaledBounds.getMinY();
+        return scaled.translated(dx, dy);
     }
 
     /** 从文件名提取形状名：最后一个下划线后的英文部分 */

@@ -26,10 +26,6 @@ public class PuzzleShapeRegistry {
         for (PuzzleShape shape : PuzzleShapes.all()) {
             register(shape);
         }
-        // SVG 资源形状注册在内置形状之后，同名时覆盖内置实现（如 airplane/fire/triangle）
-        for (PuzzleShape shape : SvgShapeLibrary.load()) {
-            register(shape);
-        }
         if (customShapes != null) {
             for (PuzzleShape shape : customShapes) {
                 register(shape);
