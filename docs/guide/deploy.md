@@ -84,3 +84,22 @@ D:\software\apache-maven-3.9.11\bin\mvn.cmd -Prelease -pl captcha-core,captcha-s
 - 父 POM `captcha-toolkit-parent` 必须一起发布，否则使用方无法解析子 POM 的 `<parent>`
 - `captcha-demo` 已标记跳过发布，只发布 core 与 starter
 - 每次发布前先递增版本号：Central 上的同一版本不可覆盖，属于不可变发布
+
+## 发布到 npm
+
+Vue 组件库发布为 `captcha-toolkit-vue`。`prepublishOnly` 钩子会先执行 `build:lib`，
+因此不会误发过期的 `dist`。
+
+```bash
+cd frontend
+npm publish
+```
+
+几个要点：
+
+- Vue 声明为 peer dependency（构建时 `external: ['vue']`），不会打进产物，
+  避免宿主项目出现两份 Vue
+- 只发布 `dist`（`files` 已限定），README 与 LICENSE 由 npm 自动附带
+- 账号开启 2FA 时，`_authToken` 必须是勾选了 “bypass 2FA” 的 Granular Access Token；
+  临时发布也可以现场验证：`npm publish --otp=<6 位验证码>`
+- 版本号在 `frontend/package.json` 中维护，已发布的版本同样不可覆盖

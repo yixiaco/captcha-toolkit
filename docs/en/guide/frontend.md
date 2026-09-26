@@ -1,5 +1,20 @@
 # Frontend Integration
 
+## Installation
+
+```bash
+npm install captcha-toolkit-vue
+```
+
+Vue is declared as a peer dependency (externalized at build time, never bundled),
+so the host project must provide Vue 3 (`^3.5`) itself:
+
+```bash
+npm install vue
+```
+
+Import the stylesheet once: `import 'captcha-toolkit-vue/style.css'`.
+
 ## Global Plugin
 
 ```ts

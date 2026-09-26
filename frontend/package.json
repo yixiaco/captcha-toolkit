@@ -1,7 +1,29 @@
 {
   "name": "captcha-toolkit-vue",
   "version": "0.1.0",
+  "description": "Vue 3 行为验证码组件库：滑块拼图 / 文字点选 / 图形点选 / 旋转 / 角度 / 刮刮乐 / 曲线等，配合 captcha-spring-boot-starter 后端使用",
   "type": "module",
+  "license": "MIT",
+  "author": "yixiaco",
+  "homepage": "https://yixiaco.github.io/captcha-toolkit/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yixiaco/captcha-toolkit.git",
+    "directory": "frontend"
+  },
+  "bugs": {
+    "url": "https://github.com/yixiaco/captcha-toolkit/issues"
+  },
+  "keywords": [
+    "captcha",
+    "vue",
+    "vue3",
+    "behavior-captcha",
+    "slider-captcha",
+    "puzzle-captcha",
+    "verification",
+    "验证码"
+  ],
   "files": [
     "dist"
   ],
@@ -24,9 +46,10 @@
     "lint:fix": "eslint . --fix",
     "build:lib": "vue-tsc --noEmit && vite build",
     "build:demo": "vue-tsc --noEmit && vite build --mode demo",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build:lib"
   },
-  "dependencies": {
+  "peerDependencies": {
     "vue": "^3.5.13"
   },
   "devDependencies": {
@@ -40,6 +63,7 @@
     "typescript-eslint": "^8.44.0",
     "vite": "^6.0.7",
     "vite-plugin-dts": "^4.5.4",
+    "vue": "^3.5.13",
     "vue-tsc": "^3.2.6"
   }
 }

@@ -109,6 +109,14 @@ VerifyResult result = engine.verify(challenge.getId(),
 
 ## 前端：嵌入其他项目
 
+先在宿主项目安装组件库（Vue 3 为 peer dependency，需自行安装 `vue@^3.5`）：
+
+```bash
+npm install captcha-toolkit-vue
+```
+
+样式需要单独引入一次：`import 'captcha-toolkit-vue/style.css'`。
+
 组件库支持两种用法：
 
 ### 全局插件

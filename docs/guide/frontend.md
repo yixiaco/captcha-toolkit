@@ -1,5 +1,20 @@
 # 前端接入
 
+## 安装
+
+```bash
+npm install captcha-toolkit-vue
+```
+
+组件库把 Vue 声明为 peer dependency（构建时已 external，不打进产物），
+宿主项目需要自己提供 Vue 3（`^3.5`）：
+
+```bash
+npm install vue
+```
+
+样式文件单独引入一次：`import 'captcha-toolkit-vue/style.css'`。
+
 ## 全局插件
 
 ```js
