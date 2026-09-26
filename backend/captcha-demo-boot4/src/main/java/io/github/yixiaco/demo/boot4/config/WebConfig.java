@@ -1,4 +1,4 @@
-package io.github.yixiaco.demo.config;
+package io.github.yixiaco.demo.boot4.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

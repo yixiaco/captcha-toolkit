@@ -25,7 +25,8 @@ backend/
   captcha-core/                  纯 Java 验证码引擎（不依赖 Spring；Java 17 字节码）
   captcha-spring-boot4-starter/  Spring Boot 4 自动配置 + HTTP 控制器（Java 21）
   captcha-spring-boot3-starter/  Spring Boot 3 适配模块（Java 17，共用同一份实现源码）
-  captcha-demo/                  可运行演示应用 + 图片素材
+  captcha-demo-boot4/            Spring Boot 4 演示应用 + 图片素材（Java 21，:18080）
+  captcha-demo-boot3/            Spring Boot 3 演示应用（Java 17，:18081）
 frontend/
   src/lib/                       Vue 3 组件库
   src/demo/                      演示站点

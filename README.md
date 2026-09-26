@@ -23,7 +23,8 @@ backend/
   captcha-core/                  纯 Java 验证码引擎（不依赖 Spring，可单独复用；Java 17 字节码）
   captcha-spring-boot4-starter/  Spring Boot 4 自动配置（Java 21 构建）
   captcha-spring-boot3-starter/  Spring Boot 3 适配模块（Java 17 构建，与 Boot 4 模块共用同一份源码）
-  captcha-demo/                  演示应用（依赖 starter，展示接入方式）
+  captcha-demo-boot4/            Spring Boot 4 演示应用（:18080，前端默认代理目标）
+  captcha-demo-boot3/            Spring Boot 3 / JDK 17 演示应用（:18081，同一套配置与接口）
 frontend/
   src/lib/                       Vue 3 组件库（可发布 npm / 源码引入）
   src/demo/                      演示站点（组件库的用法示例）
@@ -222,12 +223,20 @@ import { CaptchaModal } from 'captcha-toolkit-vue'
 
 ## 运行演示
 
-后端（JDK 21 + Maven）：
+Boot 4 演示（JDK 21 + Maven，端口 18080，前端 `npm run dev` 默认代理到它）：
 
 ```bash
-cd backend/captcha-demo
+cd backend
 set JAVA_HOME=D:\jdks\openjdk-21.0.2
-mvn spring-boot:run
+mvn -pl captcha-demo-boot4 -am spring-boot:run
+```
+
+Boot 3 演示（JDK 17 即可，端口 18081，配置与接口和 Boot 4 演示完全一致）：
+
+```bash
+cd backend
+set JAVA_HOME=D:\jdks\graalvm-jdk-17.0.12
+mvn -pl captcha-demo-boot3 -am spring-boot:run
 ```
 
 前端：

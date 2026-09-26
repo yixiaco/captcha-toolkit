@@ -130,14 +130,20 @@ class CurveCaptchaGeneratorTest {
 
     @Test
     void rejectsLowCoverageCurve() {
-        GeneratedCaptcha captcha = generate(newGenerator());
+        // 收紧容差：随机引导曲线可能很短（长度下限约 60px），默认 12px 容差下
+        // “只画开头一小段”也可能盖住 60% 的采样点，导致断言偶发失效
+        CurveConfig config = testConfig();
+        config.setTolerance(2);
+        GeneratedCaptcha captcha = generate(
+                new CurveCaptchaGenerator(config, new SceneBackgroundProvider()));
         int width = captcha.getWidth();
         int height = captcha.getHeight();
         List<PointVo> expected = captcha.getSession().getCurve();
 
-        // 只绘制前四分之一 + 直接跳到终点：起终点正确但覆盖率明显不足 60%
+        // 起终点正确，但只绘制开头一小段（点数恰好等于最少点数要求），覆盖率远低于 60%
+        int minPoints = Math.max(2, config.getMinDrawnPoints());
         List<NormalizedPoint> answer = new ArrayList<>();
-        for (int i = 0; i < expected.size() / 4; i++) {
+        for (int i = 0; i < minPoints - 1 && i < expected.size() - 1; i++) {
             answer.add(new NormalizedPoint(
                     expected.get(i).getX() / (double) width,
                     expected.get(i).getY() / (double) height));
@@ -146,8 +152,8 @@ class CurveCaptchaGeneratorTest {
                 expected.get(expected.size() - 1).getX() / (double) width,
                 expected.get(expected.size() - 1).getY() / (double) height));
 
-        VerifyResult result = newGenerator().verify(
-                captcha.getSession(), CaptchaAnswer.curve(answer));
+        VerifyResult result = new CurveCaptchaGenerator(config, new SceneBackgroundProvider())
+                .verify(captcha.getSession(), CaptchaAnswer.curve(answer));
         assertFalse(result.isSuccess());
         assertEquals("WRONG", result.getCode());
     }

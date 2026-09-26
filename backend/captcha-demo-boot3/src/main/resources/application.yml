@@ -1,10 +1,10 @@
 server:
-  # 避开通用的 8080，演示服务使用 18080
-  port: 18080
+  # 避开通用的 8080 与 Boot 4 演示的 18080，Boot 3 演示使用 18081
+  port: 18081
 
 spring:
   application:
-    name: captcha-demo
+    name: captcha-demo-boot3
 
 captcha:
   # 演示项目开放 debug 答案，便于自动化自检；生产环境务必设为 false

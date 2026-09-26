@@ -9,7 +9,8 @@ backend/
   captcha-core/                  Pure Java engine (no Spring), Java 17 bytecode
   captcha-spring-boot4-starter/  Boot 4 auto-configuration + HTTP controller (Java 21)
   captcha-spring-boot3-starter/  Boot 3 adapter (own Boot 3.5.16 parent, Java 17)
-  captcha-demo/                  Runnable demo app + image assets
+  captcha-demo-boot4/            Boot 4 demo app, port 18080 (Java 21)
+  captcha-demo-boot3/            Boot 3 demo app, port 18081 (own Boot 3.5.16 parent, Java 17)
 frontend/
   src/lib/                       Reusable Vue 3 component library
   src/demo/                      Demo app consuming the library
@@ -18,33 +19,36 @@ frontend/
 Backend source lives under `backend/captcha-core/src/main/java/io/github/yixiaco/`; tests live under the matching `src/test/java` tree. Frontend styles are in `src/lib/style.css` (library) and `src/demo/demo.css` (demo only).
 
 `captcha-spring-boot3-starter` compiles the Java sources of `captcha-spring-boot4-starter` through
-`build-helper-maven-plugin` (single source of truth for both Boot generations) and does not inherit
-`captcha-toolkit-parent`, so keep its `<version>` in sync with the root POM by hand.
+`build-helper-maven-plugin` (single source of truth for both Boot generations). It, plus
+`captcha-demo-boot3`, does not inherit `captcha-toolkit-parent`, so keep their `<version>` in sync with
+the root POM by hand.
 
 ## Build, Test, and Development Commands
 
-Backend (JDK 21; `captcha-core` + `captcha-spring-boot3-starter` alone build on JDK 17;
+Backend (JDK 21; `captcha-core` + Boot 3 modules alone build on JDK 17;
 Maven uses `D:\Maven\.m2` per `conf/settings.xml`):
 
 ```powershell
 $env:JAVA_HOME='D:\jdks\openjdk-21.0.2'
 D:\software\apache-maven-3.9.11\bin\mvn.cmd clean install   # build + test + install
-D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo -am spring-boot:run
+D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot4 -am spring-boot:run   # :18080
+D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot3 -am spring-boot:run   # :18081
 ```
 
 Run the demo with `-am` so captcha-core / starter changes are rebuilt in the same reactor;
 without it, the demo resolves stale artifacts from the local Maven repo.
 
 JDK 17 can only build the Java 17 part of the reactor
-(`mvn.cmd -pl captcha-core,captcha-spring-boot3-starter -am test`); the Boot 4 starter and the
-demo target Java 21.
+(`mvn.cmd -pl captcha-core,captcha-spring-boot3-starter,captcha-demo-boot3 -am test`); the Boot 4
+starter and its demo target Java 21.
 
 Frontend:
 
 ```bash
 cd frontend
 npm install
-npm run dev          # dev server on :5173, proxies /api to :18080
+npm run dev          # dev server on :5173, proxies /api to :18080 (Boot 4 demo);
+                     # point it at the Boot 3 demo with VITE_API_TARGET=http://localhost:18081
 npm run build:lib    # publishable component bundle
 npm run build:demo   # demo site
 ```

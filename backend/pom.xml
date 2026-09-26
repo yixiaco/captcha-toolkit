@@ -49,7 +49,9 @@
         <module>captcha-spring-boot4-starter</module>
         <!-- Spring Boot 3 适配模块：不继承本 POM（父 POM 为 Spring Boot 3.5.16），版本号需与本 POM 同步 -->
         <module>captcha-spring-boot3-starter</module>
-        <module>captcha-demo</module>
+        <module>captcha-demo-boot4</module>
+        <!-- Spring Boot 3 演示应用：同 captcha-spring-boot3-starter，父 POM 为 Spring Boot 3.5.16 -->
+        <module>captcha-demo-boot3</module>
     </modules>
 
     <properties>

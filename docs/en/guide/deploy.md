@@ -78,7 +78,7 @@ Notes:
 
 - Credentials live in the `<id>sonatype</id>` server of `settings.xml` (Central Portal user token)
 - The parent POM `captcha-toolkit-parent` must be published too, otherwise consumers cannot resolve child POMs
-- `captcha-demo` is marked as skip-publish; only core and the two starters are released
+- `captcha-demo-boot4` / `captcha-demo-boot3` are marked as skip-publish; only core and the two starters are released
 - `captcha-spring-boot3-starter` uses Spring Boot 3.5.16 as its parent (it cannot inherit
   `captcha-toolkit-parent`) and carries its own copy of the release profile; bump its `<version>` too
 - Bump the version before every release: Central never allows overwriting a published version

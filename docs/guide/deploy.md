@@ -83,7 +83,7 @@ D:\software\apache-maven-3.9.11\bin\mvn.cmd -Prelease -pl captcha-core,captcha-s
 
 - 凭据来自 `settings.xml` 中 `<id>sonatype</id>` 的 server（Central Portal 用户令牌）
 - 父 POM `captcha-toolkit-parent` 必须一起发布，否则使用方无法解析子 POM 的 `<parent>`
-- `captcha-demo` 已标记跳过发布，只发布 core 与两个 starter
+- `captcha-demo-boot4` / `captcha-demo-boot3` 已标记跳过发布，只发布 core 与两个 starter
 - `captcha-spring-boot3-starter` 的父 POM 是 Spring Boot 3.5.16（无法继承 `captcha-toolkit-parent`），
   它自带一份 release profile；升级版本号时要同步修改该模块的 `<version>`
 - 每次发布前先递增版本号：Central 上的同一版本不可覆盖，属于不可变发布

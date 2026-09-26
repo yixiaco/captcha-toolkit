@@ -13,7 +13,8 @@
 
 ```bash
 npm install
-npm run dev          # 开发演示站（/api 代理到 http://localhost:18080）
+npm run dev          # 开发演示站（/api 代理到 Boot 4 演示 http://localhost:18080）
+# 联调 Boot 3 演示（:18081）：VITE_API_TARGET=http://localhost:18081 npm run dev
 npm run type-check   # vue-tsc 类型检查
 npm run lint         # ESLint 校验（--max-warnings 0）
 npm run lint:fix     # ESLint 自动修复

@@ -11,9 +11,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>captcha-demo</artifactId>
-    <name>captcha-demo</name>
-    <description>演示应用：集成 captcha-spring-boot4-starter 后即可直接运行</description>
+    <artifactId>captcha-demo-boot4</artifactId>
+    <name>captcha-demo-boot4</name>
+    <description>Spring Boot 4 演示应用：集成 captcha-spring-boot4-starter 后即可直接运行</description>
 
     <dependencies>
         <dependency>

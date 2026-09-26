@@ -1,0 +1,144 @@
+server:
+  # 避开通用的 8080：Boot 4 演示使用 18080，Boot 3 演示（captcha-demo-boot3）使用 18081
+  port: 18080
+
+spring:
+  application:
+    name: captcha-demo-boot4
+
+captcha:
+  # 演示项目开放 debug 答案，便于自动化自检；生产环境务必设为 false
+  debug-enabled: true
+  api-prefix: /api/captcha
+  # 验证通过后发放的一次性票据有效期（秒）
+  ticket-expire-seconds: 120
+  # 行为轨迹校验：前端采集 td（按下/移动/松开、点击序列）后随 verify 提交
+  behavior:
+    enabled: true
+  background:
+    sources:
+      - /images/captcha/default.jpg
+    generate-fallback: true
+  slider:
+    width: 340
+    height: 190
+    # 验证容差（像素，服务端图片坐标系）
+    tolerance: 8
+    # 最短验证耗时（毫秒），拦截脚本秒答
+    min-elapsed-ms: 500
+    expire-seconds: 300
+    default-shape: classic
+    piece-size-ratio: 0.10714285714285714
+    margin: 10
+    render-scale: 2
+    hole-alpha: 204
+    shadow-radius: 6
+    shadow-opacity: 0.8
+    shadow-offset-x: 2
+    shadow-offset-y: -1
+    piece-padding: 8
+    # 假目标（干扰凹槽）数量：图中会出现多个缺口，只有真目标能拼合
+    fake-target-count: 1
+    # 假目标中心最小间距，避免图形重叠
+    fake-target-min-gap: 24
+    # 判定“同一 y/x 轴”的像素阈值；同 y 时大小/旋转不同，同 x 时 y 必须不同
+    fake-target-axis-threshold: 12
+  swing-tile:
+    default-shape: classic
+    piece-size-ratio: 0.10
+  click:
+    background:
+      # 点选默认使用程序生成风景图；如需图片素材在这里配置
+      sources: []
+      generate-fallback: true
+    width: 340
+    height: 190
+    # 目标文字候选数组：每次随机选一个，例如“星巴克”→ 请依次点选 星、巴、克；留空则随机选字
+    target-text:
+      - 星巴克
+      - 麦当劳
+      - 肯德基
+      - 瑞幸
+      - 华为
+    target-count: 3
+    distractor-count: 5
+    tolerance: 18
+    min-elapsed-ms: 800
+    expire-seconds: 300
+    font-size-min: 18
+    font-size-max: 24
+    min-spacing: 40
+    # 字号小 + 明度差低 + 色相偏移小，让字融入背景但肉眼可辨
+    lightness-delta-min: 0.12
+    lightness-delta-max: 0.18
+    hue-shift-max: 5
+    alpha-min: 0.78
+    alpha-max: 0.9
+    glyph-render-scale: 3
+    punch-holes-min: 5
+    punch-holes-max: 9
+    warp-amplitude: 2.0
+    curve-count: 24
+    dash-count: 12
+    dot-count: 160
+    occlusion-probability: 0.6
+  click-shape:
+    target-count: 3
+    distractor-count: 5
+    pattern-size-ratio: 0.13
+    pattern-size-min-ratio: 0.06
+    pattern-min-gap: 40
+    rotation-max: 20
+    tolerance: 18
+    min-elapsed-ms: 800
+    expire-seconds: 300
+    render-scale: 2
+  rotate:
+    width: 340
+    height: 190
+    # 角度容差（度）
+    tolerance: 3
+    min-elapsed-ms: 800
+    expire-seconds: 300
+    # 错位角度范围，避开接近 0/360 的“几乎对齐”
+    min-angle: 20
+    max-angle: 340
+    render-scale: 2
+  angle:
+    width: 340
+    height: 190
+    # 角度容差（度）
+    tolerance: 3
+    min-elapsed-ms: 800
+    expire-seconds: 300
+    # 方向标记初始错位角度范围，避开接近 0/360 的“几乎朝上”
+    min-angle: 20
+    max-angle: 340
+    # 圆盘半径占画布短边的比例（越大圆盘越大）
+    disc-radius-ratio: 0.4
+    render-scale: 2
+  scratch:
+    width: 340
+    height: 190
+    # 最短验证耗时（毫秒）
+    min-elapsed-ms: 1000
+    expire-seconds: 300
+    # 图中埋入的图案总数与目标刮出数量（实际数量在 min~max 间随机，避免每次都拖很远）
+    pattern-count: 6
+    target-count: 3
+    target-count-min: 1
+    # 图案尺寸/间距与刮中判定
+    pattern-size-ratio: 0.13
+    pattern-size-min-ratio: 0.06
+    pattern-min-gap: 36
+    # 滑块位置（归一化 0~1）校验容差
+    tolerance: 0.03
+    # 与背景融合的参数：明度差越小、色相偏移越小、越难识别；透明度与滑块拼图凹槽一致（约 0.8）
+    lightness-delta-min: 0.04
+    lightness-delta-max: 0.12
+    hue-shift-max: 8
+    alpha-min: 0.75
+    alpha-max: 0.85
+    # 图形上的白色透明层（与滑块拼图凹槽一致）
+    hole-white-alpha: 0.5
+    render-scale: 2

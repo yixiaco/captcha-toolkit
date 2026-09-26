@@ -2,7 +2,7 @@
 
 ## 环境要求
 
-- JDK 21（构建全部模块 / 运行 demo 需要；只构建 `captcha-core` 与 `captcha-spring-boot3-starter` 时 JDK 17 即可）
+- JDK 21（构建全部模块 / 运行 Boot 4 演示需要；只构建 `captcha-core` 与 Boot 3 模块时 JDK 17 即可）
 - Maven 3.9+（本仓库使用 `D:\software\apache-maven-3.9.11`，本地仓库为 `D:\Maven\.m2`）
 - Node.js 18+（Vite 6 要求；本机默认 Node 16 会报 `crypto$2.getRandomValues is not a function`，请使用 Node 18+ 或 Codex 捆绑的 Node 24）
 
@@ -12,10 +12,19 @@
 cd backend
 $env:JAVA_HOME='D:\jdks\openjdk-21.0.2'
 D:\software\apache-maven-3.9.11\bin\mvn.cmd clean install
-D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo spring-boot:run
+# Boot 4 演示：http://localhost:18080（前端 dev server 默认代理到它）
+D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot4 -am spring-boot:run
 ```
 
-后端默认监听 `http://localhost:18080`。
+Boot 3 / JDK 17 演示：同一套配置与接口，端口 18081（与 Boot 4 演示可同时运行）：
+
+```powershell
+cd backend
+$env:JAVA_HOME='D:\jdks\graalvm-jdk-17.0.12'
+D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot3 -am spring-boot:run
+```
+
+两个演示都在 `captcha.debug-enabled: true` 下运行，便于自检；生产环境务必关闭。
 
 ::: tip 修改了 captcha-core 或 starter 源码后
 先重新执行 `mvn.cmd -pl captcha-core,captcha-spring-boot4-starter,captcha-spring-boot3-starter install -DskipTests`，
@@ -62,6 +71,8 @@ npm run build:lib    # 构建组件库（含 .d.ts 类型声明）
 ```bash
 curl "http://localhost:18080/api/captcha/types?debug=1"
 ```
+
+（Boot 3 演示换成 `http://localhost:18081/api/captcha/types?debug=1`。）
 
 返回后端支持的类型与滑块形状：
 
