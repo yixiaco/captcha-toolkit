@@ -62,7 +62,7 @@ docs/                            VitePress 文档站
    <dependency>
      <groupId>io.github.yixiaco</groupId>
      <artifactId>captcha-spring-boot4-starter</artifactId>
-     <version>0.2.0</version>
+     <version>0.2.1</version>
    </dependency>
    ```
 
