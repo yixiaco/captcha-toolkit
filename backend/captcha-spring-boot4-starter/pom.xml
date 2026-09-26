@@ -46,5 +46,25 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <!--
+          自动配置集成测试：覆盖 Boot 4 / Jackson 3 下的 HTTP 绑定与位移校验链路。
+          排除 Mockito：JDK 24+ 默认禁止动态挂载 agent，而 Boot 的 Mockito 支持会自附加 agent，
+          该测试只需要 JUnit 与断言。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mockito</groupId>
+                    <artifactId>mockito-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mockito</groupId>
+                    <artifactId>mockito-junit-jupiter</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 </project>

@@ -1,34 +1,31 @@
-package io.github.yixiaco.boot3test;
+package io.github.yixiaco.boot4test;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Spring Boot 3 自动配置集成测试：确认 JDK 17 + Boot 3 宿主引入 starter 后，
- * 无需任何额外配置即可通过 HTTP 下发验证码，并遵守 debug 开关。
+ * Spring Boot 4 自动配置集成测试：确认 Boot 4（Jackson 3）宿主引入 starter 后
+ * 能正常下发验证码并接收位移答案。
  *
- * <p>这里手工启动嵌入式容器（不经过 Spring TestContext），既贴近真实运行方式，
- * 也避免为一次冒烟测试引入 Mockito 等额外测试基建。</p>
+ * <p>这里手工启动嵌入式容器（不经过 Spring TestContext），避免为一次冒烟测试
+ * 引入 Mockito 等额外测试基建。</p>
  */
-class CaptchaBoot3AutoConfigurationTest {
+class CaptchaBoot4AutoConfigurationTest {
 
     /** 随机端口的嵌入式容器（server.port=0） */
     private static ConfigurableApplicationContext application;
@@ -40,10 +37,9 @@ class CaptchaBoot3AutoConfigurationTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    /** 启动宿主应用：只加载自动配置，不扫描 starter 自身的包 */
     @BeforeAll
     static void startApplication() {
-        application = new SpringApplicationBuilder(Boot3TestApplication.class)
+        application = new SpringApplicationBuilder(Boot4TestApplication.class)
                 .properties("server.port=0")
                 .run();
         apiBase = baseUrl(application);
@@ -61,23 +57,10 @@ class CaptchaBoot3AutoConfigurationTest {
         HttpResponse<String> response = get(apiBase, "?type=slider");
         assertEquals(200, response.statusCode(), response.body());
 
-        Map<String, Object> challenge = json(response.body());
-        assertEquals("slider", challenge.get("type"));
-        assertNotNull(challenge.get("id"));
-        assertNotNull(challenge.get("image1"));
-        assertNotNull(challenge.get("image2"));
-    }
-
-    @Test
-    void debugFlagAloneNeverExposesAnswers() throws Exception {
-        HttpResponse<String> response = get(apiBase, "?type=slider&debug=true");
-        assertEquals(200, response.statusCode(), response.body());
-
-        // 后端 debug-enabled 默认关闭：前端单独传 debug=1 不应拿到答案字段
-        Object data = json(response.body()).get("data");
-        assertTrue(data instanceof Map, "data 载荷缺失: " + response.body());
-        assertFalse(((Map<?, ?>) data).containsKey("debugX"),
-                "非 debug 响应不应包含答案: " + response.body());
+        JsonNode challenge = JSON.readTree(response.body());
+        assertEquals("slider", challenge.get("type").asString());
+        assertFalse(challenge.get("id").asString().isEmpty());
+        assertFalse(challenge.get("image1").asString().isEmpty());
     }
 
     @Test
@@ -85,21 +68,20 @@ class CaptchaBoot3AutoConfigurationTest {
         HttpResponse<String> response = get(apiBase, "/types");
         assertEquals(200, response.statusCode(), response.body());
 
-        Object types = json(response.body()).get("types");
-        assertTrue(types instanceof List, "types 载荷缺失: " + response.body());
-        assertTrue(((List<?>) types).contains("slider"),
-                "应包含滑块类型: " + response.body());
+        JsonNode types = JSON.readTree(response.body()).get("types");
+        assertTrue(types.size() > 0, "应返回支持的验证码类型: " + response.body());
+        assertTrue(response.body().contains("slider"), response.body());
     }
 
     /**
      * 用前端约定的 camelCase 键（{@code xNorm}）提交滑块答案。
      *
-     * <p>回归点：Jackson 默认会把 {@code xNorm} 推导成 {@code xnorm}，位移字段一旦丢失，
-     * 滑块 / 刮刮乐 / 滑动曲线 / 滑块摆动四类验证码会永远判定失败。</p>
+     * <p>回归点：Jackson（2 与 3 相同）默认会把 {@code xNorm} 推导成 {@code xnorm}，
+     * 位移字段一旦丢失，滑块 / 刮刮乐 / 滑动曲线 / 滑块摆动四类验证码会永远判定失败。</p>
      */
     @Test
     void acceptsSliderAnswerSubmittedWithCamelCaseXNorm() throws Exception {
-        try (ConfigurableApplicationContext debugApp = new SpringApplicationBuilder(Boot3TestApplication.class)
+        try (ConfigurableApplicationContext debugApp = new SpringApplicationBuilder(Boot4TestApplication.class)
                 .properties("server.port=0", "captcha.debug-enabled=true",
                         "captcha.slider.min-elapsed-ms=0")
                 .run()) {
@@ -107,22 +89,18 @@ class CaptchaBoot3AutoConfigurationTest {
             HttpResponse<String> challengeResponse = get(base, "?type=slider&debug=1");
             assertEquals(200, challengeResponse.statusCode(), challengeResponse.body());
 
-            Map<String, Object> challenge = json(challengeResponse.body());
-            String id = (String) challenge.get("id");
-            double width = ((Number) challenge.get("width")).doubleValue();
-            Object data = challenge.get("data");
-            assertTrue(data instanceof Map, "data 载荷缺失: " + challengeResponse.body());
-            double expectedX = ((Number) ((Map<?, ?>) data).get("debugX")).doubleValue() / width;
+            JsonNode challenge = JSON.readTree(challengeResponse.body());
+            String id = challenge.get("id").asString();
+            double width = challenge.get("width").asDouble();
+            double expectedX = challenge.get("data").get("debugX").asDouble() / width;
 
-            Map<String, Object> accepted = json(post(base, "/verify",
-                    verifyBody(id, expectedX)).body());
-            assertEquals(Boolean.TRUE, accepted.get("success"), accepted.toString());
+            JsonNode accepted = JSON.readTree(post(base, "/verify", verifyBody(id, expectedX)).body());
+            assertTrue(accepted.get("success").asBoolean(), accepted.toString());
 
             // 同一次下发只允许校验一次，这里重新取一张再提交明显错误的位置
-            String wrongId = (String) json(get(base, "?type=slider&debug=1").body()).get("id");
-            Map<String, Object> rejected = json(post(base, "/verify",
-                    verifyBody(wrongId, expectedX + 0.2)).body());
-            assertFalse(Boolean.TRUE.equals(rejected.get("success")), rejected.toString());
+            String wrongId = JSON.readTree(get(base, "?type=slider&debug=1").body()).get("id").asString();
+            JsonNode rejected = JSON.readTree(post(base, "/verify", verifyBody(wrongId, expectedX + 0.2)).body());
+            assertFalse(rejected.get("success").asBoolean(), rejected.toString());
         }
     }
 
@@ -157,7 +135,7 @@ class CaptchaBoot3AutoConfigurationTest {
                 + "/api/captcha";
     }
 
-    /** 发起 GET 请求（pathAndQuery 形如 {@code ?type=slider} 或 {@code /types}） */
+    /** 发起 GET 请求 */
     private static HttpResponse<String> get(String base, String pathAndQuery) throws Exception {
         HttpRequest request = HttpRequest.newBuilder(URI.create(base + pathAndQuery)).GET().build();
         return HTTP.send(request, HttpResponse.BodyHandlers.ofString());
@@ -170,11 +148,5 @@ class CaptchaBoot3AutoConfigurationTest {
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
                 .build();
         return HTTP.send(request, HttpResponse.BodyHandlers.ofString());
-    }
-
-    /** 把响应体解析为 JSON 对象 */
-    private static Map<String, Object> json(String body) throws Exception {
-        return JSON.readValue(body, new TypeReference<>() {
-        });
     }
 }

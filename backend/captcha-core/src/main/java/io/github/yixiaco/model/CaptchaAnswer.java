@@ -1,5 +1,7 @@
 package io.github.yixiaco.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -20,7 +22,16 @@ public class CaptchaAnswer {
     @NotBlank(message = "缺少验证码类型")
     private String type;
 
-    /** 滑块答案：归一化位移（0~1，相对轨道/图片宽度），滑块类型必填 */
+    /**
+     * 滑块答案：归一化位移（0~1，相对轨道/图片宽度），滑块类型必填。
+     *
+     * <p>Jackson 对 {@code xNorm} 这类“单字母前缀 + 驼峰”字段的默认属性名是 {@code xnorm}
+     * （开头连续的大写字母会被一起小写），与前端约定的 {@code xNorm} 不一致，
+     * 会导致滑块 / 刮刮乐 / 滑动曲线 / 滑块摆动四类答案反序列化后为 null，
+     * 因此这里显式声明属性名，并同时兼容 {@code xnorm} 写法。</p>
+     */
+    @JsonProperty("xNorm")
+    @JsonAlias("xnorm")
     private Double xNorm;
 
     /** 点选答案：按点击顺序排列的归一化坐标（0~1），点选类型必填 */
