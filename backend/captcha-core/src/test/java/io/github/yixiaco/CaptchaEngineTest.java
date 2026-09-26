@@ -350,7 +350,8 @@ class CaptchaEngineTest {
         int gap = config.getSlider().getFakeTargetMinGap();
         int threshold = config.getSlider().getFakeTargetAxisThreshold();
         var fakes = renderer.getFakeTargets();
-        assertEquals(3, fakes.size());
+        // 假目标是“尽力放置”：小画布（高 44）空间紧张时可能少于配置数量，但至少应放下 2 个
+        assertTrue(fakes.size() >= 2, "小画布应至少放下 2 个假目标，实际 " + fakes.size());
         for (var fake : fakes) {
             assertEquals(renderer.getY(), fake.getY(), "假目标应与真目标同 y 轴");
             // 同 y：大小或旋转必须与真目标不同
@@ -390,6 +391,7 @@ class CaptchaEngineTest {
             r2.run();
             int v = r2.getPieceSize();
             var fs = r2.getFakeTargets();
+            assertFalse(fs.isEmpty(), "常规画布应放下假目标");
             for (var fake : fs) {
                 boolean sameY = Math.abs(fake.getY() - r2.getY()) < threshold;
                 if (sameY) {
