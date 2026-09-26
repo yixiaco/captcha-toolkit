@@ -1,0 +1,167 @@
+package io.github.yixiaco.generator;
+
+import io.github.yixiaco.behavior.BehaviorValidator;
+import io.github.yixiaco.behavior.SwingTileBehaviorValidator;
+import io.github.yixiaco.config.BehaviorConfig;
+import io.github.yixiaco.config.SwingTileConfig;
+import io.github.yixiaco.i18n.CaptchaMessages;
+import io.github.yixiaco.i18n.MessageProvider;
+import io.github.yixiaco.i18n.ResourceBundleMessageProvider;
+import io.github.yixiaco.model.CaptchaAnswer;
+import io.github.yixiaco.model.CaptchaSession;
+import io.github.yixiaco.model.GeneratedCaptcha;
+import io.github.yixiaco.model.PointVo;
+import io.github.yixiaco.model.ShapeInfo;
+import io.github.yixiaco.model.SwingTileChallengeData;
+import io.github.yixiaco.model.VerifyResult;
+import io.github.yixiaco.render.BackgroundProvider;
+import io.github.yixiaco.render.SwingTileRenderer;
+import io.github.yixiaco.shape.PuzzleShapeRegistry;
+import io.github.yixiaco.shape.ShapeSelector;
+import io.github.yixiaco.type.CaptchaType;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * 滑块摆动图块验证码生成器：用户拖动滑块让图块沿多阶贝塞尔曲线运动到目标凹槽，
+ * 方向随路径摆动，终点方向与真凹槽一致；答案固定为滑块终点（归一化位置 1）。
+ */
+public class SwingTileCaptchaGenerator
+        extends AbstractCaptchaGenerator<SwingTileChallengeData> {
+
+    /** 滑块摆动图块配置 */
+    private final SwingTileConfig options;
+
+    /** 背景图提供者 */
+    private final BackgroundProvider backgroundProvider;
+
+    /** 拼图形状注册表 */
+    private final PuzzleShapeRegistry shapeRegistry;
+
+    /** 滑块摆动图块行为轨迹校验器 */
+    private final BehaviorValidator behaviorValidator;
+
+    /** 拼图形状选择器 */
+    private final ShapeSelector shapeSelector;
+
+    /** 使用默认（关闭）行为校验构造生成器 */
+    public SwingTileCaptchaGenerator(SwingTileConfig options,
+                                     BackgroundProvider backgroundProvider,
+                                     PuzzleShapeRegistry shapeRegistry) {
+        this(options, backgroundProvider, shapeRegistry,
+                new SwingTileBehaviorValidator(new BehaviorConfig()),
+                new ResourceBundleMessageProvider());
+    }
+
+    /**
+     * @param options            滑块摆动图块配置
+     * @param backgroundProvider 背景图提供者
+     * @param shapeRegistry      拼图形状注册表
+     * @param behaviorValidator  行为轨迹校验器
+     */
+    public SwingTileCaptchaGenerator(SwingTileConfig options,
+                                     BackgroundProvider backgroundProvider,
+                                     PuzzleShapeRegistry shapeRegistry,
+                                     BehaviorValidator behaviorValidator) {
+        this(options, backgroundProvider, shapeRegistry, behaviorValidator,
+                new ResourceBundleMessageProvider());
+    }
+
+    /**
+     * @param options            滑块摆动图块配置
+     * @param backgroundProvider 背景图提供者
+     * @param shapeRegistry      拼图形状注册表
+     * @param behaviorValidator  行为轨迹校验器
+     * @param messages           用户提示消息提供者
+     */
+    public SwingTileCaptchaGenerator(SwingTileConfig options,
+                                     BackgroundProvider backgroundProvider,
+                                     PuzzleShapeRegistry shapeRegistry,
+                                     BehaviorValidator behaviorValidator,
+                                     MessageProvider messages) {
+        super(messages);
+        this.options = options;
+        this.backgroundProvider = backgroundProvider;
+        this.shapeRegistry = shapeRegistry;
+        this.behaviorValidator = behaviorValidator;
+        this.shapeSelector = new ShapeSelector(
+                shapeRegistry, options.getEnabledShapes(), options.getDefaultShape());
+    }
+
+    @Override
+    public CaptchaType type() {
+        return CaptchaType.SWING_TILE;
+    }
+
+    @Override
+    protected GeneratedCaptcha<SwingTileChallengeData> doGenerate(GenerateRequest request) {
+        // 拼图形状默认由后端随机决定；只有 debug 模式下前端才能显式指定
+        String requested = request.getParams().get("shape");
+        String shape = request.isDebug() && requested != null && !requested.isBlank()
+                ? shapeSelector.resolve(requested)
+                : shapeSelector.resolve(null);
+        SwingTileRenderer renderer = new SwingTileRenderer(
+                options, backgroundProvider, shapeRegistry);
+        renderer.setShape(shape);
+        renderer.run();
+
+        // 真凹槽在路径上的位置（0~1）放大 10000 倍存进会话 x
+        int scaledAnswer = (int) Math.round(renderer.getAnswerT() * 10000);
+        CaptchaSession session = CaptchaSession.swingTile(
+                request.getId(), shape, renderer.getWidth(), renderer.getHeight(),
+                scaledAnswer, options.getExpireSeconds() * 1000);
+        GeneratedCaptcha<SwingTileChallengeData> result = new GeneratedCaptcha<>();
+        result.setSession(session);
+        result.setImage1(renderer.getArtwork());
+        result.setImage2(renderer.getPiece());
+        result.setWidth(renderer.getWidth());
+        result.setHeight(renderer.getHeight());
+        result.setData(new SwingTileChallengeData(
+                renderer.getPath(),
+                renderer.getStartRotation(),
+                renderer.getEndRotation(),
+                renderer.getSwingAmplitude(),
+                renderer.getPieceImageSize(),
+                request.isDebug() ? renderer.getAnswerT() : null,
+                request.isDebug() ? renderer.getFakeTargets().stream()
+                        .map(f -> new PointVo(f.getX(), f.getY()))
+                        .toList() : null));
+        return result;
+    }
+
+    @Override
+    protected VerifyResult doVerify(CaptchaSession session, CaptchaAnswer answer) {
+        if (answer == null || answer.getXNorm() == null) {
+            return VerifyResult.badRequest(CaptchaMessages.SLIDER_MISSING_X_NORM, messages);
+        }
+        Optional<String> behaviorError = behaviorValidator.validate(
+                answer.getTd(), answer, session);
+        if (behaviorError.isPresent()) {
+            return VerifyResult.fail(behaviorError.get(), "BEHAVIOR", messages);
+        }
+        // 图块必须停在真凹槽对应的路径位置（随机 answerT）才能对准
+        double expected = session.getX() / 10000.0;
+        if (Math.abs(answer.getXNorm() - expected) <= options.getTolerance()) {
+            return VerifyResult.ok(CaptchaMessages.VERIFY_OK, messages);
+        }
+        return VerifyResult.fail(CaptchaMessages.VERIFY_WRONG, "WRONG", messages);
+    }
+
+    @Override
+    protected long minElapsedMs() {
+        return options.getMinElapsedMs();
+    }
+
+    /** 返回启用且已注册的形状名称列表 */
+    public List<String> getShapeNames() {
+        return shapeSelector.getShapeNames();
+    }
+
+    /** 返回启用且已注册的形状信息（名称 + 展示标签） */
+    public List<ShapeInfo> getShapeOptions() {
+        return shapeSelector.getShapeNames().stream()
+                .map(name -> new ShapeInfo(name, shapeRegistry.resolve(name).getLabel()))
+                .toList();
+    }
+}

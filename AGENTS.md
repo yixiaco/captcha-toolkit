@@ -14,7 +14,7 @@ frontend/
   src/demo/                      Demo app consuming the library
 ```
 
-Backend source lives under `backend/captcha-core/src/main/java/com/captcha/toolkit/`; tests live under the matching `src/test/java` tree. Frontend styles are in `src/lib/style.css` (library) and `src/demo/demo.css` (demo only).
+Backend source lives under `backend/captcha-core/src/main/java/io/github/yixiaco/`; tests live under the matching `src/test/java` tree. Frontend styles are in `src/lib/style.css` (library) and `src/demo/demo.css` (demo only).
 
 ## Build, Test, and Development Commands
 
@@ -45,7 +45,7 @@ and run `node_modules\vite\bin\vite.js` directly if `npm run dev` cannot pick a 
 
 ## Coding Style & Naming Conventions
 
-- Java: 4-space indentation, braces on the same line, Java 21, package root `com.captcha.toolkit.*`.
+- Java: 4-space indentation, braces on the same line, Java 21, package root `io.github.yixiaco.*`.
 - Frontend: Vue 3 `<script setup>`, 2-space indentation, single quotes, semicolons.
 - Prefer interfaces for extension points (`CaptchaFactory`, `WordFactory`, `BackgroundProvider`, `CaptchaSessionStore`) and keep all tunables in `CaptchaConfig` / `CaptchaProperties`.
 - Match the existing Chinese code comments; no linter is configured, so follow surrounding style.

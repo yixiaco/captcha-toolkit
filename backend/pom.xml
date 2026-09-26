@@ -12,12 +12,37 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.captcha.toolkit</groupId>
+    <groupId>io.github.yixiaco</groupId>
     <artifactId>captcha-toolkit-parent</artifactId>
     <version>0.1.0</version>
     <packaging>pom</packaging>
     <name>captcha-toolkit-parent</name>
     <description>可嵌入的极验风格行为验证码工具：核心引擎 + Spring Boot Starter + 演示应用</description>
+    <url>https://github.com/yixiaco/captcha-toolkit</url>
+
+    <!-- Maven Central 发布必需的元数据：许可证 / 开发者 / 源码仓库（子模块继承后一并生效） -->
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>yixiaco</id>
+            <name>yixiaco</name>
+            <url>https://github.com/yixiaco</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/yixiaco/captcha-toolkit.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/yixiaco/captcha-toolkit.git</developerConnection>
+        <url>https://github.com/yixiaco/captcha-toolkit</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <modules>
         <module>captcha-core</module>
@@ -29,20 +54,109 @@
         <java.version>21</java.version>
         <!-- 与 puzzle_captcha 参考实现一致：柔光投影 / alpha 反转滤镜 -->
         <jhlabs.version>2.0.235-1</jhlabs.version>
+        <!-- 发布链路插件版本；central-publishing 建议保持 0.11.0 及以上，
+             低版本解析不了 Central 返回的 warnings 字段会在轮询发布状态时报错 -->
+        <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+        <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+        <central-publishing-plugin.version>0.11.0</central-publishing-plugin.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.captcha.toolkit</groupId>
+                <groupId>io.github.yixiaco</groupId>
                 <artifactId>captcha-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.captcha.toolkit</groupId>
+                <groupId>io.github.yixiaco</groupId>
                 <artifactId>captcha-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <profiles>
+        <!--
+          发布到 Maven Central：mvn -Prelease clean deploy
+          放在 profile 里，日常 mvn clean install 不受影响（也不会误触发签名与上传）。
+          签名口令可用 -Dgpg.passphraseServerId=<settings.xml 中的 server id> 指定，
+          私钥路径可用 -Dgpg.keyname=<指纹> 指定，默认取密钥环中的默认私钥。
+        -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!-- Central 要求每个构件都附带 sources jar -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Central 要求每个构件都附带 javadoc jar；doclint 关闭以容忍中文注释 -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven-javadoc-plugin.version}</version>
+                        <configuration>
+                            <doclint>none</doclint>
+                            <quiet>true</quiet>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Central 要求所有构件都有 .asc 签名 -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!--
+                      Central Portal 发布：extensions=true 由插件的 DeployLifecycleParticipant 接管 deploy 阶段，
+                      凭据取自 settings.xml 中 id=sonatype 的 server（Central Portal 用户令牌）。
+                    -->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central-publishing-plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>sonatype</publishingServerId>
+                            <deploymentName>captcha-toolkit-${project.version}</deploymentName>
+                            <!-- 校验通过后自动发布，无需到 Portal 页面手动点 Publish -->
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>PUBLISHED</waitUntil>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

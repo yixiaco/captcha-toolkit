@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.captcha.toolkit</groupId>
+        <groupId>io.github.yixiaco</groupId>
         <artifactId>captcha-toolkit-parent</artifactId>
         <version>0.1.0</version>
         <relativePath>../pom.xml</relativePath>
@@ -17,7 +17,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.captcha.toolkit</groupId>
+            <groupId>io.github.yixiaco</groupId>
             <artifactId>captcha-core</artifactId>
         </dependency>
         <!-- 传递核心启动器：自动配置、ConfigurationProperties 绑定 -->

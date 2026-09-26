@@ -1,0 +1,23 @@
+package io.github.yixiaco.store;
+
+import io.github.yixiaco.model.CaptchaTicket;
+
+/**
+ * 验证码票据存储适配器（策略模式）。
+ *
+ * <p>默认提供内存实现；多实例部署时实现本接口并注册 Bean（如 Redis），
+ * 登录等业务接口即可跨实例校验票据。</p>
+ */
+public interface CaptchaTicketStore {
+
+    /** 保存票据 */
+    void put(CaptchaTicket ticket);
+
+    /** 获取票据；已过期时返回 null 并顺手清理 */
+    CaptchaTicket get(String ticket);
+
+    /** 移除票据（校验后调用，保证一次性使用） */
+    void remove(String ticket);
+
+    void clearExpired();
+}

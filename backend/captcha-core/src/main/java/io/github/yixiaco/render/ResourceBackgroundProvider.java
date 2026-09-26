@@ -1,0 +1,97 @@
+package io.github.yixiaco.render;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+
+/**
+ * 从 classpath / 文件系统读取背景图：
+ * 支持 "classpath:/images/a.jpg"、"/images/a.jpg"、"./a.jpg"、"D:/a.jpg"、"file:D:/a.jpg" 等写法。
+ */
+public class ResourceBackgroundProvider implements BackgroundProvider {
+
+    /** 背景图来源列表（classpath / 文件路径） */
+    private final List<String> sources;
+
+    /** 加载 classpath 资源使用的类加载器 */
+    private final ClassLoader classLoader;
+
+    /** 随机数源（用于打乱素材顺序） */
+    private final Random random = new Random();
+
+    /** 使用当前线程上下文类加载器构造 */
+    public ResourceBackgroundProvider(List<String> sources) {
+        this(sources, Thread.currentThread().getContextClassLoader());
+    }
+
+    /**
+     * @param sources     背景图来源列表
+     * @param classLoader classpath 资源加载器
+     */
+    public ResourceBackgroundProvider(List<String> sources, ClassLoader classLoader) {
+        this.sources = sources == null ? List.of() : new ArrayList<>(sources);
+        this.classLoader = classLoader == null
+                ? Thread.currentThread().getContextClassLoader()
+                : classLoader;
+    }
+
+    @Override
+    public Optional<BufferedImage> provide(int width, int height) {
+        List<String> candidates = new ArrayList<>(sources);
+        Collections.shuffle(candidates, random);
+        for (String source : candidates) {
+            BufferedImage image = read(source);
+            if (image != null) {
+                return Optional.of(image);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** 尝试按单个来源读取图片；失败返回 null，不影响其他素材 */
+    private BufferedImage read(String source) {
+        if (source == null || source.isBlank()) {
+            return null;
+        }
+        String path = source.trim();
+        try {
+            if (path.startsWith("file:")) {
+                Path file = Paths.get(path.substring("file:".length()));
+                if (Files.exists(file)) {
+                    try (InputStream in = Files.newInputStream(file)) {
+                        return ImageIO.read(in);
+                    }
+                }
+                return null;
+            }
+            if (path.startsWith("classpath:")) {
+                path = path.substring("classpath:".length());
+            }
+            // ClassLoader#getResourceAsStream 不接收前导 "/"，统一去掉后从 classpath 根目录解析
+            String resourcePath = path.startsWith("/") ? path.substring(1) : path;
+            try (InputStream in = classLoader.getResourceAsStream(resourcePath)) {
+                if (in != null) {
+                    return ImageIO.read(in);
+                }
+            }
+            Path file = Paths.get(path);
+            if (Files.exists(file)) {
+                try (InputStream in = Files.newInputStream(file)) {
+                    return ImageIO.read(in);
+                }
+            }
+        } catch (IOException | RuntimeException ignored) {
+            // 单个素材失败不影响其他素材
+        }
+        return null;
+    }
+}

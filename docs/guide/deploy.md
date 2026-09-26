@@ -59,3 +59,28 @@ npm run build:demo
 
 演示站产物在 `frontend/dist`；生产环境请将 `captcha.debug-enabled` 设为 `false`，
 并替换默认内存会话存储。
+
+## 发布到 Maven Central
+
+`captcha-core` 与 `captcha-spring-boot-starter` 已发布到 Maven Central，
+坐标为 `io.github.yixiaco:captcha-core`、`io.github.yixiaco:captcha-spring-boot-starter`。
+groupId 必须是已通过验证的命名空间（本例由 GitHub 账号自动验证），
+Java 包名与命名空间保持一致，同为 `io.github.yixiaco`。
+
+发布由父 POM 中的 `release` profile 驱动：它会生成 sources / javadoc 附件并用 GPG 签名，
+再通过 Central Portal 上传并自动发布。
+
+```powershell
+cd backend
+$env:JAVA_HOME='D:\jdks\openjdk-21.0.2'
+# GPG 用 Git 自带的那份，需要把它的目录加进 PATH（否则 keyboxd 无法启动）
+$env:PATH="C:\Program Files\Git\usr\bin;$env:PATH"
+D:\software\apache-maven-3.9.11\bin\mvn.cmd -Prelease -pl captcha-core,captcha-spring-boot-starter -am deploy
+```
+
+几个要点：
+
+- 凭据来自 `settings.xml` 中 `<id>sonatype</id>` 的 server（Central Portal 用户令牌）
+- 父 POM `captcha-toolkit-parent` 必须一起发布，否则使用方无法解析子 POM 的 `<parent>`
+- `captcha-demo` 已标记跳过发布，只发布 core 与 starter
+- 每次发布前先递增版本号：Central 上的同一版本不可覆盖，属于不可变发布

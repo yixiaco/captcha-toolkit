@@ -4,7 +4,7 @@
 
 ```xml
 <dependency>
-  <groupId>com.captcha.toolkit</groupId>
+  <groupId>io.github.yixiaco</groupId>
   <artifactId>captcha-spring-boot-starter</artifactId>
   <version>0.1.0</version>
 </dependency>
@@ -183,7 +183,7 @@ VerifyResult result = engine.verify(challenge.getId(),
 
 ## Extension Points
 
-- New captcha type: implement `com.captcha.toolkit.factory.CaptchaFactory` + `AbstractCaptchaGenerator`, and add a `CaptchaType` enum value
+- New captcha type: implement `io.github.yixiaco.factory.CaptchaFactory` + `AbstractCaptchaGenerator`, and add a `CaptchaType` enum value
 - Backgrounds: implement `BackgroundProvider`
 - Storage: implement `CaptchaSessionStore` (use Redis for multi-instance)
 - Word sources: implement `WordFactory`

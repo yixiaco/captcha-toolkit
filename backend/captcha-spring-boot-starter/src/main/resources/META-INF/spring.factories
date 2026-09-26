@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.captcha.toolkit.autoconfigure.CaptchaAutoConfiguration
+io.github.yixiaco.autoconfigure.CaptchaAutoConfiguration

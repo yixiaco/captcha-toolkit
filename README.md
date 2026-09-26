@@ -53,7 +53,7 @@ docs/                            VitePress 文档站
 
    ```xml
    <dependency>
-     <groupId>com.captcha.toolkit</groupId>
+     <groupId>io.github.yixiaco</groupId>
      <artifactId>captcha-spring-boot-starter</artifactId>
      <version>0.1.0</version>
    </dependency>

@@ -1,0 +1,168 @@
+package io.github.yixiaco.behavior;
+
+import io.github.yixiaco.config.BehaviorConfig;
+import io.github.yixiaco.config.ClientBehaviorConfig;
+import io.github.yixiaco.i18n.CaptchaMessages;
+import io.github.yixiaco.model.CaptchaAnswer;
+import io.github.yixiaco.model.CaptchaSession;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * 行为校验的统一模板：
+ *
+ * <ol>
+ *   <li>解析 td 报文并做通用字段/耗时/坐标检查</li>
+ *   <li>调用子类 {@link #validateEvents} 校验事件序列</li>
+ *   <li>调用子类 {@link #validateAnswer} 校验与本次答案的关联</li>
+ *   <li>开启风险评分时，用统计特征综合打分，超过画像阈值判定异常</li>
+ * </ol>
+ *
+ * <p>新增验证码类型时，继承本类并实现两个抽象方法即可复用全部通用规则。</p>
+ */
+public abstract class AbstractBehaviorValidator implements BehaviorValidator {
+
+    /** 行为校验配置（含分端画像） */
+    private final BehaviorConfig config;
+
+    /** 拖拽类（滑块/旋转）风险评分器 */
+    private final BehaviorRiskScorer dragRiskScorer = new DragBehaviorRiskScorer();
+
+    /** 点选类风险评分器 */
+    private final BehaviorRiskScorer clickRiskScorer = new ClickBehaviorRiskScorer();
+
+    /**
+     * @param config 行为校验配置（含分端画像）
+     */
+    protected AbstractBehaviorValidator(BehaviorConfig config) {
+        this.config = config;
+    }
+
+    /**
+     * 统一校验流程：解析报文 → 通用规则 → 子类事件序列 → 子类答案关联。
+     */
+    @Override
+    public final Optional<String> validate(String td, CaptchaAnswer answer, CaptchaSession session) {
+        if (!config.isEnabled()) {
+            return Optional.empty();
+        }
+        if (td == null || td.isBlank()) {
+            return Optional.of(CaptchaMessages.BEHAVIOR_MISSING_TD);
+        }
+        BehaviorTrace trace;
+        try {
+            trace = BehaviorTraceCodec.decode(td);
+        } catch (IllegalArgumentException e) {
+            return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_FORMAT);
+        }
+        ClientBehaviorConfig profile = config.profileFor(
+                answer == null ? null : answer.getClientType());
+        Optional<String> common = validateCommon(trace, profile);
+        if (common.isPresent()) {
+            return common;
+        }
+        Optional<String> events = validateEvents(trace);
+        if (events.isPresent()) {
+            return events;
+        }
+        Optional<String> answerError = validateAnswer(trace, answer, session, profile);
+        if (answerError.isPresent()) {
+            return answerError;
+        }
+        return validateRisk(trace, profile);
+    }
+
+    /** 返回当前校验器使用的行为配置 */
+    protected BehaviorConfig config() {
+        return config;
+    }
+
+    /** 子类校验事件序列（拖拽 vs 点选） */
+    protected abstract Optional<String> validateEvents(BehaviorTrace trace);
+
+    /** 子类校验轨迹与提交答案的关联 */
+    protected abstract Optional<String> validateAnswer(
+            BehaviorTrace trace, CaptchaAnswer answer, CaptchaSession session,
+            ClientBehaviorConfig profile);
+
+    /**
+     * 通用规则：协议版本、视口尺寸、起止时间、耗时、点数、时间顺序、
+     * 坐标范围与相邻点跳跃距离。
+     */
+    private Optional<String> validateCommon(BehaviorTrace trace, ClientBehaviorConfig profile) {
+        if (trace.protocol() != config.getProtocol()) {
+            return Optional.of(CaptchaMessages.BEHAVIOR_PROTOCOL_UNSUPPORTED);
+        }
+        if (!Double.isFinite(trace.viewportWidth()) || trace.viewportWidth() <= 0
+                || !Double.isFinite(trace.viewportHeight()) || trace.viewportHeight() <= 0) {
+            return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_VIEWPORT);
+        }
+        if (trace.startTime() >= trace.endTime()) {
+            return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_TIMESTAMP);
+        }
+        long duration = trace.durationMillis();
+        if (duration < profile.getMinDurationMs()) {
+            return Optional.of(CaptchaMessages.BEHAVIOR_TOO_SHORT);
+        }
+        if (duration > profile.getMaxDurationMs()) {
+            return Optional.of(CaptchaMessages.BEHAVIOR_TOO_LONG);
+        }
+        List<BehaviorPoint> points = trace.points();
+        if (points.isEmpty() || points.size() < profile.getMinPoints()) {
+            return Optional.of(CaptchaMessages.BEHAVIOR_NOT_ENOUGH_POINTS);
+        }
+        // 所有点（含起点）坐标必须有限且落在 [0,1]，避免 NaN/Infinity 绕过范围校验
+        for (BehaviorPoint point : points) {
+            if (!Double.isFinite(point.x()) || !Double.isFinite(point.y())
+                    || point.x() < 0 || point.x() > 1
+                    || point.y() < 0 || point.y() > 1) {
+                return Optional.of(CaptchaMessages.BEHAVIOR_COORDINATE_OUT_OF_RANGE);
+            }
+        }
+        if (points.getFirst().timeMs() < 0 || points.getFirst().timeMs() > 100) {
+            return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_START_TIME);
+        }
+        for (int i = 1; i < points.size(); i++) {
+            BehaviorPoint prev = points.get(i - 1);
+            BehaviorPoint current = points.get(i);
+            if (current.timeMs() < prev.timeMs()) {
+                return Optional.of(CaptchaMessages.BEHAVIOR_TIME_OUT_OF_ORDER);
+            }
+            long dt = current.timeMs() - prev.timeMs();
+            if (dt > 0) {
+                double distance = Math.hypot(current.x() - prev.x(), current.y() - prev.y());
+                if (distance > profile.getMaxJumpRatio()) {
+                    return Optional.of(CaptchaMessages.BEHAVIOR_JUMP_TOO_LARGE);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * 第二层风险评分：把多个弱信号加权汇总成综合分数，
+     * 超过画像阈值才判定异常，避免单特征误伤正常用户。
+     */
+    private Optional<String> validateRisk(BehaviorTrace trace, ClientBehaviorConfig profile) {
+        if (!config.isRiskEnabled()) {
+            return Optional.empty();
+        }
+        BehaviorRiskScorer scorer = isClickTrace(trace) ? clickRiskScorer : dragRiskScorer;
+        BehaviorRiskResult risk = scorer.score(trace, profile);
+        if (risk.score() > profile.getRiskThreshold()) {
+            return Optional.of(CaptchaMessages.BEHAVIOR_RISK_TOO_HIGH);
+        }
+        return Optional.empty();
+    }
+
+    /** 轨迹中出现 DOWN 事件即视为点选轨迹，否则按拖拽轨迹评分 */
+    private static boolean isClickTrace(BehaviorTrace trace) {
+        for (BehaviorPoint point : trace.points()) {
+            if (point.type() == BehaviorEventType.DOWN) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
