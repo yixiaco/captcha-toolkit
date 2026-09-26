@@ -62,8 +62,8 @@ class CurveCaptchaGeneratorTest {
         assertEquals(48, curve.size(), "默认采样点数应为 48");
 
         // 曲线不能退化为一个点
-        PointVo first = curve.getFirst();
-        PointVo last = curve.getLast();
+        PointVo first = curve.get(0);
+        PointVo last = curve.get(curve.size() - 1);
         assertFalse(first.getX() == last.getX() && first.getY() == last.getY(),
                 "引导曲线起终点不能重合");
 
@@ -143,8 +143,8 @@ class CurveCaptchaGeneratorTest {
                     expected.get(i).getY() / (double) height));
         }
         answer.add(new NormalizedPoint(
-                expected.getLast().getX() / (double) width,
-                expected.getLast().getY() / (double) height));
+                expected.get(expected.size() - 1).getX() / (double) width,
+                expected.get(expected.size() - 1).getY() / (double) height));
 
         VerifyResult result = newGenerator().verify(
                 captcha.getSession(), CaptchaAnswer.curve(answer));

@@ -82,7 +82,7 @@ public class DragBehaviorRiskScorer extends AbstractBehaviorRiskScorer {
         if (points.size() < 2) {
             return new BehaviorRiskResult.Feature("start-pause", 0, 0, 0);
         }
-        BehaviorPoint start = points.getFirst();
+        BehaviorPoint start = points.get(0);
         double accumulated = 0;
         for (int i = 1; i < points.size(); i++) {
             BehaviorPoint current = points.get(i);
@@ -104,8 +104,8 @@ public class DragBehaviorRiskScorer extends AbstractBehaviorRiskScorer {
             return new BehaviorRiskResult.Feature("path-efficiency", 0, 0, 0);
         }
         double displacement = Math.hypot(
-                points.getLast().x() - points.getFirst().x(),
-                points.getLast().y() - points.getFirst().y());
+                points.get(points.size() - 1).x() - points.get(0).x(),
+                points.get(points.size() - 1).y() - points.get(0).y());
         if (displacement <= 0) {
             return new BehaviorRiskResult.Feature("path-efficiency", 0, 0, 0);
         }

@@ -168,7 +168,7 @@ class BehaviorCommonBoundaryTest {
     @MethodSource("allModules")
     void equalTimeIsAccepted(BehaviorTestFixtures.Fixture fixture) {
         List<BehaviorPoint> points = fixture.points();
-        List<BehaviorPoint> sameTime = withTime(points, 1, points.getFirst().timeMs());
+        List<BehaviorPoint> sameTime = withTime(points, 1, points.get(0).timeMs());
         assertTrue(fixture.validator().validate(
                 fixture.encode(sameTime),
                 fixture.answer(), fixture.session()).isEmpty(),
@@ -197,7 +197,7 @@ class BehaviorCommonBoundaryTest {
     @MethodSource("allModules")
     void firstPointOutOfRangeIsRejected(BehaviorTestFixtures.Fixture fixture) {
         List<BehaviorPoint> points = new ArrayList<>(fixture.points());
-        BehaviorPoint first = points.getFirst();
+        BehaviorPoint first = points.get(0);
         points.set(0, new BehaviorPoint(first.timeMs(), 1.01, 0.5, first.type()));
         assertEquals(CaptchaMessages.BEHAVIOR_COORDINATE_OUT_OF_RANGE,
                 fixture.validator().validate(

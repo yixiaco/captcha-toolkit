@@ -57,8 +57,9 @@ and replace the in-memory session store.
 
 ## Publishing to Maven Central
 
-`captcha-core` and `captcha-spring-boot-starter` are published as
-`io.github.yixiaco:captcha-core` and `io.github.yixiaco:captcha-spring-boot-starter`.
+`captcha-core`, `captcha-spring-boot4-starter` and `captcha-spring-boot3-starter` are published as
+`io.github.yixiaco:captcha-core`, `io.github.yixiaco:captcha-spring-boot4-starter` and
+`io.github.yixiaco:captcha-spring-boot3-starter`.
 The groupId must be a verified namespace (this project's is verified automatically
 through the GitHub account), and the Java package root matches it.
 
@@ -70,14 +71,16 @@ cd backend
 $env:JAVA_HOME='D:\jdks\openjdk-21.0.2'
 # GPG ships with Git; put its bin directory on PATH or keyboxd cannot start
 $env:PATH="C:\Program Files\Git\usr\bin;$env:PATH"
-D:\software\apache-maven-3.9.11\bin\mvn.cmd -Prelease -pl captcha-core,captcha-spring-boot-starter -am deploy
+D:\software\apache-maven-3.9.11\bin\mvn.cmd -Prelease -pl captcha-core,captcha-spring-boot4-starter,captcha-spring-boot3-starter -am deploy
 ```
 
 Notes:
 
 - Credentials live in the `<id>sonatype</id>` server of `settings.xml` (Central Portal user token)
 - The parent POM `captcha-toolkit-parent` must be published too, otherwise consumers cannot resolve child POMs
-- `captcha-demo` is marked as skip-publish; only core and starter are released
+- `captcha-demo` is marked as skip-publish; only core and the two starters are released
+- `captcha-spring-boot3-starter` uses Spring Boot 3.5.16 as its parent (it cannot inherit
+  `captcha-toolkit-parent`) and carries its own copy of the release profile; bump its `<version>` too
 - Bump the version before every release: Central never allows overwriting a published version
 
 ## Publishing to npm

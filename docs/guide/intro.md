@@ -15,15 +15,16 @@ Captcha Toolkit 是一套可复用的**行为验证码工具集**，设计目标
 
 ## 技术栈
 
-- 后端：Java 21 + Spring Boot 4 + Maven，核心引擎不依赖 Spring，可单独复用
+- 后端：Spring Boot 4（Java 21）+ Spring Boot 3 适配模块（Java 17）+ Maven，核心引擎不依赖 Spring，可单独复用（Java 17 字节码）
 - 前端：Vue 3 + Vite 6，组件库与演示站分离
 
 ## 模块结构
 
 ```text
 backend/
-  captcha-core/                  纯 Java 验证码引擎（不依赖 Spring）
-  captcha-spring-boot-starter/   Spring Boot 自动配置 + HTTP 控制器
+  captcha-core/                  纯 Java 验证码引擎（不依赖 Spring；Java 17 字节码）
+  captcha-spring-boot4-starter/  Spring Boot 4 自动配置 + HTTP 控制器（Java 21）
+  captcha-spring-boot3-starter/  Spring Boot 3 适配模块（Java 17，共用同一份实现源码）
   captcha-demo/                  可运行演示应用 + 图片素材
 frontend/
   src/lib/                       Vue 3 组件库

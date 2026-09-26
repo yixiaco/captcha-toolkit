@@ -420,15 +420,15 @@ class BehaviorValidationTest {
     private static String clickTrace(List<PointVo> targets, int width, int height) {
         List<BehaviorPoint> points = new ArrayList<>();
         int time = 0;
-        double cursorX = targets.getFirst().getX() / (double) width;
-        double cursorY = targets.getFirst().getY() / (double) height;
+        double cursorX = targets.get(0).getX() / (double) width;
+        double cursorY = targets.get(0).getY() / (double) height;
         points.add(new BehaviorPoint(time, cursorX, cursorY, BehaviorEventType.START));
 
         for (PointVo target : targets) {
             double targetX = target.getX() / (double) width;
             double targetY = target.getY() / (double) height;
             move(points, time, cursorX, cursorY, targetX, targetY, 5);
-            time = points.getLast().timeMs();
+            time = points.get(points.size() - 1).timeMs();
             points.add(new BehaviorPoint(time, targetX, targetY, BehaviorEventType.DOWN));
             points.add(new BehaviorPoint(time + 80, targetX, targetY, BehaviorEventType.UP));
             time += 80;
@@ -455,8 +455,8 @@ class BehaviorValidationTest {
         List<BehaviorPoint> points = new ArrayList<>();
         int time = 0;
         int nextDown = 0;
-        double cursorX = targets.getFirst().getX() / (double) width;
-        double cursorY = targets.getFirst().getY() / (double) height;
+        double cursorX = targets.get(0).getX() / (double) width;
+        double cursorY = targets.get(0).getY() / (double) height;
         points.add(new BehaviorPoint(time, cursorX, cursorY, BehaviorEventType.START));
 
         for (int i = 0; i < targets.size(); i++) {
@@ -531,8 +531,8 @@ class BehaviorValidationTest {
     private static String humanLikeClickTrace(List<PointVo> targets, int width, int height) {
         List<BehaviorPoint> points = new ArrayList<>();
         int time = 0;
-        double cursorX = targets.getFirst().getX() / (double) width;
-        double cursorY = targets.getFirst().getY() / (double) height;
+        double cursorX = targets.get(0).getX() / (double) width;
+        double cursorY = targets.get(0).getY() / (double) height;
         points.add(new BehaviorPoint(time, cursorX, cursorY, BehaviorEventType.START));
         int[] steps = {5, 7, 9};
         int[] dwells = {90, 150, 60};

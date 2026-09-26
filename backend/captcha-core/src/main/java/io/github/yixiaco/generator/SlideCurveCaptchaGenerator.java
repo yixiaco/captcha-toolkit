@@ -97,7 +97,7 @@ public class SlideCurveCaptchaGenerator
                 renderer.getShape(),
                 request.isDebug() ? renderer.getAnswerSwing() : null,
                 request.isDebug() ? renderer.getFakeTargets().stream()
-                        .map(f -> f.getPoints().getFirst())
+                        .map(f -> f.getPoints().get(0))
                         .toList() : null));
         return result;
     }

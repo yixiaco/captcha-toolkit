@@ -27,10 +27,10 @@ public class ScratchBehaviorValidator extends AbstractBehaviorValidator {
     @Override
     protected Optional<String> validateEvents(BehaviorTrace trace) {
         List<BehaviorPoint> points = trace.points();
-        if (points.getFirst().type() != BehaviorEventType.START) {
+        if (points.get(0).type() != BehaviorEventType.START) {
             return Optional.of(CaptchaMessages.SCRATCH_EXPECTED_START);
         }
-        if (points.getLast().type() != BehaviorEventType.UP) {
+        if (points.get(points.size() - 1).type() != BehaviorEventType.UP) {
             return Optional.of(CaptchaMessages.SCRATCH_EXPECTED_RELEASE);
         }
         boolean hasMove = false;
@@ -54,7 +54,7 @@ public class ScratchBehaviorValidator extends AbstractBehaviorValidator {
         if (answer == null || answer.getXNorm() == null) {
             return Optional.of(CaptchaMessages.SCRATCH_MISSING_X_NORM);
         }
-        BehaviorPoint end = trace.points().getLast();
+        BehaviorPoint end = trace.points().get(trace.points().size() - 1);
         if (Math.abs(end.x() - answer.getXNorm()) > profile.getPointTolerance()) {
             return Optional.of(CaptchaMessages.SCRATCH_END_MISMATCH);
         }

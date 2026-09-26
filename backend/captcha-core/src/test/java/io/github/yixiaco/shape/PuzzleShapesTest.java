@@ -116,22 +116,34 @@ class PuzzleShapesTest {
     @Test
     void allShapesFitInBoxWithoutDegenerating() {
         for (PuzzleShape shape : PuzzleShapes.all()) {
-            Path2D path = shape.create(0, 0, 100);
-            Rectangle2D bounds = path.getBounds2D();
+            // 渲染器实际消费的几何模型：非 classic 形状必须完整落在方块内
+            Rectangle2D geometry = shape.geometry(0, 0, 100).bounds();
+            // 兼容兜底路径：多单元 Area 合并会离散化曲线，误差幅度随 JDK 版本变化
+            // （JDK 17 的离散化比 21 粗，最大偏差约 2%），因此只校验“没有明显跑偏”
+            Rectangle2D fallback = shape.create(0, 0, 100).getBounds2D();
             if ("classic".equals(shape.getName())) {
                 // classic 是带外凸圆弧的拼图块，允许少量越界
-                assertTrue(bounds.getMinX() >= -20 && bounds.getMinY() >= -20
-                                && bounds.getMaxX() <= 120 && bounds.getMaxY() <= 120,
-                        shape.getName() + " 边界应在允许范围内: " + bounds);
+                assertTrue(withinBox(geometry, -20, 120),
+                        shape.getName() + " 边界应在允许范围内: " + geometry);
+                assertTrue(withinBox(fallback, -20, 120),
+                        shape.getName() + " 兜底路径边界应在允许范围内: " + fallback);
             } else {
-                // create() 是几何兜底路径，多单元取 Area 并集时曲线离散化会有亚像素外扩
-                assertTrue(bounds.getMinX() >= -0.1 && bounds.getMinY() >= -0.1
-                                && bounds.getMaxX() <= 100.1 && bounds.getMaxY() <= 100.1,
-                        shape.getName() + " 应完整位于方块内: " + bounds);
+                assertTrue(withinBox(geometry, -0.01, 100.01),
+                        shape.getName() + " 应完整位于方块内: " + geometry);
+                assertTrue(withinBox(fallback, -2, 102),
+                        shape.getName() + " 兜底路径不应明显超出方块: " + fallback);
             }
-            assertTrue(bounds.getWidth() > 0 && bounds.getHeight() > 0,
-                    shape.getName() + " 不应是空或退化路径: " + bounds);
+            assertTrue(geometry.getWidth() > 0 && geometry.getHeight() > 0,
+                    shape.getName() + " 不应是空或退化路径: " + geometry);
+            assertTrue(fallback.getWidth() > 0 && fallback.getHeight() > 0,
+                    shape.getName() + " 兜底路径不应是空或退化路径: " + fallback);
         }
+    }
+
+    /** 判断矩形是否完整落在 [min, max] 包围盒内 */
+    private static boolean withinBox(Rectangle2D bounds, double min, double max) {
+        return bounds.getMinX() >= min && bounds.getMinY() >= min
+                && bounds.getMaxX() <= max && bounds.getMaxY() <= max;
     }
 
     @Test

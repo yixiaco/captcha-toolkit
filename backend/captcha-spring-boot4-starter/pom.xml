@@ -7,13 +7,13 @@
     <parent>
         <groupId>io.github.yixiaco</groupId>
         <artifactId>captcha-toolkit-parent</artifactId>
-        <version>0.1.1</version>
+        <version>0.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>captcha-spring-boot-starter</artifactId>
-    <name>captcha-spring-boot-starter</name>
-    <description>Spring Boot 自动配置：一行依赖即可把验证码接口嵌入任意 Web 项目</description>
+    <artifactId>captcha-spring-boot4-starter</artifactId>
+    <name>captcha-spring-boot4-starter</name>
+    <description>Spring Boot 4 自动配置：一行依赖即可把验证码接口嵌入任意 Web 项目</description>
 
     <dependencies>
         <dependency>

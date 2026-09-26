@@ -20,8 +20,9 @@ npm run dev
 
 ```text
 backend/
-  captcha-core/                  纯 Java 验证码引擎（不依赖 Spring，可单独复用）
-  captcha-spring-boot-starter/   Spring Boot 自动配置（一行依赖即可暴露 HTTP 接口）
+  captcha-core/                  纯 Java 验证码引擎（不依赖 Spring，可单独复用；Java 17 字节码）
+  captcha-spring-boot4-starter/  Spring Boot 4 自动配置（Java 21 构建）
+  captcha-spring-boot3-starter/  Spring Boot 3 适配模块（Java 17 构建，与 Boot 4 模块共用同一份源码）
   captcha-demo/                  演示应用（依赖 starter，展示接入方式）
 frontend/
   src/lib/                       Vue 3 组件库（可发布 npm / 源码引入）
@@ -49,15 +50,24 @@ docs/                            VitePress 文档站
    mvn clean install
    ```
 
-2. 在宿主项目引入 starter：
+2. 按宿主的 Spring Boot 版本引入对应 starter：
+
+   | 宿主环境 | 依赖坐标 | 编译基线 |
+   | --- | --- | --- |
+   | Spring Boot 4.x | `io.github.yixiaco:captcha-spring-boot4-starter` | Java 21 |
+   | Spring Boot 3.x | `io.github.yixiaco:captcha-spring-boot3-starter` | Java 17 |
 
    ```xml
    <dependency>
      <groupId>io.github.yixiaco</groupId>
-     <artifactId>captcha-spring-boot-starter</artifactId>
-     <version>0.1.1</version>
+     <artifactId>captcha-spring-boot4-starter</artifactId>
+     <version>0.2.0</version>
    </dependency>
    ```
+
+   Boot 3 / JDK 17 宿主把 `artifactId` 换成 `captcha-spring-boot3-starter` 即可：两个 starter
+   的接口、配置项与扩展点完全一致（同一份实现源码分别按两个 Boot 版本编译）。
+   纯 Java 项目可直接依赖 `captcha-core`（Java 17 字节码，不依赖 Spring）。
 
 3. 启动后自动注册接口（前缀、参数全部可配）：
 

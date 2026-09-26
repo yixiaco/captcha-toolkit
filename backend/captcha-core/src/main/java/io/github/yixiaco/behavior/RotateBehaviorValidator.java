@@ -26,10 +26,10 @@ public class RotateBehaviorValidator extends AbstractBehaviorValidator {
     @Override
     protected Optional<String> validateEvents(BehaviorTrace trace) {
         List<BehaviorPoint> points = trace.points();
-        if (points.getFirst().type() != BehaviorEventType.START) {
+        if (points.get(0).type() != BehaviorEventType.START) {
             return Optional.of(CaptchaMessages.ROTATE_EXPECTED_START);
         }
-        if (points.getLast().type() != BehaviorEventType.UP) {
+        if (points.get(points.size() - 1).type() != BehaviorEventType.UP) {
             return Optional.of(CaptchaMessages.ROTATE_EXPECTED_RELEASE);
         }
         boolean hasMove = false;

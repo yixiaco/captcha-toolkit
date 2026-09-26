@@ -30,10 +30,10 @@ public class CurveBehaviorValidator extends AbstractBehaviorValidator {
     @Override
     protected Optional<String> validateEvents(BehaviorTrace trace) {
         List<BehaviorPoint> points = trace.points();
-        if (points.getFirst().type() != BehaviorEventType.START) {
+        if (points.get(0).type() != BehaviorEventType.START) {
             return Optional.of(CaptchaMessages.CURVE_EXPECTED_START);
         }
-        if (points.getLast().type() != BehaviorEventType.UP) {
+        if (points.get(points.size() - 1).type() != BehaviorEventType.UP) {
             return Optional.of(CaptchaMessages.CURVE_EXPECTED_RELEASE);
         }
         boolean hasMove = false;
@@ -62,10 +62,10 @@ public class CurveBehaviorValidator extends AbstractBehaviorValidator {
             return Optional.of(CaptchaMessages.CURVE_NOT_ENOUGH_POINTS);
         }
         double tolerance = profile.getPointTolerance() * 2;
-        BehaviorPoint traceStart = trace.points().getFirst();
-        BehaviorPoint traceEnd = trace.points().getLast();
-        NormalizedPoint curveStart = curve.getFirst();
-        NormalizedPoint curveEnd = curve.getLast();
+        BehaviorPoint traceStart = trace.points().get(0);
+        BehaviorPoint traceEnd = trace.points().get(trace.points().size() - 1);
+        NormalizedPoint curveStart = curve.get(0);
+        NormalizedPoint curveEnd = curve.get(curve.size() - 1);
         if (Math.hypot(traceStart.x() - curveStart.x(), traceStart.y() - curveStart.y())
                 > tolerance) {
             return Optional.of(CaptchaMessages.CURVE_START_MISMATCH);

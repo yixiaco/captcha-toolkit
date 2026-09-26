@@ -28,10 +28,10 @@ public class ClickBehaviorValidator extends AbstractBehaviorValidator {
     @Override
     protected Optional<String> validateEvents(BehaviorTrace trace) {
         List<BehaviorPoint> points = trace.points();
-        if (points.getFirst().type() != BehaviorEventType.START) {
+        if (points.get(0).type() != BehaviorEventType.START) {
             return Optional.of(CaptchaMessages.CLICK_EXPECTED_START);
         }
-        if (points.getLast().type() != BehaviorEventType.UP) {
+        if (points.get(points.size() - 1).type() != BehaviorEventType.UP) {
             return Optional.of(CaptchaMessages.CLICK_EXPECTED_RELEASE);
         }
         boolean pendingDown = false;

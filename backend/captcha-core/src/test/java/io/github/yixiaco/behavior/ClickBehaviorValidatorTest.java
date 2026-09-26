@@ -46,8 +46,8 @@ class ClickBehaviorValidatorTest {
             List<NormalizedPoint> downs, long[] dwells) {
         List<BehaviorPoint> points = new ArrayList<>();
         int time = 0;
-        double cursorX = downs.getFirst().x();
-        double cursorY = downs.getFirst().y();
+        double cursorX = downs.get(0).x();
+        double cursorY = downs.get(0).y();
         points.add(new BehaviorPoint(time, cursorX, cursorY, BehaviorEventType.START));
         for (int i = 0; i < downs.size(); i++) {
             NormalizedPoint down = downs.get(i);
@@ -72,7 +72,7 @@ class ClickBehaviorValidatorTest {
     /** 编码指定轨迹点 */
     private static String encode(List<BehaviorPoint> points) {
         return BehaviorTraceCodec.encode(new BehaviorTrace(
-                1, 340, 190, 1_000_000L, 1_000_000L + points.getLast().timeMs(), points));
+                1, 340, 190, 1_000_000L, 1_000_000L + points.get(points.size() - 1).timeMs(), points));
     }
 
     @Test
@@ -99,7 +99,7 @@ class ClickBehaviorValidatorTest {
     void rejectsTraceNotEndingWithRelease() {
         List<BehaviorPoint> points = clickPoints(
                 List.of(new NormalizedPoint(0.3, 0.4)), new long[]{80});
-        BehaviorPoint last = points.getLast();
+        BehaviorPoint last = points.get(points.size() - 1);
         points.set(points.size() - 1,
                 new BehaviorPoint(last.timeMs(), last.x(), last.y(), BehaviorEventType.MOVE));
         CaptchaAnswer answer = singleAnswer();
@@ -226,8 +226,8 @@ class ClickBehaviorValidatorTest {
             List<NormalizedPoint> downs, long[] dwells) {
         List<BehaviorPoint> points = new ArrayList<>();
         int time = 0;
-        double cursorX = downs.getFirst().x();
-        double cursorY = downs.getFirst().y();
+        double cursorX = downs.get(0).x();
+        double cursorY = downs.get(0).y();
         points.add(new BehaviorPoint(time, cursorX, cursorY, BehaviorEventType.START));
         for (int i = 0; i < downs.size(); i++) {
             NormalizedPoint down = downs.get(i);

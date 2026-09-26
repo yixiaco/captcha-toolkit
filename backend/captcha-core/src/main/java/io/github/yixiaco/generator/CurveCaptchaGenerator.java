@@ -140,17 +140,17 @@ public class CurveCaptchaGenerator extends AbstractCaptchaGenerator<CurveChallen
         double startEndTolerance = tolerance * 2;
 
         // 起点/终点必须落在期望曲线的首尾标记附近（方向一致性）
-        NormalizedPoint first = drawn.getFirst();
-        NormalizedPoint last = drawn.getLast();
+        NormalizedPoint first = drawn.get(0);
+        NormalizedPoint last = drawn.get(drawn.size() - 1);
         double startDist = Math.hypot(
-                first.x() - expected.getFirst().getX() / (double) width,
-                first.y() - expected.getFirst().getY() / (double) height);
+                first.x() - expected.get(0).getX() / (double) width,
+                first.y() - expected.get(0).getY() / (double) height);
         if (startDist > startEndTolerance) {
             return VerifyResult.fail(CaptchaMessages.CURVE_START_MISMATCH, "WRONG", messages);
         }
         double endDist = Math.hypot(
-                last.x() - expected.getLast().getX() / (double) width,
-                last.y() - expected.getLast().getY() / (double) height);
+                last.x() - expected.get(expected.size() - 1).getX() / (double) width,
+                last.y() - expected.get(expected.size() - 1).getY() / (double) height);
         if (endDist > startEndTolerance) {
             return VerifyResult.fail(CaptchaMessages.CURVE_END_MISMATCH, "WRONG", messages);
         }
@@ -195,8 +195,8 @@ public class CurveCaptchaGenerator extends AbstractCaptchaGenerator<CurveChallen
                 int x = (int) Math.round(marginX + random.nextDouble() * (width - marginX * 2));
                 int y = (int) Math.round(marginY + random.nextDouble() * (height - marginY * 2));
                 if (controls.isEmpty()
-                        || Math.hypot(x - controls.getLast().getX(),
-                                y - controls.getLast().getY()) >= minGap) {
+                        || Math.hypot(x - controls.get(controls.size() - 1).getX(),
+                                y - controls.get(controls.size() - 1).getY()) >= minGap) {
                     controls.add(new PointVo(x, y));
                     break;
                 }
@@ -213,7 +213,7 @@ public class CurveCaptchaGenerator extends AbstractCaptchaGenerator<CurveChallen
     /** 用 Catmull-Rom 风格的三次贝塞尔段构造经过所有控制点的平滑路径 */
     private Path2D smoothPath(List<PointVo> points) {
         Path2D path = new Path2D.Double();
-        path.moveTo(points.getFirst().getX(), points.getFirst().getY());
+        path.moveTo(points.get(0).getX(), points.get(0).getY());
         for (int i = 0; i < points.size() - 1; i++) {
             PointVo p0 = points.get(Math.max(0, i - 1));
             PointVo p1 = points.get(i);
@@ -294,7 +294,7 @@ public class CurveCaptchaGenerator extends AbstractCaptchaGenerator<CurveChallen
         g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 
         Path2D path = new Path2D.Double();
-        path.moveTo(curve.getFirst().getX(), curve.getFirst().getY());
+        path.moveTo(curve.get(0).getX(), curve.get(0).getY());
         for (int i = 1; i < curve.size(); i++) {
             path.lineTo(curve.get(i).getX(), curve.get(i).getY());
         }
@@ -308,8 +308,8 @@ public class CurveCaptchaGenerator extends AbstractCaptchaGenerator<CurveChallen
                 10f, new float[]{10f, 8f}, 0f));
         g.draw(path);
 
-        drawMarker(g, curve.getFirst(), new Color(46, 204, 113));
-        drawMarker(g, curve.getLast(), new Color(255, 82, 82));
+        drawMarker(g, curve.get(0), new Color(46, 204, 113));
+        drawMarker(g, curve.get(curve.size() - 1), new Color(255, 82, 82));
         g.dispose();
     }
 

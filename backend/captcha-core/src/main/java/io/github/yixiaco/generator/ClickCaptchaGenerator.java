@@ -334,7 +334,7 @@ public class ClickCaptchaGenerator
     /** 渲染提示词整图：把提示文字横向排成一行（透明背景 PNG） */
     private String renderPromptImage(List<String> prompt) {
         String fontFamily = options.getFonts().isEmpty()
-                ? "SansSerif" : options.getFonts().getFirst();
+                ? "SansSerif" : options.getFonts().get(0);
         String sample = prompt.isEmpty() ? "测" : String.join("", prompt);
         Font font = CaptchaFonts.resolve(fontFamily, sample, Font.BOLD, 40);
         BufferedImage probe = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);

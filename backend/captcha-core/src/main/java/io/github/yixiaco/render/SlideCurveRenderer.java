@@ -253,7 +253,7 @@ public class SlideCurveRenderer {
     /** 绘制凹槽：深色曲线槽 */
     private void drawGroove(Graphics2D g, List<PointVo> points, int alpha) {
         Path2D path = new Path2D.Double();
-        path.moveTo(points.getFirst().getX(), points.getFirst().getY());
+        path.moveTo(points.get(0).getX(), points.get(0).getY());
         for (int i = 1; i < points.size(); i++) {
             PointVo p = points.get(i);
             path.lineTo(p.getX(), p.getY());

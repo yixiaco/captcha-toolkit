@@ -62,7 +62,7 @@ class SlideCurveCaptchaGeneratorTest {
         assertEquals(2, data.debugFakeTargets().size());
 
         // 假凹槽与真曲线共用两端固定点（左端一致），但形状不同，摆动无法对准
-        assertEquals(data.endpoints().getFirst(), data.debugFakeTargets().getFirst());
+        assertEquals(data.endpoints().get(0), data.debugFakeTargets().get(0));
     }
 
     @Test

@@ -1,7 +1,7 @@
 {
   "name": "captcha-toolkit-vue",
   "version": "0.1.0",
-  "description": "Vue 3 行为验证码组件库：滑块拼图 / 文字点选 / 图形点选 / 旋转 / 角度 / 刮刮乐 / 曲线等，配合 captcha-spring-boot-starter 后端使用",
+  "description": "Vue 3 行为验证码组件库：滑块拼图 / 文字点选 / 图形点选 / 旋转 / 角度 / 刮刮乐 / 曲线等，配合 captcha-spring-boot4-starter / captcha-spring-boot3-starter 后端使用",
   "type": "module",
   "license": "MIT",
   "author": "yixiaco",

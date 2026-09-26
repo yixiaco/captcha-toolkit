@@ -7,18 +7,18 @@
     <parent>
         <groupId>io.github.yixiaco</groupId>
         <artifactId>captcha-toolkit-parent</artifactId>
-        <version>0.1.1</version>
+        <version>0.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>captcha-demo</artifactId>
     <name>captcha-demo</name>
-    <description>演示应用：集成 captcha-spring-boot-starter 后即可直接运行</description>
+    <description>演示应用：集成 captcha-spring-boot4-starter 后即可直接运行</description>
 
     <dependencies>
         <dependency>
             <groupId>io.github.yixiaco</groupId>
-            <artifactId>captcha-spring-boot-starter</artifactId>
+            <artifactId>captcha-spring-boot4-starter</artifactId>
         </dependency>
         <!-- Starter 中 Web 是 optional，演示应用需要显式引入 -->
         <dependency>
@@ -40,7 +40,7 @@
             </plugin>
             <!--
               demo 只是演示应用，不发布到 Maven Central；
-              发布时用 -pl captcha-core,captcha-spring-boot-starter -am 选模块，
+              发布时用 -pl captcha-core,captcha-spring-boot4-starter -am 选模块，
               这里再兜一层，避免将来整仓 -Prelease deploy 时误发。
             -->
             <plugin>

@@ -15,15 +15,17 @@ Answers are only stored server-side. A one-time ticket is issued after verificat
 
 ## Tech Stack
 
-- Backend: Java 21 + Spring Boot 4 + Maven. The core engine has no Spring dependency.
+- Backend: Spring Boot 4 (Java 21) plus a Spring Boot 3 adapter (Java 17) + Maven.
+  The core engine has no Spring dependency and compiles to Java 17 bytecode.
 - Frontend: Vue 3 + TypeScript + Vite 6.
 
 ## Module Structure
 
 ```text
 backend/
-  captcha-core/                  Pure Java engine (no Spring)
-  captcha-spring-boot-starter/   Auto-configuration + HTTP controller
+  captcha-core/                  Pure Java engine (no Spring; Java 17 bytecode)
+  captcha-spring-boot4-starter/  Boot 4 auto-configuration + HTTP controller (Java 21)
+  captcha-spring-boot3-starter/  Boot 3 adapter (Java 17, shares the same sources)
   captcha-demo/                  Runnable demo app + image assets
 frontend/
   src/lib/                       Vue 3 component library (TypeScript)

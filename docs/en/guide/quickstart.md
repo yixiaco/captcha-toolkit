@@ -2,7 +2,8 @@
 
 ## Requirements
 
-- JDK 21
+- JDK 21 (needed to build every module and run the demo; JDK 17 is enough for
+  `captcha-core` + `captcha-spring-boot3-starter`)
 - Maven 3.9+ (this repo uses `D:\software\apache-maven-3.9.11`, local repo `D:\Maven\.m2`)
 - Node.js 18+ (Vite 6 requirement)
 
@@ -18,7 +19,7 @@ D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo spring-boot:run
 The backend listens on `http://localhost:18080`.
 
 ::: tip After changing captcha-core or starter
-Run `mvn.cmd -pl captcha-core,captcha-spring-boot-starter install -DskipTests` first,
+Run `mvn.cmd -pl captcha-core,captcha-spring-boot4-starter,captcha-spring-boot3-starter install -DskipTests` first,
 otherwise the demo may use stale artifacts from the local repository.
 :::
 

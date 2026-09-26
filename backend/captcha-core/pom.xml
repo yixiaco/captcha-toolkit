@@ -7,13 +7,18 @@
     <parent>
         <groupId>io.github.yixiaco</groupId>
         <artifactId>captcha-toolkit-parent</artifactId>
-        <version>0.1.1</version>
+        <version>0.2.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>captcha-core</artifactId>
     <name>captcha-core</name>
     <description>纯 Java 验证码引擎：不依赖 Spring，可被任意 Java 项目复用</description>
+
+    <properties>
+        <!-- 引擎下探到 Java 17：Spring Boot 3 / JDK 17 宿主可直接复用同一份引擎 -->
+        <java.version>17</java.version>
+    </properties>
 
     <dependencies>
         <dependency>

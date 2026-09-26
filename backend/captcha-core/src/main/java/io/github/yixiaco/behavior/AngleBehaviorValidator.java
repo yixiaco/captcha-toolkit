@@ -26,10 +26,10 @@ public class AngleBehaviorValidator extends AbstractBehaviorValidator {
     @Override
     protected Optional<String> validateEvents(BehaviorTrace trace) {
         List<BehaviorPoint> points = trace.points();
-        if (points.getFirst().type() != BehaviorEventType.START) {
+        if (points.get(0).type() != BehaviorEventType.START) {
             return Optional.of(CaptchaMessages.ANGLE_EXPECTED_START);
         }
-        if (points.getLast().type() != BehaviorEventType.UP) {
+        if (points.get(points.size() - 1).type() != BehaviorEventType.UP) {
             return Optional.of(CaptchaMessages.ANGLE_EXPECTED_RELEASE);
         }
         boolean hasMove = false;
@@ -54,7 +54,7 @@ public class AngleBehaviorValidator extends AbstractBehaviorValidator {
             return Optional.of(CaptchaMessages.ANGLE_MISSING_ANGLE);
         }
         double expectedX = normalizeAngle(answer.getAngle()) / 360.0;
-        BehaviorPoint end = trace.points().getLast();
+        BehaviorPoint end = trace.points().get(trace.points().size() - 1);
         if (Math.abs(end.x() - expectedX) > profile.getPointTolerance()) {
             return Optional.of(CaptchaMessages.ANGLE_END_MISMATCH);
         }

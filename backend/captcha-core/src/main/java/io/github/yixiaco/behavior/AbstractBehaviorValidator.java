@@ -120,7 +120,7 @@ public abstract class AbstractBehaviorValidator implements BehaviorValidator {
                 return Optional.of(CaptchaMessages.BEHAVIOR_COORDINATE_OUT_OF_RANGE);
             }
         }
-        if (points.getFirst().timeMs() < 0 || points.getFirst().timeMs() > 100) {
+        if (points.get(0).timeMs() < 0 || points.get(0).timeMs() > 100) {
             return Optional.of(CaptchaMessages.BEHAVIOR_INVALID_START_TIME);
         }
         for (int i = 1; i < points.size(); i++) {
