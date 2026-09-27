@@ -4,6 +4,7 @@
     v-if="challenge"
     :key="challenge.id"
     v-bind="bindings"
+    :challenge="challenge"
     @success="onSuccess"
     @fail="onFail"
     @error="onError"
