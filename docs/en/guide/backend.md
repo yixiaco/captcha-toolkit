@@ -14,7 +14,7 @@ configuration options and extension points):
 <dependency>
   <groupId>io.github.yixiaco</groupId>
   <artifactId>captcha-spring-boot4-starter</artifactId>
-  <version>0.2.1</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 

@@ -19,7 +19,7 @@
     <groupId>io.github.yixiaco</groupId>
     <artifactId>captcha-demo-boot3</artifactId>
     <!-- 需与 backend/pom.xml 中 captcha-toolkit-parent 的版本保持一致（无法继承，只能手写） -->
-    <version>0.2.1</version>
+    <version>0.3.0</version>
     <packaging>jar</packaging>
     <name>captcha-demo-boot3</name>
     <description>Spring Boot 3 / JDK 17 演示应用：集成 captcha-spring-boot3-starter 后即可直接运行</description>
@@ -46,7 +46,7 @@
 
     <build>
         <plugins>
-            <!-- 打包为可执行 fat jar：java -jar target/captcha-demo-boot3-0.2.1.jar -->
+            <!-- 打包为可执行 fat jar：java -jar target/captcha-demo-boot3-0.3.0.jar -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
