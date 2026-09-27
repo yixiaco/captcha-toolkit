@@ -26,11 +26,16 @@ backend/
   captcha-core/                  Pure Java engine (no Spring; Java 17 bytecode)
   captcha-spring-boot4-starter/  Boot 4 auto-configuration + HTTP controller (Java 21)
   captcha-spring-boot3-starter/  Boot 3 adapter (Java 17, shares the same sources)
+  captcha-spring-boot2-starter/  Boot 2.7 adapter (Java 17, shares the same sources)
   captcha-demo-boot4/            Boot 4 demo app + image assets (Java 21, :18080)
   captcha-demo-boot3/            Boot 3 demo app (Java 17, :18080)
-frontend/
-  src/lib/                       Vue 3 component library (TypeScript)
-  src/demo/                      Demo site
+  captcha-demo-boot2/            Boot 2.7 demo app (Java 17, :18080)
+packages/                        npm workspaces
+  captcha-toolkit-vue/           Vue 3 component library (npm: captcha-toolkit-vue)
+    src/core/                    Framework-agnostic core (shared by both frontend packages)
+    src/lib/                     Vue 3 components
+    src/demo/                    Demo site
+  captcha-toolkit-vue2/          Vue 2.7 library (npm: captcha-toolkit-vue2, same sources dual-built)
 docs/                            VitePress documentation (this site)
 ```
 

@@ -47,12 +47,12 @@ D:\software\apache-maven-3.9.11\bin\mvn.cmd clean install
 Frontend:
 
 ```bash
-cd frontend
+cd packages/captcha-toolkit-vue
 npm install
 npm run build:demo
 ```
 
-The demo output is `frontend/dist-demo`. In production, set `captcha.debug-enabled: false`
+The demo output is `packages/captcha-toolkit-vue/dist-demo`. In production, set `captcha.debug-enabled: false`
 and replace the in-memory session store.
 
 ## Publishing to Maven Central
@@ -85,19 +85,23 @@ Notes:
 
 ## Publishing to npm
 
-The Vue component library is published as `captcha-toolkit-vue`. The `prepublishOnly`
-hook runs `build:lib` first, so a stale `dist` can never be published.
+The two Vue component libraries are published independently: `captcha-toolkit-vue` (Vue 3) and
+`captcha-toolkit-vue2` (Vue 2.7). Each `prepublishOnly` hook runs `build:lib` first, so a stale
+`dist` can never be published.
 
 ```bash
-cd frontend
-npm publish
+# after installing once at the repository root:
+npm run build:lib                                    # make sure both bundles build
+cd packages/captcha-toolkit-vue  && npm publish      # Vue 3 package (peer: vue@^3.5)
+cd packages/captcha-toolkit-vue2 && npm publish      # Vue 2.7 package (peer: vue@^2.7)
 ```
 
 Notes:
 
-- Vue is a peer dependency (externalized at build time) and is never bundled, so the
-  host project cannot end up with two copies of Vue
+- Vue is a peer dependency in both packages (externalized at build time) and is never bundled, so the
+  host project cannot end up with two copies of Vue; the workspace installs both Vue 3 and Vue 2.7
+  side by side, each resolved by its own package
 - Only `dist` is published (`files`); README and LICENSE are attached automatically
 - With 2FA enabled, `_authToken` must be a granular access token with “bypass 2FA”;
   alternatively pass a one-time code: `npm publish --otp=<code>`
-- The version lives in `frontend/package.json`; published versions cannot be overwritten
+- The version lives in `packages/captcha-toolkit-vue/package.json`; published versions cannot be overwritten

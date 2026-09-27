@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository is a reusable behavior-captcha toolkit (slider puzzle + click characters) with a Spring Boot backend and a Vue 3 frontend.
+This repository is a reusable behavior-captcha toolkit (slider puzzle + click characters) with a Spring Boot backend and two publishable Vue component libraries (Vue 3 + Vue 2.7) managed as an npm workspaces monorepo.
 
 ```text
 backend/
@@ -13,16 +13,18 @@ backend/
   captcha-demo-boot4/            Boot 4 demo app, port 18080 (Java 21)
   captcha-demo-boot3/            Boot 3 demo app, port 18080 (own Boot 3.5.16 parent, Java 17)
   captcha-demo-boot2/            Boot 2.7 demo app, port 18080 (own Boot 2.7.18 parent, Java 17)
-frontend/
-  src/core/                      Framework-agnostic core (HTTP protocol, behavior trace, device
+packages/                        npm workspaces (root package.json declares packages/*)
+  captcha-toolkit-vue/           npm package "captcha-toolkit-vue" (Vue 3)
+    src/core/                    Framework-agnostic core (HTTP protocol, behavior trace, device
                                  fingerprint, shapes, i18n) — shared by every UI layer
-  src/lib/                       Reusable Vue 3 component library
-  src/demo/                      Demo app consuming the library
-frontend-vue2/                   Vue 2.7 package (captcha-toolkit-vue2); compiles the same
-                                 frontend/src sources with @vitejs/plugin-vue2
+    src/lib/                     Reusable Vue 3 component library
+    src/demo/                    Demo app consuming the library
+  captcha-toolkit-vue2/          npm package "captcha-toolkit-vue2" (Vue 2.7); compiles the same
+                                 captcha-toolkit-vue/src sources with @vitejs/plugin-vue2
+docs/                            VitePress documentation site
 ```
 
-Backend source lives under `backend/captcha-core/src/main/java/io/github/yixiaco/`; tests live under the matching `src/test/java` tree. Frontend styles are in `src/lib/style.css` (library) and `src/demo/demo.css` (demo only).
+Backend source lives under `backend/captcha-core/src/main/java/io/github/yixiaco/`; tests live under the matching `src/test/java` tree. Frontend styles are in `packages/captcha-toolkit-vue/src/lib/style.css` (library) and `packages/captcha-toolkit-vue/src/demo/demo.css` (demo only).
 
 `captcha-spring-boot3-starter` and `captcha-spring-boot2-starter` both compile the Java sources of
 `captcha-spring-boot4-starter` through `build-helper-maven-plugin` (single source of truth for all
@@ -60,35 +62,44 @@ the Boot 2.7 adapter cannot resolve the build-helper-added shared sources.
 Frontend:
 
 ```bash
-cd frontend
+# Install once at the repository root: packages/* are npm workspaces (Vite/Vue are hoisted there).
 npm install
+
+npm run dev          # Vue 3 demo on :5173, proxies /api to :18080 (whichever demo runs)
+npm run dev:vue2     # Vue 2 demo on :5175, same demo page, same proxy target
+npm run build:lib    # both packages (Vue 3 + Vue 2.7 bundles)
+npm run build:demo   # Vue 3 demo site
+npm run smoke        # jsdom smoke test of the Vue 2 bundle
+
+# The same scripts also work per package:
+cd packages/captcha-toolkit-vue
 npm run dev          # dev server on :5173, proxies /api to :18080 (whichever demo runs);
                      # override with VITE_API_TARGET=http://localhost:xxxx
 npm run build:lib    # publishable component bundle
 npm run build:demo   # demo site
 ```
 
-Vue 2.7 package (separate npm package `captcha-toolkit-vue2`, shares `frontend/src`):
+Vue 2.7 package (separate npm package `captcha-toolkit-vue2`, shares `packages/captcha-toolkit-vue/src`):
 
 ```bash
-cd frontend-vue2
-npm install
+cd packages/captcha-toolkit-vue2
 npm run dev          # dev demo on :5175, proxies /api to :18080 (VITE_API_TARGET to change)
 npm run build:lib    # -> dist/captcha-toolkit-vue2.js (+ .css)
 npm run smoke        # jsdom mount check: renders, portal to body, exactly one captcha request
 ```
 
-`npm run dev` renders the very same demo page as the Vue 3 package: `frontend-vue2/dev/main.ts`
+`npm run dev` renders the very same demo page as the Vue 3 package: `packages/captcha-toolkit-vue2/dev/main.ts`
 only swaps the bootstrap (`createApp(App).mount('#app')` -> `new Vue({ render }).$mount('#app')`)
-and reuses `frontend/src/demo/App.vue` + `frontend/src/demo/demo.css`.
+and reuses `packages/captcha-toolkit-vue/src/demo/App.vue` + `packages/captcha-toolkit-vue/src/demo/demo.css`.
 
 The two frontend packages must stay behaviourally identical: the Vue-2-only pieces are
-`frontend/src/lib/portal-vue2.vue`, the `@captcha-portal` alias wiring in both vite configs, and the
+`packages/captcha-toolkit-vue/src/lib/portal-vue2.vue`, the `@captcha-portal` alias wiring in both vite configs, and the
 `display: contents` host nodes required by Vue 2's single-root rule.
 
 Frontend requires Node 18+ (Vite 6). The default system Node on this machine is 16 and will fail
 with `crypto$2.getRandomValues is not a function`; use Node 18+ (e.g. the Codex bundled Node 24)
-and run `node_modules\vite\bin\vite.js` directly if `npm run dev` cannot pick a newer Node.
+and run the hoisted binary directly (`node <repo>\node_modules\vite\bin\vite.js`) if `npm run dev`
+cannot pick a newer Node.
 
 ## Coding Style & Naming Conventions
 

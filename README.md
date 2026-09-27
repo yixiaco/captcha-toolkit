@@ -27,11 +27,12 @@ backend/
   captcha-demo-boot4/            Spring Boot 4 演示应用（:18080，前端默认代理目标）
   captcha-demo-boot3/            Spring Boot 3 / JDK 17 演示应用（:18080，同一套配置与接口）
   captcha-demo-boot2/            Spring Boot 2.7 / JDK 17 演示应用（:18080，同一套配置与接口）
-frontend/
-  src/core/                      框架无关核心层（HTTP 协议 / 行为轨迹 / 设备指纹 / 图形与文案）
-  src/lib/                       Vue 3 组件库（可发布 npm / 源码引入）
-  src/demo/                      演示站点（组件库的用法示例）
-frontend-vue2/                   Vue 2.7 组件库（独立包 captcha-toolkit-vue2，复用同一份 src 源码双编译）
+packages/                        npm workspaces（根 package.json 声明 packages/*）
+  captcha-toolkit-vue/           Vue 3 组件库（npm: captcha-toolkit-vue）
+    src/core/                    框架无关核心层（HTTP 协议 / 行为轨迹 / 设备指纹 / 图形与文案）
+    src/lib/                     Vue 3 组件库源码（可发布 npm / 源码引入）
+    src/demo/                    演示站点（组件库的用法示例）
+  captcha-toolkit-vue2/          Vue 2.7 组件库（npm: captcha-toolkit-vue2，复用上一份 src 双编译）
 docs/                            VitePress 文档站
 ```
 
@@ -290,9 +291,11 @@ java -jar captcha-demo-boot2/target/captcha-demo-boot2-0.3.0.jar
 前端：
 
 ```bash
-cd frontend
+# 仓库根目录安装一次即可（npm workspaces 统一管理两个前端包的依赖）
 npm install
-npm run dev
+
+npm run dev          # Vue 3 演示（:5173，代理到 :18080）
+npm run dev:vue2     # Vue 2 演示（:5175，代理到 :18080）
 ```
 
 打开 `http://localhost:5173`，也可用 URL 直接指定验证方式：

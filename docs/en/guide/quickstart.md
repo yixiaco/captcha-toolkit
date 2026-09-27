@@ -45,12 +45,14 @@ otherwise the demo may use stale artifacts from the local repository.
 ## Start the Frontend
 
 ```bash
-cd frontend
+cd packages/captcha-toolkit-vue
 npm install
 npm run dev
 ```
 
-The dev server listens on `http://localhost:5173` and proxies `/api` to `:18080`.
+The frontend is an npm workspaces monorepo: run `npm install` once at the repository root, then
+`npm run dev` (Vue 3, `http://localhost:5173`) or `npm run dev:vue2` (Vue 2, `http://localhost:5175`).
+Both dev servers proxy `/api` to `:18080`.
 
 Common checks:
 

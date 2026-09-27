@@ -52,12 +52,12 @@ D:\software\apache-maven-3.9.11\bin\mvn.cmd clean install
 前端构建：
 
 ```bash
-cd frontend
+cd packages/captcha-toolkit-vue
 npm install
 npm run build:demo
 ```
 
-演示站产物在 `frontend/dist`；生产环境请将 `captcha.debug-enabled` 设为 `false`，
+演示站产物在 `packages/captcha-toolkit-vue/dist-demo`；生产环境请将 `captcha.debug-enabled` 设为 `false`，
 并替换默认内存会话存储。
 
 ## 发布到 Maven Central
@@ -95,19 +95,22 @@ D:\software\apache-maven-3.9.11\bin\mvn.cmd -Prelease -pl captcha-core,captcha-s
 
 ## 发布到 npm
 
-Vue 组件库发布为 `captcha-toolkit-vue`。`prepublishOnly` 钩子会先执行 `build:lib`，
+前端是 npm workspaces monorepo，两个包各自独立发布：`captcha-toolkit-vue`（Vue 3）与
+`captcha-toolkit-vue2`（Vue 2.7）。`prepublishOnly` 钩子会先执行 `build:lib`，
 因此不会误发过期的 `dist`。
 
 ```bash
-cd frontend
-npm publish
+# 在仓库根目录安装一次依赖后：
+npm run build:lib                                   # 先确认两个包都能构建
+cd packages/captcha-toolkit-vue  && npm publish     # Vue 3 包（peer: vue@^3.5）
+cd packages/captcha-toolkit-vue2 && npm publish     # Vue 2.7 包（peer: vue@^2.7）
 ```
 
 几个要点：
 
-- Vue 声明为 peer dependency（构建时 `external: ['vue']`），不会打进产物，
-  避免宿主项目出现两份 Vue
+- Vue 在两个包里都声明为 peer dependency（构建时 `external: ['vue']`），不会打进产物，
+  避免宿主项目出现两份 Vue；workspaces 会同时装 Vue 3 与 Vue 2.7，各自解析互不影响
 - 只发布 `dist`（`files` 已限定），README 与 LICENSE 由 npm 自动附带
 - 账号开启 2FA 时，`_authToken` 必须是勾选了 “bypass 2FA” 的 Granular Access Token；
   临时发布也可以现场验证：`npm publish --otp=<6 位验证码>`
-- 版本号在 `frontend/package.json` 中维护，已发布的版本同样不可覆盖
+- 版本号在 `packages/captcha-toolkit-vue/package.json` 中维护，已发布的版本同样不可覆盖

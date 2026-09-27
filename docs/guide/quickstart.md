@@ -43,12 +43,14 @@ D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot2 -am spring-bo
 ## 启动前端
 
 ```bash
-cd frontend
+cd packages/captcha-toolkit-vue
 npm install
 npm run dev
 ```
 
-前端开发服务器默认监听 `http://localhost:5173`，并把 `/api` 代理到 `:18080`。
+前端是 npm workspaces monorepo：在仓库根目录 `npm install` 一次即可，两个演示分别用
+`npm run dev`（Vue 3，`http://localhost:5173`）和 `npm run dev:vue2`（Vue 2，
+`http://localhost:5175`）启动，二者都把 `/api` 代理到 `:18080`。
 
 前端为 TypeScript 工程，常用校验命令：
 

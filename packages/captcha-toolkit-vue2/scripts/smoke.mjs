@@ -68,6 +68,7 @@ await new Promise((resolve) => setTimeout(resolve, 150));
 
 const html = dom.window.document.body.innerHTML;
 const checks = [
+  [`Vue 版本为 2.7.x（实际 ${Vue.version}）`, String(Vue.version).startsWith('2.7')],
   ['只请求一次验证码', calls === 1],
   ['渲染出滑块组件', html.includes('slider-captcha')],
   ['portal 已挂载到 body', !!dom.window.document.body.querySelector('.captcha-portal')],
