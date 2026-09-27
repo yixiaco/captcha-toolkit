@@ -7,8 +7,6 @@ import io.github.yixiaco.i18n.MessageProvider;
 import io.github.yixiaco.model.CaptchaAnswer;
 import io.github.yixiaco.model.TicketVerifyRequest;
 import io.github.yixiaco.model.VerifyResult;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -93,10 +91,10 @@ public class CaptchaController {
 
     /** 校验前端提交的答案 */
     @PostMapping("/verify")
-    public VerifyResult verify(@Valid @RequestBody CaptchaAnswer answer,
+    public VerifyResult verify(@RequestBody(required = false) CaptchaAnswer answer,
                                @RequestHeader(name = "Accept-Language", required = false)
                                String acceptLanguage) {
-        if (answer == null || answer.getId() == null) {
+        if (answer == null || answer.getId() == null || answer.getId().isBlank()) {
             return VerifyResult.badRequest(CaptchaMessages.VERIFY_MISSING_ID, messageProvider)
                     .localize(resolveLocale(null, acceptLanguage), messageProvider);
         }
@@ -107,19 +105,23 @@ public class CaptchaController {
     /** 业务接口校验一次性票据（GET 方式，适合快速联调） */
     @GetMapping("/ticket/verify")
     public VerifyResult verifyTicket(
-            @RequestParam @NotBlank(message = "缺少票据 ticket") String ticket,
+            @RequestParam(required = false) String ticket,
             @RequestParam(required = false) String lang,
             @RequestHeader(name = "Accept-Language", required = false) String acceptLanguage) {
+        if (ticket == null || ticket.isBlank()) {
+            return VerifyResult.badRequest(CaptchaMessages.VERIFY_MISSING_TICKET, messageProvider)
+                    .localize(resolveLocale(lang, acceptLanguage), messageProvider);
+        }
         return engine.consumeTicket(ticket)
                 .localize(resolveLocale(lang, acceptLanguage), messageProvider);
     }
 
     /** 业务接口校验一次性票据（POST 方式，票据放请求体） */
     @PostMapping("/ticket/verify")
-    public VerifyResult verifyTicket(@Valid @RequestBody TicketVerifyRequest request,
+    public VerifyResult verifyTicket(@RequestBody(required = false) TicketVerifyRequest request,
                                      @RequestHeader(name = "Accept-Language", required = false)
                                      String acceptLanguage) {
-        if (request == null || request.getTicket() == null) {
+        if (request == null || request.getTicket() == null || request.getTicket().isBlank()) {
             return VerifyResult.badRequest(CaptchaMessages.VERIFY_MISSING_TICKET, messageProvider)
                     .localize(resolveLocale(null, acceptLanguage), messageProvider);
         }

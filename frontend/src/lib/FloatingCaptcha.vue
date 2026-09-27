@@ -1,5 +1,5 @@
 <template>
-  <Teleport to="body">
+  <Portal>
     <div
       class="floating-widget"
       :class="[opts.floatingPosition, { expanded: open }]"
@@ -128,16 +128,17 @@
         </div>
       </Transition>
     </div>
-  </Teleport>
+  </Portal>
 </template>
 
 <script setup lang="ts">
 import { provide, ref } from 'vue';
+import Portal from '@captcha-portal';
 import AutoCaptcha from './AutoCaptcha.vue';
 import { CaptchaOptionsKey, useCaptchaOptions } from './options';
-import type { CaptchaMessages } from './i18n';
-import type { VerifyResult } from './api';
-import type { CaptchaMode } from './types';
+import type { CaptchaMessages } from '../core/i18n';
+import type { VerifyResult } from '../core/api';
+import type { CaptchaMode } from '../core/types';
 
 interface Props {
   /** 类型提示：auto 由后端决定；具体类型仅在 debug 模式下生效 */

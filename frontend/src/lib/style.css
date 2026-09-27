@@ -735,6 +735,12 @@
 }
 
 .fade-enter-from,
+.fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Vue 2 要求单根：外壳套了一层宿主节点，这里让它不参与布局（弹窗/浮动内部仍是 fixed 覆盖层） */
+.captcha-host {
+  display: contents;
 }

@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      父 POM 直接用 Spring Boot 2.7（最后一个 2.7.x 版本），而不是继承 captcha-toolkit-parent：
+      Maven 只支持单继承，且父 POM 锁定的依赖版本不会被子模块里 import 的 BOM 覆盖，
+      只有挂到 Boot 2.7 的父 POM 上才能得到干净的 Boot 2.7 依赖树。
+      代价：version 必须与 backend/pom.xml 保持一致（见下方注释），发布 profile 也需要复制一份。
+
+      Boot 2.7 尚未进入 jakarta 时代（Bean Validation 仍是 javax），因此共享源码里
+      不再使用 Bean Validation 注解，参数校验改由控制器显式完成 —— 这样同一份源码
+      可以被 Boot 2.7 / 3.5 / 4.0 三个模块复用。
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>io.github.yixiaco</groupId>
+    <artifactId>captcha-spring-boot2-starter</artifactId>
+    <!-- 需与 backend/pom.xml 中 captcha-toolkit-parent 的版本保持一致（无法继承，只能手写） -->
+    <version>0.3.0</version>
+    <packaging>jar</packaging>
+    <name>captcha-spring-boot2-starter</name>
+    <description>Spring Boot 2.7 自动配置：Spring Boot 2.7 基线 + Java 17，供 Boot 2.7 / JDK 17 宿主接入</description>
+    <url>https://github.com/yixiaco/captcha-toolkit</url>
+
+    <!-- Maven Central 发布必需的元数据：与根 POM 保持一致 -->
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>yixiaco</id>
+            <name>yixiaco</name>
+            <url>https://github.com/yixiaco</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/yixiaco/captcha-toolkit.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/yixiaco/captcha-toolkit.git</developerConnection>
+        <url>https://github.com/yixiaco/captcha-toolkit</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <properties>
+        <!-- captcha-core 是 Java 17 字节码，Boot 2.7 也支持 Java 17，因此这里显式锁 17 -->
+        <java.version>17</java.version>
+        <!-- 与根 POM 保持一致的发布插件版本 -->
+        <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+        <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+        <central-publishing-plugin.version>0.11.0</central-publishing-plugin.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.yixiaco</groupId>
+            <artifactId>captcha-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- 传递核心启动器：自动配置、ConfigurationProperties 绑定 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <!--
+          不引入 spring-boot-starter-validation：Boot 2.7 的 Bean Validation 是 javax 体系，
+          共享源码已改为显式参数校验，引入只会多一层无用依赖。
+        -->
+        <!-- Web 支持设为 optional：宿主项目已有 Web 时由宿主提供，纯后端项目也不会被强制引入 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!--
+          自动配置集成测试：验证 Boot 2.7 / JDK 17 下接口可用。
+          排除 Mockito：该测试只需要 JUnit 与断言，不需要 mock，也避免额外 agent 依赖。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mockito</groupId>
+                    <artifactId>mockito-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mockito</groupId>
+                    <artifactId>mockito-junit-jupiter</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+              与 captcha-spring-boot4-starter 共用同一份源码：同一套自动配置/控制器/配置类
+              分别按 Spring Boot 2.7（本模块）、3.5（captcha-spring-boot3-starter）与
+              4.0（captcha-spring-boot4-starter）编译，避免各 starter 的实现漂移。
+              本模块可继续在 src/main/java 放 Boot 2.7 专属类。
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <!-- Boot 2.7 父 POM 管理的是 3.3.0；这里与 captcha-spring-boot3-starter 保持一致，便于统一升级 -->
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>add-shared-spring-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.basedir}/../captcha-spring-boot4-starter/src/main/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!--
+          发布到 Maven Central：mvn -Prelease clean deploy
+          本模块无法继承 captcha-toolkit-parent，因此这里复制一份发布配置，参数与根 POM 保持一致。
+        -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!-- Central 要求每个构件都附带 sources jar -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Central 要求每个构件都附带 javadoc jar；doclint 关闭以容忍中文注释 -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven-javadoc-plugin.version}</version>
+                        <configuration>
+                            <doclint>none</doclint>
+                            <quiet>true</quiet>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Central 要求所有构件都有 .asc 签名 -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Central Portal 发布：与根 POM 使用同一个 deploymentName，多个构件合并为一次发布 -->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central-publishing-plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>sonatype</publishingServerId>
+                            <deploymentName>captcha-toolkit-${project.version}</deploymentName>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>PUBLISHED</waitUntil>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

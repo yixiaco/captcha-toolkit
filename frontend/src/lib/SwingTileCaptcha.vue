@@ -113,10 +113,10 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useCaptchaOptions } from './options';
 import CaptchaLoadError from './CaptchaLoadError.vue';
-import type { CaptchaChallenge, ChallengePoint, SwingTileChallengeData, VerifyResult } from './api';
-import type { CaptchaStatus, ClientType } from './types';
-import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace';
-import type { BehaviorTrace } from './trace';
+import type { CaptchaChallenge, ChallengePoint, SwingTileChallengeData, VerifyResult } from '../core/api';
+import type { CaptchaStatus, ClientType } from '../core/types';
+import { createTrace, pushNormalizedPoint, buildCompressedTrace } from '../core/trace';
+import type { BehaviorTrace } from '../core/trace';
 
 interface Props {
   /** 自定义 API 客户端 */

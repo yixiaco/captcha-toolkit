@@ -8,6 +8,7 @@
 | --- | --- | --- |
 | Spring Boot 4.x | `io.github.yixiaco:captcha-spring-boot4-starter` | Java 21 |
 | Spring Boot 3.x | `io.github.yixiaco:captcha-spring-boot3-starter` | Java 17 |
+| Spring Boot 2.7.x | `io.github.yixiaco:captcha-spring-boot2-starter` | Java 17 |
 
 ```xml
 <dependency>
@@ -17,7 +18,10 @@
 </dependency>
 ```
 
-Boot 3 / JDK 17 宿主把 `artifactId` 换成 `captcha-spring-boot3-starter` 即可。
+Boot 3 / Boot 2.7 宿主把 `artifactId` 换成 `captcha-spring-boot3-starter` /
+`captcha-spring-boot2-starter` 即可。三个 starter 共用同一份实现源码，
+接口与配置项完全一致；只有 Boot 2.7 的 Bean Validation 仍是 javax 体系，
+因此共享源码不使用 Bean Validation 注解，参数校验由控制器显式完成。
 也可以直接使用纯 Java 引擎 `captcha-core`（Java 17 字节码），不依赖 Spring。
 
 ## HTTP 接口

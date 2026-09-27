@@ -2,13 +2,14 @@
 
 ## Add the Dependency
 
-Pick the starter that matches your Spring Boot generation (both expose exactly the same API,
-configuration options and extension points):
+Pick the starter that matches your Spring Boot generation (all of them expose exactly the same
+API, configuration options and extension points):
 
 | Host | Dependency | Compile baseline |
 | --- | --- | --- |
 | Spring Boot 4.x | `io.github.yixiaco:captcha-spring-boot4-starter` | Java 21 |
 | Spring Boot 3.x | `io.github.yixiaco:captcha-spring-boot3-starter` | Java 17 |
+| Spring Boot 2.7.x | `io.github.yixiaco:captcha-spring-boot2-starter` | Java 17 |
 
 ```xml
 <dependency>
@@ -18,7 +19,10 @@ configuration options and extension points):
 </dependency>
 ```
 
-On Spring Boot 3 / JDK 17 hosts, switch the artifactId to `captcha-spring-boot3-starter`.
+On Spring Boot 3 / Spring Boot 2.7 hosts, switch the artifactId to
+`captcha-spring-boot3-starter` / `captcha-spring-boot2-starter`. The three starters share one
+implementation source set; only Boot 2.7 still uses `javax` Bean Validation, so the shared code
+does not rely on Bean Validation annotations and validates request parameters explicitly.
 You can also use `captcha-core` directly without Spring (Java 17 bytecode).
 
 ## HTTP API

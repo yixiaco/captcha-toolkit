@@ -27,7 +27,7 @@ backend/
   captcha-spring-boot4-starter/  Boot 4 auto-configuration + HTTP controller (Java 21)
   captcha-spring-boot3-starter/  Boot 3 adapter (Java 17, shares the same sources)
   captcha-demo-boot4/            Boot 4 demo app + image assets (Java 21, :18080)
-  captcha-demo-boot3/            Boot 3 demo app (Java 17, :18081)
+  captcha-demo-boot3/            Boot 3 demo app (Java 17, :18080)
 frontend/
   src/lib/                       Vue 3 component library (TypeScript)
   src/demo/                      Demo site

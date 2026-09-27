@@ -30,6 +30,33 @@ createApp(App)
   .mount('#app')
 ```
 
+## Vue 2 宿主
+
+Vue 2.7 使用独立包 `captcha-toolkit-vue2`（与 Vue 3 包共用同一份实现源码，接口、props、事件一致）：
+
+```bash
+npm install captcha-toolkit-vue2
+```
+
+```js
+import Vue from 'vue'
+import CaptchaToolkit from 'captcha-toolkit-vue2'
+import 'captcha-toolkit-vue2/style.css'
+
+Vue.use(CaptchaToolkit, {
+  baseUrl: '/api/captcha',
+  debug: false,
+})
+```
+
+差异与注意点：
+
+- peer dependency 是 `vue@^2.7`（依赖 2.7 内置的 Composition API 与 `<script setup>` 支持），Vue 2.6 及更早版本不支持
+- Vue 2 没有 `Teleport`：弹窗/浮动组件挂载后会把节点搬到 `body`，对外表现一致
+- 组件要求单根节点，因此外壳组件内部包了一层 `display: contents` 的宿主节点，不影响布局
+- 暂不提供 `.d.ts` 类型声明（Vue 2.7 的类型体系与共享源码里的 Vue 3 类型不兼容，需要单独生成，后续补上）
+- 本地验证：`cd frontend-vue2 && npm install && npm run build:lib && npm run smoke`（jsdom 里挂载产物，校验渲染与请求次数）
+
 ## 组件用法
 
 `Captcha` 通过 `display` 切换内嵌 / 弹窗两种形态：

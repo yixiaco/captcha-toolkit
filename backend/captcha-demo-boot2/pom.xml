@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      与 captcha-spring-boot2-starter 一致：父 POM 直接用 Spring Boot 2.7（最后一个 2.7.x），
+      否则会被 captcha-toolkit-parent（Spring Boot 4）锁定的依赖版本污染。
+      代价：version 需与 backend/pom.xml 的 captcha-toolkit-parent 保持一致。
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.7.18</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>io.github.yixiaco</groupId>
+    <artifactId>captcha-demo-boot2</artifactId>
+    <!-- 需与 backend/pom.xml 中 captcha-toolkit-parent 的版本保持一致（无法继承，只能手写） -->
+    <version>0.3.0</version>
+    <packaging>jar</packaging>
+    <name>captcha-demo-boot2</name>
+    <description>Spring Boot 2.7 / JDK 17 演示应用：集成 captcha-spring-boot2-starter 后即可直接运行</description>
+
+    <properties>
+        <!-- captcha-core 是 Java 17 字节码，Boot 2.7 支持 Java 17 -->
+        <java.version>17</java.version>
+        <!-- 与根 POM 保持一致的发布插件版本 -->
+        <central-publishing-plugin.version>0.11.0</central-publishing-plugin.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.yixiaco</groupId>
+            <artifactId>captcha-spring-boot2-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Starter 中 Web 是 optional，演示应用需要显式引入 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 打包为可执行 fat jar：java -jar target/captcha-demo-boot2-0.3.0.jar -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- 演示应用只是示例，不发布到 Maven Central（与 captcha-demo-boot3 / boot4 一致） -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central-publishing-plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <skipPublishing>true</skipPublishing>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

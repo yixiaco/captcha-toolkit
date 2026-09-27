@@ -1,0 +1,56 @@
+{
+  "name": "captcha-toolkit-vue2",
+  "version": "0.1.0",
+  "description": "Vue 2.7 行为验证码组件库：滑块拼图 / 文字点选 / 图形点选 / 旋转 / 角度 / 刮刮乐 / 曲线等，配合 captcha-spring-boot2-starter / 3-starter / 4-starter 后端使用",
+  "type": "module",
+  "license": "MIT",
+  "author": "yixiaco",
+  "homepage": "https://yixiaco.github.io/captcha-toolkit/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yixiaco/captcha-toolkit.git",
+    "directory": "frontend-vue2"
+  },
+  "bugs": {
+    "url": "https://github.com/yixiaco/captcha-toolkit/issues"
+  },
+  "keywords": [
+    "captcha",
+    "vue",
+    "vue2",
+    "vue2.7",
+    "behavior-captcha",
+    "slider-captcha",
+    "puzzle-captcha",
+    "verification",
+    "验证码"
+  ],
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/captcha-toolkit-vue2.umd.cjs",
+  "module": "./dist/captcha-toolkit-vue2.js",
+  "style": "./dist/captcha-toolkit-vue2.css",
+  "exports": {
+    ".": {
+      "import": "./dist/captcha-toolkit-vue2.js",
+      "require": "./dist/captcha-toolkit-vue2.umd.cjs"
+    },
+    "./style.css": "./dist/captcha-toolkit-vue2.css"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build:lib": "vite build",
+    "smoke": "node scripts/smoke.mjs",
+    "prepublishOnly": "npm run build:lib"
+  },
+  "peerDependencies": {
+    "vue": "^2.7.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue2": "^2.3.3",
+    "jsdom": "^30.1.1",
+    "vite": "^6.0.7",
+    "vue": "^2.7.16"
+  }
+}

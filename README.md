@@ -23,11 +23,15 @@ backend/
   captcha-core/                  纯 Java 验证码引擎（不依赖 Spring，可单独复用；Java 17 字节码）
   captcha-spring-boot4-starter/  Spring Boot 4 自动配置（Java 21 构建）
   captcha-spring-boot3-starter/  Spring Boot 3 适配模块（Java 17 构建，与 Boot 4 模块共用同一份源码）
+  captcha-spring-boot2-starter/  Spring Boot 2.7 适配模块（Java 17 构建，同样共用这份源码）
   captcha-demo-boot4/            Spring Boot 4 演示应用（:18080，前端默认代理目标）
-  captcha-demo-boot3/            Spring Boot 3 / JDK 17 演示应用（:18081，同一套配置与接口）
+  captcha-demo-boot3/            Spring Boot 3 / JDK 17 演示应用（:18080，同一套配置与接口）
+  captcha-demo-boot2/            Spring Boot 2.7 / JDK 17 演示应用（:18080，同一套配置与接口）
 frontend/
+  src/core/                      框架无关核心层（HTTP 协议 / 行为轨迹 / 设备指纹 / 图形与文案）
   src/lib/                       Vue 3 组件库（可发布 npm / 源码引入）
   src/demo/                      演示站点（组件库的用法示例）
+frontend-vue2/                   Vue 2.7 组件库（独立包 captcha-toolkit-vue2，复用同一份 src 源码双编译）
 docs/                            VitePress 文档站
 ```
 
@@ -57,6 +61,7 @@ docs/                            VitePress 文档站
    | --- | --- | --- |
    | Spring Boot 4.x | `io.github.yixiaco:captcha-spring-boot4-starter` | Java 21 |
    | Spring Boot 3.x | `io.github.yixiaco:captcha-spring-boot3-starter` | Java 17 |
+   | Spring Boot 2.7.x | `io.github.yixiaco:captcha-spring-boot2-starter` | Java 17 |
 
    ```xml
    <dependency>
@@ -66,8 +71,10 @@ docs/                            VitePress 文档站
    </dependency>
    ```
 
-   Boot 3 / JDK 17 宿主把 `artifactId` 换成 `captcha-spring-boot3-starter` 即可：两个 starter
-   的接口、配置项与扩展点完全一致（同一份实现源码分别按两个 Boot 版本编译）。
+   Boot 3 / Boot 2.7 宿主把 `artifactId` 换成 `captcha-spring-boot3-starter` /
+   `captcha-spring-boot2-starter` 即可：三个 starter 的接口、配置项与扩展点完全一致
+   （同一份实现源码分别按三个 Boot 版本编译；Boot 2.7 的 Bean Validation 是 javax 体系，
+   因此共享源码不再使用 Bean Validation 注解，参数校验由控制器显式完成）。
    纯 Java 项目可直接依赖 `captcha-core`（Java 17 字节码，不依赖 Spring）。
 
 3. 启动后自动注册接口（前缀、参数全部可配）：
@@ -132,6 +139,19 @@ npm install captcha-toolkit-vue
 ```
 
 样式需要单独引入一次：`import 'captcha-toolkit-vue/style.css'`。
+
+Vue 2.7 宿主改用独立包 `captcha-toolkit-vue2`（接口、props、事件与 Vue 3 包完全一致，
+区别只是 peer dependency 为 `vue@^2.7`，弹窗/浮动组件用挂载后搬移节点的方式替代 Teleport）：
+
+```js
+import Vue from 'vue'
+import CaptchaToolkit from 'captcha-toolkit-vue2'
+import 'captcha-toolkit-vue2/style.css'
+
+Vue.use(CaptchaToolkit, { baseUrl: '/api/captcha' })
+```
+
+两个前端包与三个后端 starter（Boot 2.7 / 3 / 4）任意组合都兼容，HTTP 协议与行为轨迹格式一致。
 
 组件库支持两种用法：
 
@@ -229,7 +249,10 @@ import { CaptchaModal } from 'captcha-toolkit-vue'
 
 ## 运行演示
 
-Boot 4 演示（JDK 21 + Maven，端口 18080，前端 `npm run dev` 默认代理到它）：
+三个演示（Boot 2.7 / 3 / 4）**端口统一为 18080**，接口与配置项完全一致——前端 dev server
+默认就代理到这个端口，换演示时前端不用改任何配置；同一时间只启动一个即可。
+
+Boot 4 演示（JDK 21 + Maven）：
 
 ```bash
 cd backend
@@ -237,13 +260,32 @@ set JAVA_HOME=D:\jdks\openjdk-21.0.2
 mvn -pl captcha-demo-boot4 -am spring-boot:run
 ```
 
-Boot 3 演示（JDK 17 即可，端口 18081，配置与接口和 Boot 4 演示完全一致）：
+Boot 3 演示（JDK 17 即可）：
 
 ```bash
 cd backend
 set JAVA_HOME=D:\jdks\graalvm-jdk-17.0.12
 mvn -pl captcha-demo-boot3 -am spring-boot:run
 ```
+
+Boot 2.7 演示（JDK 17 即可）：
+
+```bash
+cd backend
+set JAVA_HOME=D:\jdks\graalvm-jdk-17.0.12
+mvn -pl captcha-demo-boot2 -am spring-boot:run
+```
+
+若 `-am spring-boot:run`
+在父 POM 上报 “Unable to find a suitable main class”，改用打包后直接运行：
+
+```bash
+mvn -pl captcha-demo-boot2 -am -DskipTests package
+java -jar captcha-demo-boot2/target/captcha-demo-boot2-0.3.0.jar
+```
+
+需要同时跑两个演示时，用 `--server.port=xxxx` 或 `SERVER_PORT=xxxx` 临时改端口，
+前端则用 `VITE_API_TARGET=http://localhost:xxxx npm run dev` 指向它。
 
 前端：
 

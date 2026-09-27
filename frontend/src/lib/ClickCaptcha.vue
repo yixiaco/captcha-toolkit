@@ -74,10 +74,10 @@
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useCaptchaOptions } from './options';
 import CaptchaLoadError from './CaptchaLoadError.vue';
-import type { CaptchaChallenge, ClickChallengeData, VerifyResult } from './api';
-import type { CaptchaStatus, ClientType } from './types';
-import { createTrace, pushPoint, buildCompressedTrace, removeLastEvent } from './trace';
-import type { BehaviorTrace } from './trace';
+import type { CaptchaChallenge, ClickChallengeData, VerifyResult } from '../core/api';
+import type { CaptchaStatus, ClientType } from '../core/types';
+import { createTrace, pushPoint, buildCompressedTrace, removeLastEvent } from '../core/trace';
+import type { BehaviorTrace } from '../core/trace';
 
 interface Props {
   /** 自定义 API 客户端 */

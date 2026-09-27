@@ -26,7 +26,7 @@ backend/
   captcha-spring-boot4-starter/  Spring Boot 4 自动配置 + HTTP 控制器（Java 21）
   captcha-spring-boot3-starter/  Spring Boot 3 适配模块（Java 17，共用同一份实现源码）
   captcha-demo-boot4/            Spring Boot 4 演示应用 + 图片素材（Java 21，:18080）
-  captcha-demo-boot3/            Spring Boot 3 演示应用（Java 17，:18081）
+  captcha-demo-boot3/            Spring Boot 3 演示应用（Java 17，:18080）
 frontend/
   src/lib/                       Vue 3 组件库
   src/demo/                      演示站点

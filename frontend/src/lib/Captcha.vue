@@ -1,37 +1,40 @@
 <template>
-  <CaptchaModal
-    v-if="props.display === 'modal'"
-    v-bind="attrs"
-    :visible="props.visible"
-    :mode="props.mode"
-    @close="onClose"
-    @success="onSuccess"
-  />
-  <FloatingCaptcha
-    v-else-if="props.display === 'floating'"
-    v-bind="attrs"
-    :mode="props.mode"
-    @success="onSuccess"
-    @fail="onFail"
-    @error="onError"
-    @close="onClose"
-  />
-  <AutoCaptcha
-    v-else
-    v-bind="attrs"
-    :mode="props.mode"
-    @success="onSuccess"
-    @fail="onFail"
-    @error="onError"
-  />
+  <!-- Vue 2 要求单根，这里统一用一个宿主节点包住三种形态（display: contents 不参与宿主布局） -->
+  <div class="captcha-host">
+    <CaptchaModal
+      v-if="props.display === 'modal'"
+      v-bind="attrs"
+      :visible="props.visible"
+      :mode="props.mode"
+      @close="onClose"
+      @success="onSuccess"
+    />
+    <FloatingCaptcha
+      v-else-if="props.display === 'floating'"
+      v-bind="attrs"
+      :mode="props.mode"
+      @success="onSuccess"
+      @fail="onFail"
+      @error="onError"
+      @close="onClose"
+    />
+    <AutoCaptcha
+      v-else
+      v-bind="attrs"
+      :mode="props.mode"
+      @success="onSuccess"
+      @fail="onFail"
+      @error="onError"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { useAttrs } from 'vue';
 import CaptchaModal from './CaptchaModal.vue';
 import FloatingCaptcha from './FloatingCaptcha.vue';
 import AutoCaptcha from './AutoCaptcha.vue';
-import type { VerifyResult } from './api';
+import { useAttrsCompat } from './attrs';
+import type { VerifyResult } from '../core/api';
 
 interface Props {
   /** 展示方式：inline 嵌入页面 / modal 弹窗 / floating 浮动按钮 */
@@ -57,7 +60,7 @@ const emit = defineEmits<{
   (e: 'fail', result: VerifyResult): void
   (e: 'error', error: unknown): void
 }>();
-const attrs = useAttrs();
+const attrs = useAttrsCompat();
 
 function onSuccess(result: VerifyResult) {
   emit('success', result);

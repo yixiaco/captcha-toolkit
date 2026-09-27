@@ -13,7 +13,7 @@ import ScratchCaptcha from './ScratchCaptcha.vue';
 import CurveCaptcha from './CurveCaptcha.vue';
 import SlideCurveCaptcha from './SlideCurveCaptcha.vue';
 import SwingTileCaptcha from './SwingTileCaptcha.vue';
-import { createCaptchaApi, defaultRequest } from './api';
+import { createCaptchaApi, defaultRequest } from '../core/api';
 import type {
   CaptchaApi,
   CaptchaChallenge,
@@ -31,9 +31,9 @@ import type {
   RequestFunction,
   RequestOptions,
   VerifyResult,
-} from './api';
-import { PUZZLE_SHAPES, getShapeOptions, registerShape } from './shapes';
-import type { ShapeConfig, ShapeMap } from './shapes';
+} from '../core/api';
+import { PUZZLE_SHAPES, getShapeOptions, registerShape } from '../core/shapes';
+import type { ShapeConfig, ShapeMap } from '../core/shapes';
 import {
   CaptchaOptionsKey,
   defaultCaptchaOptions,
@@ -44,9 +44,9 @@ import type { CaptchaOptions } from './options';
 import {
   defaultMessagesFor,
   resolveCaptchaMessages,
-} from './i18n';
-import type { CaptchaLocale, CaptchaMessages } from './i18n';
-import type { CaptchaMode, CaptchaStatus, ClientType } from './types';
+} from '../core/i18n';
+import type { CaptchaLocale, CaptchaMessages } from '../core/i18n';
+import type { CaptchaMode, CaptchaStatus, ClientType } from '../core/types';
 import './style.css';
 
 export {
@@ -104,7 +104,17 @@ export type {
 
 const CaptchaToolkit = {
   install(app: App, options: Partial<CaptchaOptions> = {}) {
-    app.provide(CaptchaOptionsKey, resolveProvidedCaptchaOptions(options));
+    const resolved = resolveProvidedCaptchaOptions(options);
+    // Vue 3 有应用级 provide；Vue 2.7 没有，用全局 mixin 提供同一份配置
+    const host = app as unknown as {
+      provide?: (key: unknown, value: unknown) => void
+      mixin?: (options: unknown) => void
+    };
+    if (typeof host.provide === 'function') {
+      host.provide(CaptchaOptionsKey, resolved);
+    } else if (typeof host.mixin === 'function') {
+      host.mixin({ provide: { [CaptchaOptionsKey]: resolved } });
+    }
   },
 };
 

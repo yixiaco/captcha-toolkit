@@ -17,7 +17,7 @@
     <version>0.3.0</version>
     <packaging>pom</packaging>
     <name>captcha-toolkit-parent</name>
-    <description>可嵌入的极验风格行为验证码工具：核心引擎 + Spring Boot 3/4 Starter + 演示应用</description>
+    <description>可嵌入的极验风格行为验证码工具：核心引擎 + Spring Boot 2.7/3/4 Starter + 演示应用</description>
     <url>https://github.com/yixiaco/captcha-toolkit</url>
 
     <!-- Maven Central 发布必需的元数据：许可证 / 开发者 / 源码仓库（子模块继承后一并生效） -->
@@ -49,9 +49,13 @@
         <module>captcha-spring-boot4-starter</module>
         <!-- Spring Boot 3 适配模块：不继承本 POM（父 POM 为 Spring Boot 3.5.16），版本号需与本 POM 同步 -->
         <module>captcha-spring-boot3-starter</module>
+        <!-- Spring Boot 2.7 适配模块：不继承本 POM（父 POM 为 Spring Boot 2.7.18），版本号需与本 POM 同步 -->
+        <module>captcha-spring-boot2-starter</module>
         <module>captcha-demo-boot4</module>
         <!-- Spring Boot 3 演示应用：同 captcha-spring-boot3-starter，父 POM 为 Spring Boot 3.5.16 -->
         <module>captcha-demo-boot3</module>
+        <!-- Spring Boot 2.7 演示应用：父 POM 为 Spring Boot 2.7.18，与其它演示同为 18080 -->
+        <module>captcha-demo-boot2</module>
     </modules>
 
     <properties>

@@ -3,6 +3,10 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@captcha-portal": ["./src/lib/portal-vue3.vue"]
+    },
     "strict": true,
     "jsx": "preserve",
     "jsxImportSource": "vue",

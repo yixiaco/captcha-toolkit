@@ -8,6 +8,12 @@ export default defineConfig(({ mode }) => {
   // 默认构建为可发布组件库；--mode demo 时构建演示站点
   const isDemo = mode === 'demo';
   return {
+    resolve: {
+      alias: {
+        // 弹窗/浮动组件的“传送门”按目标版本替换实现（Vue 3 用 Teleport，Vue 2.7 用挂载后搬移节点）
+        '@captcha-portal': fileURLToPath(new URL('./src/lib/portal-vue3.vue', import.meta.url)),
+      },
+    },
     plugins: [
       vue(),
       // 组件库构建时生成 .d.ts 类型声明；演示站构建不需要
@@ -18,8 +24,8 @@ export default defineConfig(({ mode }) => {
       open: false,
       proxy: {
         '/api': {
-          // 默认代理到 Boot 4 演示（:18080）；联调 Boot 3 演示时用
-          // VITE_API_TARGET=http://localhost:18081 npm run dev
+          // 三个后端演示（Boot 2.7 / 3 / 4）统一监听 18080，换演示无需改前端；
+          // 需要指向别的地址时用 VITE_API_TARGET=http://localhost:xxxx npm run dev
           target: process.env.VITE_API_TARGET ?? 'http://localhost:18080',
           changeOrigin: true,
         },

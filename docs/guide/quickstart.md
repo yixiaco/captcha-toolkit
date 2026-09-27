@@ -12,11 +12,12 @@
 cd backend
 $env:JAVA_HOME='D:\jdks\openjdk-21.0.2'
 D:\software\apache-maven-3.9.11\bin\mvn.cmd clean install
-# Boot 4 演示：http://localhost:18080（前端 dev server 默认代理到它）
+# 三个演示（Boot 2.7 / 3 / 4）统一监听 18080，前端 dev server 默认代理到它
 D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot4 -am spring-boot:run
 ```
 
-Boot 3 / JDK 17 演示：同一套配置与接口，端口 18081（与 Boot 4 演示可同时运行）：
+Boot 3 / JDK 17 演示：同一套配置与接口，同样监听 18080（**同一时间只跑一个演示**，
+两个都要跑时用 `--server.port=xxxx` 临时改端口）：
 
 ```powershell
 cd backend
@@ -24,10 +25,18 @@ $env:JAVA_HOME='D:\jdks\graalvm-jdk-17.0.12'
 D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot3 -am spring-boot:run
 ```
 
-两个演示都在 `captcha.debug-enabled: true` 下运行，便于自检；生产环境务必关闭。
+Boot 2.7 / JDK 17 演示：同样一套配置与接口，端口同样是 18080（Vue 2 包的 `npm run dev` 也默认代理到它）：
+
+```powershell
+cd backend
+$env:JAVA_HOME='D:\jdks\graalvm-jdk-17.0.12'
+D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot2 -am spring-boot:run
+```
+
+三个演示都在 `captcha.debug-enabled: true` 下运行，便于自检；生产环境务必关闭。
 
 ::: tip 修改了 captcha-core 或 starter 源码后
-先重新执行 `mvn.cmd -pl captcha-core,captcha-spring-boot4-starter,captcha-spring-boot3-starter install -DskipTests`，
+先重新执行 `mvn.cmd -pl captcha-core,captcha-spring-boot4-starter,captcha-spring-boot3-starter,captcha-spring-boot2-starter install -DskipTests`，
 否则 demo 会使用本地仓库中的旧版本。
 :::
 
@@ -73,7 +82,7 @@ npm run build:lib    # 构建组件库（含 .d.ts 类型声明）
 curl "http://localhost:18080/api/captcha/types?debug=1"
 ```
 
-（Boot 3 演示换成 `http://localhost:18081/api/captcha/types?debug=1`。）
+（三个演示都是同一个地址，换演示不用改命令。）
 
 返回后端支持的类型与滑块形状：
 

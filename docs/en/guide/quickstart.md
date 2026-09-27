@@ -13,11 +13,12 @@
 cd backend
 $env:JAVA_HOME='D:\jdks\openjdk-21.0.2'
 D:\software\apache-maven-3.9.11\bin\mvn.cmd clean install
-# Boot 4 demo: http://localhost:18080 (the frontend dev server proxies to it)
+# All three demos (Boot 2.7 / 3 / 4) listen on 18080; the frontend dev server proxies to it
 D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot4 -am spring-boot:run
 ```
 
-Boot 3 / JDK 17 demo: the same configuration and API on port 18081 (it can run next to the Boot 4 demo):
+Boot 3 / JDK 17 demo: the same configuration and API, also on port 18080 (run **one demo at a
+time**; pass `--server.port=xxxx` when you really need two):
 
 ```powershell
 cd backend
@@ -25,10 +26,19 @@ $env:JAVA_HOME='D:\jdks\graalvm-jdk-17.0.12'
 D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot3 -am spring-boot:run
 ```
 
-Both demos run with `captcha.debug-enabled: true` for easy self-checking; turn it off in production.
+Boot 2.7 / JDK 17 demo: same configuration and API again, port 18080 as well (the Vue 2 package's
+`npm run dev` proxies there too):
+
+```powershell
+cd backend
+$env:JAVA_HOME='D:\jdks\graalvm-jdk-17.0.12'
+D:\software\apache-maven-3.9.11\bin\mvn.cmd -pl captcha-demo-boot2 -am spring-boot:run
+```
+
+All three demos run with `captcha.debug-enabled: true` for easy self-checking; turn it off in production.
 
 ::: tip After changing captcha-core or starter
-Run `mvn.cmd -pl captcha-core,captcha-spring-boot4-starter,captcha-spring-boot3-starter install -DskipTests` first,
+Run `mvn.cmd -pl captcha-core,captcha-spring-boot4-starter,captcha-spring-boot3-starter,captcha-spring-boot2-starter install -DskipTests` first,
 otherwise the demo may use stale artifacts from the local repository.
 :::
 

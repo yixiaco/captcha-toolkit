@@ -1,43 +1,46 @@
 <template>
-  <component
-    :is="innerComponent"
-    v-if="challenge"
-    :key="challenge.id"
-    v-bind="bindings"
-    :challenge="challenge"
-    @success="onSuccess"
-    @fail="onFail"
-    @error="onError"
-    @refresh="onRefresh"
-  />
-  <div
-    v-else
-    class="auto-captcha"
-    :style="{ width: opts.width + 'px', maxWidth: '100%' }"
-  >
+  <!-- Vue 2 要求单根，这里统一用一个宿主节点包住两种分支（display: contents 不参与宿主布局） -->
+  <div class="captcha-host">
+    <component
+      :is="innerComponent"
+      v-if="challenge"
+      :key="challenge.id"
+      v-bind="bindings"
+      :challenge="challenge"
+      @success="onSuccess"
+      @fail="onFail"
+      @error="onError"
+      @refresh="onRefresh"
+    />
     <div
-      class="img-wrap"
-      :style="{ width: opts.width + 'px', height: opts.height + 'px' }"
+      v-else
+      class="auto-captcha"
+      :style="{ width: opts.width + 'px', maxWidth: '100%' }"
     >
-      <CaptchaLoadError
-        v-if="status === 'error'"
-        :text="opts.loadFailedText"
-        :retry-text="opts.retryText"
-        @retry="reload"
-      />
       <div
-        v-else
-        class="loading-mask"
+        class="img-wrap"
+        :style="{ width: opts.width + 'px', height: opts.height + 'px' }"
       >
-        <div class="spinner" />
-        <span>{{ opts.loadingText }}</span>
+        <CaptchaLoadError
+          v-if="status === 'error'"
+          :text="opts.loadFailedText"
+          :retry-text="opts.retryText"
+          @retry="reload"
+        />
+        <div
+          v-else
+          class="loading-mask"
+        >
+          <div class="spinner" />
+          <span>{{ opts.loadingText }}</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, useAttrs } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import type { Component } from 'vue';
 import SliderCaptcha from './SliderCaptcha.vue';
 import ClickCaptcha from './ClickCaptcha.vue';
@@ -48,9 +51,10 @@ import CurveCaptcha from './CurveCaptcha.vue';
 import SlideCurveCaptcha from './SlideCurveCaptcha.vue';
 import SwingTileCaptcha from './SwingTileCaptcha.vue';
 import CaptchaLoadError from './CaptchaLoadError.vue';
+import { useAttrsCompat } from './attrs';
 import { useCaptchaOptions } from './options';
-import type { CaptchaChallenge, RequestFunction, VerifyResult } from './api';
-import type { ClientType } from './types';
+import type { CaptchaChallenge, RequestFunction, VerifyResult } from '../core/api';
+import type { ClientType } from '../core/types';
 
 interface Props {
   /**
@@ -89,9 +93,6 @@ const props = withDefaults(defineProps<Props>(), {
   debug: null,
 });
 
-// 根节点是 fragment：宿主 attrs 由 bindings 显式透传给具体组件，这里不再自动继承
-defineOptions({ inheritAttrs: false });
-
 const emit = defineEmits<{
   (e: 'success', result: VerifyResult): void
   (e: 'fail', result: VerifyResult): void
@@ -99,7 +100,7 @@ const emit = defineEmits<{
 }>();
 
 const opts = useCaptchaOptions(props);
-const attrs = useAttrs();
+const attrs = useAttrsCompat();
 const status = ref<'loading' | 'ready' | 'error'>('loading');
 const challenge = ref<CaptchaChallenge | null>(null);
 /** 具体组件在受控模式下的额外请求参数（如滑块形状） */

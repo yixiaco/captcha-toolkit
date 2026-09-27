@@ -30,6 +30,38 @@ createApp(App)
   .mount('#app')
 ```
 
+## Vue 2 Hosts
+
+Vue 2.7 uses the separate package `captcha-toolkit-vue2` (same implementation source as the Vue 3
+package, same props and events):
+
+```bash
+npm install captcha-toolkit-vue2
+```
+
+```js
+import Vue from 'vue'
+import CaptchaToolkit from 'captcha-toolkit-vue2'
+import 'captcha-toolkit-vue2/style.css'
+
+Vue.use(CaptchaToolkit, {
+  baseUrl: '/api/captcha',
+  debug: false,
+})
+```
+
+Differences worth knowing:
+
+- The peer dependency is `vue@^2.7` (it relies on the built-in Composition API and
+  `<script setup>` support); Vue 2.6 and earlier are not supported
+- Vue 2 has no `Teleport`: the modal / floating components move their node to `body` after mount,
+  which behaves the same from the outside
+- Vue 2 requires a single root node, so the wrapper components add a `display: contents` host node
+  that does not affect layout
+- TypeScript declarations (`.d.ts`) are not shipped yet: Vue 2.7's type system is incompatible with
+  the Vue 3 types used by the shared sources, so they need a dedicated generation pass
+- Local check: `cd frontend-vue2 && npm install && npm run build:lib && npm run smoke`
+
 ## Components
 
 `Captcha` switches between inline and modal via `display`:

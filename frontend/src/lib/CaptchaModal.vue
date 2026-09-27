@@ -1,5 +1,5 @@
 <template>
-  <Teleport to="body">
+  <Portal>
     <div
       v-if="visible"
       class="modal-mask"
@@ -102,16 +102,17 @@
         </div>
       </div>
     </div>
-  </Teleport>
+  </Portal>
 </template>
 
 <script setup lang="ts">
 import { provide, ref, watch } from 'vue';
+import Portal from '@captcha-portal';
 import AutoCaptcha from './AutoCaptcha.vue';
 import { CaptchaOptionsKey, useCaptchaOptions } from './options';
-import type { CaptchaMessages } from './i18n';
-import type { VerifyResult } from './api';
-import type { CaptchaMode } from './types';
+import type { CaptchaMessages } from '../core/i18n';
+import type { VerifyResult } from '../core/api';
+import type { CaptchaMode } from '../core/types';
 
 interface Props {
   /** 是否显示弹窗 */

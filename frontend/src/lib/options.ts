@@ -2,11 +2,11 @@
 
 import { inject, provide, reactive, watch } from 'vue';
 import type { InjectionKey, Reactive } from 'vue';
-import { createCaptchaApi } from './api';
-import type { CaptchaApi, RequestFunction } from './api';
-import { CAPTCHA_MESSAGE_KEYS, resolveCaptchaMessages } from './i18n';
-import type { CaptchaLocale, CaptchaMessages } from './i18n';
-import type { ClientType } from './types';
+import { createCaptchaApi } from '../core/api';
+import type { CaptchaApi, RequestFunction } from '../core/api';
+import { CAPTCHA_MESSAGE_KEYS, resolveCaptchaMessages } from '../core/i18n';
+import type { CaptchaLocale, CaptchaMessages } from '../core/i18n';
+import type { ClientType } from '../core/types';
 
 export interface CaptchaOptions {
   /** 自定义 API 客户端；不传则按 baseUrl/request 自动创建 */
