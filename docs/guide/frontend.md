@@ -55,6 +55,8 @@ Vue.use(CaptchaToolkit, {
 - Vue 2 没有 `Teleport`：弹窗/浮动组件挂载后会把节点搬到 `body`，对外表现一致
 - 组件要求单根节点，因此外壳组件内部包了一层 `display: contents` 的宿主节点，不影响布局
 - 暂不提供 `.d.ts` 类型声明（Vue 2.7 的类型体系与共享源码里的 Vue 3 类型不兼容，需要单独生成，后续补上）
+- 演示页与 Vue 3 包**完全共用同一份源码**（`frontend/src/demo/App.vue` + `demo.css`），
+  Vue 2 侧只是把启动方式换成 `new Vue({ render }).$mount('#app')`
 - 本地验证：`cd frontend-vue2 && npm install && npm run build:lib && npm run smoke`（jsdom 里挂载产物，校验渲染与请求次数）
 
 ## 组件用法

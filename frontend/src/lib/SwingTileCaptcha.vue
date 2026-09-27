@@ -181,8 +181,13 @@ const shaking = ref(false);
 const imgWidth = ref(opts.width);
 const imgHeight = ref(opts.height);
 
-/** 服务端返回的贝塞尔路径与摆动参数 */
-let curveData: SwingTileChallengeData | null = null;
+/**
+ * 服务端返回的贝塞尔路径与摆动参数。
+ *
+ * <p>必须用 ref：模板与 computed 都要读它，而 Vue 2.7 不会像 Vue 3 那样把普通
+ * {@code let} 绑定包成响应式（曾导致图块在 Vue 2 下完全不渲染）。</p>
+ */
+const curveData = ref<SwingTileChallengeData | null>(null);
 let trackWidth = 0;
 let startClientX = 0;
 let startLeft = 0;
@@ -203,7 +208,7 @@ function onImageError() {
     status.value = 'error';
     image1.value = '';
     image2.value = '';
-    curveData = null;
+    curveData.value = null;
   }
 }
 
@@ -237,14 +242,15 @@ function ease(t: number) {
 
 /** 图块当前的位置与方向：沿贝塞尔路径移动，方向随路径摆动，终点对准真凹槽 */
 const pieceStyle = computed(() => {
-  if (!curveData || !curveData.path || curveData.path.length < 2) return {};
+  const data = curveData.value;
+  if (!data || !data.path || data.path.length < 2) return {};
   // 使用缓动后的参数，让图块忽快忽慢，而不是跟着滑块匀速/等距移动
   const u = ease(swing());
-  const point = bezier(curveData.path, u);
-  const size = curveData.pieceSize || 0;
-  const rotation = (curveData.endRotation || 0)
-    + ((curveData.startRotation || 0) - (curveData.endRotation || 0)) * (1 - u)
-    + (curveData.swingAmplitude || 0) * Math.sin(Math.PI * u);
+  const point = bezier(data.path, u);
+  const size = data.pieceSize || 0;
+  const rotation = (data.endRotation || 0)
+    + ((data.startRotation || 0) - (data.endRotation || 0)) * (1 - u)
+    + (data.swingAmplitude || 0) * Math.sin(Math.PI * u);
   return {
     width: `${size}px`,
     height: `${size}px`,
@@ -271,7 +277,7 @@ async function applyChallenge(res: CaptchaChallenge<SwingTileChallengeData>) {
   captchaId.value = res.id;
   image1.value = res.image1;
   image2.value = res.image2 || '';
-  curveData = res.data || null;
+  curveData.value = res.data || null;
   imgWidth.value = res.width || opts.width;
   imgHeight.value = res.height || opts.height;
   await nextTick();
@@ -304,7 +310,7 @@ async function loadCaptcha(params: Record<string, unknown> = {}) {
   status.value = 'loading';
   image1.value = '';
   image2.value = '';
-  curveData = null;
+  curveData.value = null;
   trace = null;
   try {
     const res = await opts.api.getCaptcha<SwingTileChallengeData>({

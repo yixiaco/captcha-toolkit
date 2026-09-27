@@ -60,6 +60,8 @@ Differences worth knowing:
   that does not affect layout
 - TypeScript declarations (`.d.ts`) are not shipped yet: Vue 2.7's type system is incompatible with
   the Vue 3 types used by the shared sources, so they need a dedicated generation pass
+- The demo page is **the same source** as the Vue 3 package (`frontend/src/demo/App.vue` plus
+  `demo.css`); the Vue 2 side only swaps the bootstrap to `new Vue({ render }).$mount('#app')`
 - Local check: `cd frontend-vue2 && npm install && npm run build:lib && npm run smoke`
 
 ## Components

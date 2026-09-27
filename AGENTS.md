@@ -78,6 +78,10 @@ npm run build:lib    # -> dist/captcha-toolkit-vue2.js (+ .css)
 npm run smoke        # jsdom mount check: renders, portal to body, exactly one captcha request
 ```
 
+`npm run dev` renders the very same demo page as the Vue 3 package: `frontend-vue2/dev/main.ts`
+only swaps the bootstrap (`createApp(App).mount('#app')` -> `new Vue({ render }).$mount('#app')`)
+and reuses `frontend/src/demo/App.vue` + `frontend/src/demo/demo.css`.
+
 The two frontend packages must stay behaviourally identical: the Vue-2-only pieces are
 `frontend/src/lib/portal-vue2.vue`, the `@captcha-portal` alias wiring in both vite configs, and the
 `display: contents` host nodes required by Vue 2's single-root rule.
