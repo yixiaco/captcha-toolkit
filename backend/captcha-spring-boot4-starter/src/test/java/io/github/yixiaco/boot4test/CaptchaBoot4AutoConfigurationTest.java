@@ -13,6 +13,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -53,14 +55,48 @@ class CaptchaBoot4AutoConfigurationTest {
     }
 
     @Test
-    void createsSliderChallengeWithoutExtraConfiguration() throws Exception {
-        HttpResponse<String> response = get(apiBase, "?type=slider");
+    void createsChallengeWithServerSelectedType() throws Exception {
+        // 类型由后端决定：不带任何参数也能下发验证码
+        HttpResponse<String> response = get(apiBase, "");
         assertEquals(200, response.statusCode(), response.body());
 
         JsonNode challenge = JSON.readTree(response.body());
-        assertEquals("slider", challenge.get("type").asString());
+        JsonNode type = challenge.get("type");
+        assertTrue(type != null && !type.asString().isEmpty(),
+                "应返回后端选择的类型: " + response.body());
         assertFalse(challenge.get("id").asString().isEmpty());
-        assertFalse(challenge.get("image1").asString().isEmpty());
+        // 部分类型（如角度验证）只下发独立小图，因此至少应有一张图片
+        assertTrue(hasImage(challenge), "应下发验证图片: " + response.body());
+    }
+
+    @Test
+    void typeIsDecidedByServerUnlessDebugEnabled() throws Exception {
+        try (ConfigurableApplicationContext debugApp = new SpringApplicationBuilder(Boot4TestApplication.class)
+                .properties("server.port=0", "captcha.types=slider,click",
+                        "captcha.debug-enabled=true")
+                .run()) {
+            String base = baseUrl(debugApp);
+
+            // debug 模式下前端指定的类型生效（且受类型池限制）
+            assertEquals("click", JSON.readTree(get(base, "?type=click&debug=1").body())
+                    .get("type").asString());
+
+            // 未带 debug 时同一个 type 参数被忽略：多次请求应出现后端随机挑出的不同结果
+            Set<String> picked = new HashSet<>();
+            for (int i = 0; i < 12; i++) {
+                String type = JSON.readTree(get(base, "?type=click").body()).get("type").asString();
+                assertTrue(Set.of("slider", "click").contains(type),
+                        "下发类型应落在类型池内: " + type);
+                picked.add(type);
+            }
+            assertTrue(picked.size() > 1,
+                    "非 debug 下类型应由后端决定，而不是沿用客户端的 click: " + picked);
+
+            // debug 指定类型池之外的类型：拒绝而不是降级
+            JsonNode rejected = JSON.readTree(get(base, "?type=rotate&debug=1").body());
+            assertFalse(rejected.get("success").asBoolean(), rejected.toString());
+            assertEquals("BAD_REQUEST", rejected.get("code").asString(), rejected.toString());
+        }
     }
 
     @Test
@@ -133,6 +169,16 @@ class CaptchaBoot4AutoConfigurationTest {
         return "http://localhost:"
                 + context.getEnvironment().getProperty("local.server.port")
                 + "/api/captcha";
+    }
+
+    /** 判断下发载荷中是否至少带了一张图片 */
+    private static boolean hasImage(JsonNode challenge) {
+        return isText(challenge.get("image1")) || isText(challenge.get("image2"));
+    }
+
+    /** 判断节点是否为非空文本 */
+    private static boolean isText(JsonNode node) {
+        return node != null && !node.isNull() && !node.asString().isEmpty();
     }
 
     /** 发起 GET 请求 */

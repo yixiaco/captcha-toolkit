@@ -89,130 +89,22 @@
           </div>
 
           <div class="floating-body">
-            <SliderCaptcha
-              v-if="mode === 'slider'"
-              :key="`slider-${refreshKey}`"
+            <!-- 类型由后端决定：这里只把 mode 当作 debug 模式下的类型提示 -->
+            <AutoCaptcha
+              :key="`auto-${refreshKey}`"
+              :mode="mode"
               :api="opts.api"
-              :width="opts.width"
-              :height="opts.height"
+              :base-url="opts.baseUrl"
+              :request="opts.request"
+              :locale="opts.locale"
+              :debug="opts.debug"
               :shape="opts.shape"
-              :shapes="opts.shapes"
-              :shape-labels="opts.shapeLabels"
-              :show-shape-picker="opts.showShapePicker"
-              :debug="opts.debug"
-              :auto-reload="opts.autoReload"
-              :handle-width="opts.handleWidth"
-              :shape-label="opts.shapeLabel"
-              :random-label="opts.randomLabel"
-              :slider-tip="opts.sliderTip"
-              :loading-text="opts.loadingText"
-              :load-failed-text="opts.loadFailedText"
-              :retry-text="opts.retryText"
-              :image-alt="opts.imageAlt"
-              @success="onCaptchaSuccess"
-              @fail="onCaptchaFail"
-            />
-            <ClickCaptcha
-              v-else-if="mode === 'click'"
-              :key="`click-${refreshKey}`"
-              :api="opts.api"
               :width="opts.width"
               :height="opts.height"
-              :prompt-prefix="opts.promptPrefix"
-              :mark-min-distance="opts.markMinDistance"
-              :debug="opts.debug"
-              :auto-reload="opts.autoReload"
               :loading-text="opts.loadingText"
               :load-failed-text="opts.loadFailedText"
               :retry-text="opts.retryText"
-              :image-alt="opts.imageAlt"
-              @success="onCaptchaSuccess"
-              @fail="onCaptchaFail"
-            />
-            <ClickCaptcha
-              v-else-if="mode === 'click-shape'"
-              :key="`click-shape-${refreshKey}`"
-              :api="opts.api"
-              :width="opts.width"
-              :height="opts.height"
-              type="click-shape"
-              :prompt-prefix="opts.clickShapeTip"
-              :mark-min-distance="opts.markMinDistance"
-              :debug="opts.debug"
-              :auto-reload="opts.autoReload"
-              :loading-text="opts.loadingText"
-              :load-failed-text="opts.loadFailedText"
-              :retry-text="opts.retryText"
-              :image-alt="opts.imageAlt"
-              @success="onCaptchaSuccess"
-              @fail="onCaptchaFail"
-            />
-            <RotateCaptcha
-              v-else-if="mode === 'rotate'"
-              :key="`rotate-${refreshKey}`"
-              :api="opts.api"
-              :width="opts.width"
-              :height="opts.height"
-              :rotate-tip="opts.rotateTip"
-              :handle-width="opts.handleWidth"
-              :debug="opts.debug"
-              :auto-reload="opts.autoReload"
-              :loading-text="opts.loadingText"
-              :load-failed-text="opts.loadFailedText"
-              :retry-text="opts.retryText"
-              :image-alt="opts.imageAlt"
-              @success="onCaptchaSuccess"
-              @fail="onCaptchaFail"
-            />
-            <AngleCaptcha
-              v-else-if="mode === 'angle'"
-              :key="`angle-${refreshKey}`"
-              :api="opts.api"
-              :width="opts.width"
-              :height="opts.height"
-              :angle-tip="opts.angleTip"
-              :handle-width="opts.handleWidth"
-              :debug="opts.debug"
-              :auto-reload="opts.autoReload"
-              :loading-text="opts.loadingText"
-              :load-failed-text="opts.loadFailedText"
-              :retry-text="opts.retryText"
-              :image-alt="opts.imageAlt"
-              @success="onCaptchaSuccess"
-              @fail="onCaptchaFail"
-            />
-            <ScratchCaptcha
-              v-else-if="mode === 'scratch'"
-              :key="`scratch-${refreshKey}`"
-              :api="opts.api"
-              :width="opts.width"
-              :height="opts.height"
-              :scratch-tip="opts.scratchTip"
-              :handle-width="opts.handleWidth"
-              :debug="opts.debug"
-              :auto-reload="opts.autoReload"
-              :loading-text="opts.loadingText"
-              :load-failed-text="opts.loadFailedText"
-              :retry-text="opts.retryText"
-              :image-alt="opts.imageAlt"
-              @success="onCaptchaSuccess"
-              @fail="onCaptchaFail"
-            />
-            <CurveCaptcha
-              v-else-if="mode === 'curve'"
-              :key="`curve-${refreshKey}`"
-              :api="opts.api"
-              :width="opts.width"
-              :height="opts.height"
-              :curve-tip="opts.curveTip"
-              :curve-color="opts.curveColor"
-              :curve-width="opts.curveWidth"
-              :debug="opts.debug"
-              :auto-reload="opts.autoReload"
-              :loading-text="opts.loadingText"
-              :load-failed-text="opts.loadFailedText"
-              :retry-text="opts.retryText"
-              :image-alt="opts.imageAlt"
+              :client-type="opts.clientType"
               @success="onCaptchaSuccess"
               @fail="onCaptchaFail"
             />
@@ -241,19 +133,14 @@
 
 <script setup lang="ts">
 import { provide, ref } from 'vue';
-import SliderCaptcha from './SliderCaptcha.vue';
-import ClickCaptcha from './ClickCaptcha.vue';
-import RotateCaptcha from './RotateCaptcha.vue';
-import AngleCaptcha from './AngleCaptcha.vue';
-import ScratchCaptcha from './ScratchCaptcha.vue';
-import CurveCaptcha from './CurveCaptcha.vue';
+import AutoCaptcha from './AutoCaptcha.vue';
 import { CaptchaOptionsKey, useCaptchaOptions } from './options';
 import type { CaptchaMessages } from './i18n';
 import type { VerifyResult } from './api';
 import type { CaptchaMode } from './types';
 
 interface Props {
-  /** 验证模式：slider / click / rotate / curve */
+  /** 类型提示：auto 由后端决定；具体类型仅在 debug 模式下生效 */
   mode?: CaptchaMode | string
   /** 自定义 API 客户端 */
   api?: object | null
@@ -335,7 +222,7 @@ interface Props {
 
 // 布尔可选 props 统一用 null 作为“未传”标记，避免 Vue 默认 false 覆盖全局配置
 const props = withDefaults(defineProps<Props>(), {
-  mode: 'slider',
+  mode: 'auto',
   showShapePicker: null,
   debug: null,
   autoReload: null,

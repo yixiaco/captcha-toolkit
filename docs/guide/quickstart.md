@@ -62,9 +62,10 @@ npm run build:lib    # 构建组件库（含 .d.ts 类型声明）
 - `http://localhost:5173/?captcha=curve` 曲线绘制
 - `http://localhost:5173/?captcha=slide-curve` 滑动曲线
 - `http://localhost:5173/?captcha=swing-tile` 滑块摆动图块
-- `http://localhost:5173/?captcha=random` 随机模式
+- `http://localhost:5173/?captcha=auto`（同 `random`）后端决定类型
 
-滑块调试时可追加形状参数，例如 `?captcha=slider&shape=classic`。
+具体类型属于调试用法：只有演示（`debug-enabled: true`）下才会按 `?captcha=` 指定的类型下发，
+生产环境由后端 `captcha.types` 类型池决定。滑块调试时可追加形状参数，例如 `?captcha=slider&shape=classic`。
 
 ## 接口自检
 

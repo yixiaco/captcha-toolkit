@@ -1,26 +1,25 @@
 <template>
   <CaptchaModal
-    v-if="display === 'modal'"
+    v-if="props.display === 'modal'"
     v-bind="attrs"
-    :visible="visible"
-    :mode="mode"
+    :visible="props.visible"
+    :mode="props.mode"
     @close="onClose"
     @success="onSuccess"
   />
   <FloatingCaptcha
-    v-else-if="display === 'floating'"
+    v-else-if="props.display === 'floating'"
     v-bind="attrs"
-    :mode="mode"
+    :mode="props.mode"
     @success="onSuccess"
     @fail="onFail"
     @error="onError"
     @close="onClose"
   />
-  <component
-    :is="inlineComponent"
+  <AutoCaptcha
     v-else
     v-bind="attrs"
-    :type="inlineClickType"
+    :mode="props.mode"
     @success="onSuccess"
     @fail="onFail"
     @error="onError"
@@ -28,33 +27,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue';
-import type { Component } from 'vue';
+import { useAttrs } from 'vue';
 import CaptchaModal from './CaptchaModal.vue';
 import FloatingCaptcha from './FloatingCaptcha.vue';
-import SliderCaptcha from './SliderCaptcha.vue';
-import ClickCaptcha from './ClickCaptcha.vue';
-import RotateCaptcha from './RotateCaptcha.vue';
-import AngleCaptcha from './AngleCaptcha.vue';
-import ScratchCaptcha from './ScratchCaptcha.vue';
-import CurveCaptcha from './CurveCaptcha.vue';
-import SlideCurveCaptcha from './SlideCurveCaptcha.vue';
-import SwingTileCaptcha from './SwingTileCaptcha.vue';
+import AutoCaptcha from './AutoCaptcha.vue';
 import type { VerifyResult } from './api';
-import type { CaptchaMode } from './types';
 
 interface Props {
   /** 展示方式：inline 嵌入页面 / modal 弹窗 / floating 浮动按钮 */
   display?: string
-  /** 验证模式：slider / click / rotate */
-  mode?: CaptchaMode | string
+  /**
+   * 类型提示：auto 表示完全由后端决定；指定具体类型时仅在 debug 模式下生效。
+   * 无论传什么，组件都按后端响应里的 type 渲染。
+   */
+  mode?: string
   /** 弹窗是否可见（仅 display=modal 生效） */
   visible?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   display: 'modal',
-  mode: 'slider',
+  mode: 'auto',
   visible: false,
 });
 
@@ -65,24 +58,6 @@ const emit = defineEmits<{
   (e: 'error', error: unknown): void
 }>();
 const attrs = useAttrs();
-
-const inlineComponent = computed<Component>(() => {
-  if (props.mode === 'click' || props.mode === 'click-shape') return ClickCaptcha;
-  if (props.mode === 'rotate') return RotateCaptcha;
-  if (props.mode === 'angle') return AngleCaptcha;
-  if (props.mode === 'scratch') return ScratchCaptcha;
-  if (props.mode === 'curve') return CurveCaptcha;
-  if (props.mode === 'slide-curve') return SlideCurveCaptcha;
-  if (props.mode === 'swing-tile') return SwingTileCaptcha;
-  return SliderCaptcha;
-});
-
-/** 点选类组件的类型编码（文字点选 / 图形点选） */
-const inlineClickType = computed<string | undefined>(() => {
-  if (props.mode === 'click-shape') return 'click-shape';
-  if (props.mode === 'click') return 'click';
-  return undefined;
-});
 
 function onSuccess(result: VerifyResult) {
   emit('success', result);

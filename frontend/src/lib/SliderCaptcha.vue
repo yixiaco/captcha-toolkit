@@ -73,7 +73,7 @@
         v-if="status === 'error'"
         :text="opts.loadFailedText"
         :retry-text="opts.retryText"
-        @retry="loadCaptcha"
+        @retry="loadCaptcha()"
       />
 
       <transition name="fade">
@@ -147,7 +147,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { getShapeOptions } from './shapes';
 import { useCaptchaOptions } from './options';
 import CaptchaLoadError from './CaptchaLoadError.vue';
-import type { SliderChallengeData, VerifyResult } from './api';
+import type { CaptchaChallenge, SliderChallengeData, VerifyResult } from './api';
 import type { CaptchaStatus, ClientType } from './types';
 import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace';
 import type { BehaviorTrace } from './trace';
@@ -193,6 +193,8 @@ interface Props {
   imageAlt?: string | null
   /** 客户端类型：web / h5 / mini_program */
   clientType?: ClientType | null
+  /** 父级预取的验证码：传入后组件不再自行请求，由上层统一按后端类型下发 */
+  challenge?: CaptchaChallenge<SliderChallengeData> | null
 }
 
 // 布尔可选 props 统一用 null 作为“未传”标记，避免 Vue 默认 false 覆盖全局配置
@@ -206,6 +208,8 @@ const emit = defineEmits<{
   (e: 'success', result: VerifyResult): void
   (e: 'fail', result: VerifyResult): void
   (e: 'error', error: unknown): void
+  /** 受控模式下请求父级重新下发一张验证码，可携带额外请求参数（如形状） */
+  (e: 'refresh', params?: Record<string, unknown>): void
 }>();
 
 const opts = useCaptchaOptions(props);
@@ -262,10 +266,39 @@ function trackPoint(event: PointerEvent, type: 0 | 1 | 2) {
   pushNormalizedPoint(trace!, x, y, type);
 }
 
+/** 应用后端下发的验证码：自行请求与父级下发共用同一套渲染逻辑 */
+async function applyChallenge(res: CaptchaChallenge<SliderChallengeData>) {
+  captchaId.value = res.id;
+  image1.value = res.image1;
+  image2.value = res.image2 || '';
+  // 以后端实际图片尺寸为准，避免前端配置宽度与后端不一致导致坐标换算错误
+  imgWidth.value = res.width || opts.width;
+  imgHeight.value = res.height || opts.height;
+  await nextTick();
+  trackWidth = trackRef.value ? trackRef.value.clientWidth : imgWidth.value;
+  // 小图是从拼图块左侧留白处裁剪的，整体左移 offset 让拼图块贴住大图左边缘
+  pieceOffsetX.value = res.data?.pieceOffsetX || 0;
+  pieceLeft.value = 0;
+  status.value = 'idle';
+  if (opts.debug && rootRef.value) {
+    rootRef.value.dataset.captchaId = res.id;
+    if (res.data?.debugX != null) {
+      rootRef.value.dataset.debugX = String(res.data.debugX);
+    }
+  }
+}
+
 /**
- * 从后端获取滑块验证码：大图（带缺口）+ 小图（拼图块）
+ * 从后端获取滑块验证码：大图（带缺口）+ 小图（拼图块）。
+ *
+ * <p>父级已接管下发时（{@code challenge} 存在）只把刷新请求交回父级，
+ * 由上层按后端返回的类型重新渲染。</p>
  */
-async function loadCaptcha() {
+async function loadCaptcha(params: Record<string, unknown> = {}) {
+  if (props.challenge) {
+    emit('refresh', params);
+    return;
+  }
   status.value = 'loading';
   image1.value = '';
   image2.value = '';
@@ -277,24 +310,11 @@ async function loadCaptcha() {
       shape: opts.debug ? selectedShape.value || 'random' : undefined,
       debug: opts.debug ? '1' : undefined,
     });
-    captchaId.value = res.id;
-    image1.value = res.image1;
-    image2.value = res.image2 || '';
-    // 以后端实际图片尺寸为准，避免前端配置宽度与后端不一致导致坐标换算错误
-    imgWidth.value = res.width || opts.width;
-    imgHeight.value = res.height || opts.height;
-    await nextTick();
-    trackWidth = trackRef.value ? trackRef.value.clientWidth : imgWidth.value;
-    // 小图是从拼图块左侧留白处裁剪的，整体左移 offset 让拼图块贴住大图左边缘
-    pieceOffsetX.value = res.data?.pieceOffsetX || 0;
-    pieceLeft.value = 0;
-    status.value = 'idle';
-    if (opts.debug && rootRef.value) {
-      rootRef.value.dataset.captchaId = res.id;
-      if (res.data?.debugX != null) {
-        rootRef.value.dataset.debugX = String(res.data.debugX);
-      }
+    if (res.type && res.type !== 'slider') {
+      throw new Error(`后端下发了 ${res.type} 类型的验证码，滑块组件无法渲染；`
+        + '请改用 <Captcha> 由组件按后端类型自动渲染，或把 captcha.types 固定为单一类型');
     }
+    await applyChallenge(res);
   } catch (error) {
     console.error('加载滑块验证码失败', error);
     emit('error', error);
@@ -305,7 +325,7 @@ async function loadCaptcha() {
 function onShapeChange(event: Event) {
   if (status.value === 'success') return;
   selectedShape.value = (event.target as HTMLSelectElement).value;
-  loadCaptcha();
+  loadCaptcha({ shape: selectedShape.value || 'random' });
 }
 
 function onPointerDown(event: PointerEvent) {
@@ -379,6 +399,11 @@ onMounted(async () => {
   // 仅当形状在接口下发的可用列表内时才预选，避免非 debug 模式前端擅自指定形状
   if (opts.shape && opts.shapes?.includes(opts.shape)) {
     selectedShape.value = opts.shape;
+  }
+  // 父级已下发验证码：直接渲染，不再自行请求
+  if (props.challenge) {
+    await applyChallenge(props.challenge);
+    return;
   }
   loadCaptcha();
 });

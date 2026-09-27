@@ -26,7 +26,7 @@ Boot 3 / JDK 17 宿主把 `artifactId` 换成 `captcha-spring-boot3-starter` 即
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `{prefix}?type=slider\|click\|click-shape\|rotate\|angle\|scratch\|curve\|slide-curve\|swing-tile` | 下发验证码 |
+| GET | `{prefix}?debug=1` | 下发验证码（类型由后端决定，仅 debug 下 `type` 生效） |
 | POST | `{prefix}/verify` | 校验答案 |
 | GET/POST | `{prefix}/ticket/verify` | 业务接口校验一次性票据 |
 | GET | `{prefix}/types?debug=1` | 查询支持的类型与形状（debug 才返回形状列表，否则为空列表） |
@@ -34,8 +34,14 @@ Boot 3 / JDK 17 宿主把 `artifactId` 换成 `captcha-spring-boot3-starter` 即
 ### 下发验证码
 
 ```http
-GET /api/captcha?type=slider&shape=classic&debug=1
+GET /api/captcha
 ```
+
+类型由**后端决定**：引擎从 `captcha.types` 类型池（为空表示全部已注册类型）中随机挑选，
+响应里的 `type` 就是实际下发的类型。非 debug 请求携带的 `type` 会被忽略；
+只有前端 `debug=1` 且后端 `captcha.debug-enabled=true` 时，才允许用
+`/api/captcha?type=slider&shape=classic&debug=1` 指定类型与形状，
+且 `type` 必须是类型池内的类型（否则返回 `BAD_REQUEST`）。
 
 返回示例（debug 模式会附带答案字段）：
 

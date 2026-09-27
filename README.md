@@ -72,10 +72,15 @@ docs/                            VitePress 文档站
 
 3. 启动后自动注册接口（前缀、参数全部可配）：
 
-   - `GET {prefix}?type=slider|click|rotate&shape=classic&debug=1` 下发验证码
+   - `GET {prefix}?debug=1` 下发验证码（类型由后端决定；仅 debug 模式下 `type=slider|click|...` 才生效）
    - `POST {prefix}/verify` 校验答案（滑块 `{id,type,xNorm}`；点选 `{id,type,points:[{x,y}...]}`，坐标为归一化 0~1；开启行为校验时需附带 `td` 与 `clientType`）
    - `GET/POST {prefix}/ticket/verify?ticket=...` 业务接口校验一次性票据
    - `GET {prefix}/types` 查询后端支持的类型与形状（通用前端可动态渲染）
+
+验证码类型由**后端决定**：引擎从 `captcha.types` 类型池（为空表示全部已注册类型）中随机挑选，
+非 debug 请求携带的 `type` 一律忽略；只有前端 `debug=1` 且后端 `captcha.debug-enabled=true` 时，
+才允许用 `type` 指定类型（且必须落在类型池内）。通用前端组件 `<Captcha>` / `<CaptchaModal>` /
+`<FloatingCaptcha>` 会按响应里的 `type` 自动渲染对应交互，无需前端预选。
 
 验证通过后 `POST {prefix}/verify` 会返回一次性 `ticket`（默认 120 秒有效），
 登录等业务接口拿到 `ticket` 后调用 `POST {prefix}/ticket/verify`（请求体 `{"ticket":"..."}`）校验；
@@ -205,6 +210,7 @@ import { CaptchaModal } from 'captcha-toolkit-vue'
 | `api` | 自定义 API 客户端（`createCaptchaApi` 返回值） | 自动创建 |
 | `request` | 自定义请求函数，兼容 `fetch` 签名 | 内置 fetch |
 | `width` / `height` | 图片尺寸 | `340` / `190` |
+| `mode` | 类型提示：`auto` 由后端决定；具体类型仅 debug 模式生效 | `auto` |
 | `shape` | 滑块初始形状（仅 debug 模式生效，正常模式由后端决定） | `''` |
 | `shapes` | 形状选择器白名单 | 内置 9 种 |
 | `shapeLabels` | 形状显示名覆盖（如 `{ classic: 'Classic' }`） | 内置中文名 |
@@ -248,7 +254,8 @@ npm run dev
 ```
 
 打开 `http://localhost:5173`，也可用 URL 直接指定验证方式：
-`?captcha=slider&shape=classic`、`?captcha=click`、`?captcha=random`。
+`?captcha=auto`（后端决定，默认）、`?captcha=slider&shape=classic`、`?captcha=click`。
+指定具体类型只在 debug 模式（演示默认开启）下生效。
 
 ## 关键配置项（`captcha.*`）
 
@@ -257,6 +264,7 @@ npm run dev
 | `enabled` | 是否注册 HTTP 接口 | `true` |
 | `api-prefix` | 接口前缀 | `/api/captcha` |
 | `debug-enabled` | 是否允许 `debug=1` 返回答案 | `false` |
+| `types` | 允许下发的类型池（非 debug 随机下发、debug 指定类型都受它限制）；为空表示全部 | 全部 |
 | `ticket-expire-seconds` | 验证通过后票据有效期（秒），业务接口凭票据校验 | `120` |
 | `background.sources` | 背景图资源（classpath 或文件路径） | `/images/captcha/default.jpg` |
 | `background.generate-fallback` | 素材缺失时用程序生成风景图 | `true` |

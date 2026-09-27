@@ -9,6 +9,7 @@
 | `enabled` | 是否注册 HTTP 接口 | `true` |
 | `api-prefix` | 接口前缀 | `/api/captcha` |
 | `debug-enabled` | 是否允许 debug 返回答案（唯一开关，前端 debug 参数不能单独开启） | `false` |
+| `types` | 允许下发的类型池（非 debug 随机下发、debug 指定类型都受它限制）；为空表示全部已注册类型 | 全部 |
 | `ticket-expire-seconds` | 票据有效期（秒） | `120` |
 | `locale` | 默认提示语言（如 `zh_CN` / `en`） | `zh_CN` |
 

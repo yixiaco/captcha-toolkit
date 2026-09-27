@@ -37,7 +37,7 @@
         v-if="status === 'error'"
         :text="opts.loadFailedText"
         :retry-text="opts.retryText"
-        @retry="loadCaptcha"
+        @retry="loadCaptcha()"
       />
 
       <transition name="fade">
@@ -110,7 +110,7 @@
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useCaptchaOptions } from './options';
 import CaptchaLoadError from './CaptchaLoadError.vue';
-import type { ChallengePoint, SlideCurveChallengeData, VerifyResult } from './api';
+import type { CaptchaChallenge, ChallengePoint, SlideCurveChallengeData, VerifyResult } from './api';
 import type { CaptchaStatus, ClientType } from './types';
 import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace';
 import type { BehaviorTrace } from './trace';
@@ -146,6 +146,8 @@ interface Props {
   imageAlt?: string | null
   /** 客户端类型：web / h5 / mini_program */
   clientType?: ClientType | null
+  /** 父级预取的验证码：传入后组件不再自行请求，由上层统一按后端类型下发 */
+  challenge?: CaptchaChallenge<SlideCurveChallengeData> | null
 }
 
 // 布尔可选 props 统一用 null 作为“未传”标记，避免 Vue 默认 false 覆盖全局配置
@@ -158,6 +160,8 @@ const emit = defineEmits<{
   (e: 'success', result: VerifyResult): void
   (e: 'fail', result: VerifyResult): void
   (e: 'error', error: unknown): void
+  /** 受控模式下请求父级重新下发一张验证码 */
+  (e: 'refresh', params?: Record<string, unknown>): void
 }>();
 
 const opts = useCaptchaOptions(props);
@@ -276,7 +280,42 @@ function trackPoint(event: PointerEvent, type: 0 | 1 | 2) {
   pushNormalizedPoint(trace!, x, y, type);
 }
 
-async function loadCaptcha() {
+/** 应用后端下发的验证码：自行请求与父级下发共用同一套渲染逻辑 */
+async function applyChallenge(res: CaptchaChallenge<SlideCurveChallengeData>) {
+  captchaId.value = res.id;
+  image1.value = res.image1;
+  curveData = res.data || null;
+  // 以后端实际图片尺寸为准，避免前端配置宽度与后端不一致导致坐标换算错误
+  imgWidth.value = res.width || opts.width;
+  imgHeight.value = res.height || opts.height;
+  await nextTick();
+  trackWidth = trackRef.value ? trackRef.value.clientWidth : imgWidth.value;
+  pieceLeft.value = 0;
+  drawCurve();
+  status.value = 'idle';
+  if (opts.debug && rootRef.value) {
+    rootRef.value.dataset.captchaId = res.id;
+    if (res.data?.debugSwing != null) {
+      rootRef.value.dataset.debugSwing = String(res.data.debugSwing);
+    }
+    if (res.data?.debugFakeTargets) {
+      rootRef.value.dataset.debugFakeTargets = JSON.stringify(
+        res.data.debugFakeTargets.map((p) => ({ x: p.x, y: p.y }))
+      );
+    }
+  }
+}
+
+/**
+ * 从后端获取滑动曲线验证码。
+ *
+ * <p>父级已接管下发时（{@code challenge} 存在）只把刷新请求交回父级。</p>
+ */
+async function loadCaptcha(params: Record<string, unknown> = {}) {
+  if (props.challenge) {
+    emit('refresh', params);
+    return;
+  }
   status.value = 'loading';
   image1.value = '';
   curveData = null;
@@ -286,28 +325,11 @@ async function loadCaptcha() {
       type: 'slide-curve',
       debug: opts.debug ? '1' : undefined,
     });
-    captchaId.value = res.id;
-    image1.value = res.image1;
-    curveData = res.data || null;
-    // 以后端实际图片尺寸为准，避免前端配置宽度与后端不一致导致坐标换算错误
-    imgWidth.value = res.width || opts.width;
-    imgHeight.value = res.height || opts.height;
-    await nextTick();
-    trackWidth = trackRef.value ? trackRef.value.clientWidth : imgWidth.value;
-    pieceLeft.value = 0;
-    drawCurve();
-    status.value = 'idle';
-    if (opts.debug && rootRef.value) {
-      rootRef.value.dataset.captchaId = res.id;
-      if (res.data?.debugSwing != null) {
-        rootRef.value.dataset.debugSwing = String(res.data.debugSwing);
-      }
-      if (res.data?.debugFakeTargets) {
-        rootRef.value.dataset.debugFakeTargets = JSON.stringify(
-          res.data.debugFakeTargets.map((p) => ({ x: p.x, y: p.y }))
-        );
-      }
+    if (res.type && res.type !== 'slide-curve') {
+      throw new Error(`后端下发了 ${res.type} 类型的验证码，滑动曲线组件无法渲染；`
+        + '请改用 <Captcha> 由组件按后端类型自动渲染，或把 captcha.types 固定为单一类型');
     }
+    await applyChallenge(res);
   } catch (error) {
     console.error('加载滑动曲线验证码失败', error);
     emit('error', error);
@@ -386,6 +408,11 @@ async function onPointerUp(event: PointerEvent) {
 onMounted(async () => {
   await nextTick();
   trackWidth = trackRef.value ? trackRef.value.clientWidth : opts.width;
+  // 父级已下发验证码：直接渲染，不再自行请求
+  if (props.challenge) {
+    await applyChallenge(props.challenge);
+    return;
+  }
   loadCaptcha();
 });
 

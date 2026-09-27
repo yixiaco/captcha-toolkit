@@ -294,7 +294,7 @@
         </button>
         <button
           class="mode-btn random"
-          @click="openRandom"
+          @click="openAuto"
         >
           <svg
             viewBox="0 0 24 24"
@@ -308,7 +308,7 @@
           >
             <path d="M4 7h13M13 3l4 4-4 4M20 17H7M11 13l-4 4 4 4" />
           </svg>
-          随机模式
+          后端决定
         </button>
       </div>
 
@@ -357,7 +357,10 @@ const isDev = import.meta.env.DEV;
 const account = ref('');
 const password = ref('');
 const captchaVisible = ref(false);
-const captchaMode = ref<'slider' | 'click' | 'click-shape' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile'>('slider');
+/** 类型提示：auto 表示由后端类型池决定，具体类型仅在 debug 模式下生效 */
+type DemoMode = 'auto' | 'slider' | 'click' | 'click-shape' | 'rotate' | 'angle'
+  | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile';
+const captchaMode = ref<DemoMode>('auto');
 const demoShapes = ref<string[]>([]);
 const demoShapeLabels = ref<Record<string, string>>({});
 const demoLocale = ref<'zh-CN' | 'en'>('zh-CN');
@@ -369,7 +372,7 @@ const shapeFromUrl = ref('');
 const verified = ref(false);
 const verifiedTicket = ref('');
 
-function open(mode: 'slider' | 'click' | 'click-shape' | 'rotate' | 'angle' | 'scratch' | 'curve' | 'slide-curve' | 'swing-tile') {
+function open(mode: DemoMode) {
   resetVerified();
   captchaMode.value = mode;
   captchaVisible.value = true;
@@ -377,13 +380,13 @@ function open(mode: 'slider' | 'click' | 'click-shape' | 'rotate' | 'angle' | 's
   loadShapes();
 }
 
-function openRandom() {
-  const modes = ['slider', 'click', 'click-shape', 'rotate', 'angle', 'scratch', 'curve', 'slide-curve', 'swing-tile'] as const;
-  open(modes[Math.floor(Math.random() * modes.length)]);
+/** 不指定类型：由后端从类型池中决定（生产模式下的默认用法） */
+function openAuto() {
+  open('auto');
 }
 
 function onLogin() {
-  openRandom();
+  openAuto();
 }
 
 function onVerified(result: VerifyResult) {
@@ -418,7 +421,8 @@ function loadShapes() {
     });
 }
 
-// 支持 URL 参数直接打开指定验证方式：?captcha=slider|click|random，滑块/摆动图块可追加 &shape=...
+// 支持 URL 参数直接打开指定验证方式：?captcha=slider|click|auto|random，
+// 具体类型仅在 debug 模式下生效（非 debug 由后端决定），滑块/摆动图块可追加 &shape=...
 onMounted(() => {
   loadShapes();
   const params = new URLSearchParams(location.search);
@@ -434,8 +438,8 @@ onMounted(() => {
     || modeParam === 'slide-curve'
     || modeParam === 'swing-tile') {
     open(modeParam);
-  } else if (modeParam === 'random') {
-    openRandom();
+  } else if (modeParam === 'random' || modeParam === 'auto') {
+    openAuto();
   }
 });
 </script>

@@ -19,6 +19,8 @@ import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -33,6 +35,11 @@ import java.util.Locale;
  *   enabled: true
  *   api-prefix: /api/captcha
  *   debug-enabled: false
+ *   # 允许下发的类型；空表示全部。非 debug 时后端在此范围内随机挑选，
+ *   # debug 时也限定前端可用 type 指定的范围
+ *   types:
+ *     - slider
+ *     - click
  *   background:
  *     sources:
  *       - /images/captcha/default.jpg
@@ -59,6 +66,9 @@ public class CaptchaProperties {
 
     /** 是否允许 debug=1 返回答案 */
     private boolean debugEnabled = false;
+
+    /** 允许下发的验证码类型编码；为空表示全部已注册类型 */
+    private List<String> types = new ArrayList<>();
 
     /** 验证通过后发放的票据有效期（秒） */
     private long ticketExpireSeconds = 120;
@@ -110,6 +120,7 @@ public class CaptchaProperties {
         CaptchaConfig config = new CaptchaConfig();
         config.setDebugEnabled(debugEnabled);
         config.setTicketExpireSeconds(ticketExpireSeconds);
+        config.setTypes(List.copyOf(types));
         BeanUtils.copyProperties(slider, config.getSlider());
         BeanUtils.copyProperties(click, config.getClick());
         BeanUtils.copyProperties(clickShape, config.getClickShape());

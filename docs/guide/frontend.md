@@ -38,7 +38,6 @@ createApp(App)
 <template>
   <Captcha
     display="inline"
-    mode="slider"
     :width="300"
     :height="170"
     @success="onVerified"
@@ -46,7 +45,6 @@ createApp(App)
 
   <CaptchaModal
     :visible="visible"
-    mode="click"
     @success="onVerified"
   />
 </template>
@@ -58,6 +56,22 @@ function onVerified(result) {
   console.log('验证通过，票据：', result.ticket)
 }
 </script>
+```
+
+默认 `mode="auto"`：组件请求时不带 `type`，由后端类型池决定，拿到响应后按其中的 `type`
+自动渲染对应交互（滑块 / 文字点选 / 图形点选 / 旋转 / 角度 / 刮刮乐 / 曲线 / 滑动曲线 / 摆动图块）。
+
+`mode="slider"`、`mode="click"` 这类具体类型只是**类型提示**，只有前端 `debug` 与后端
+`debug-enabled` 同时开启时才会生效；生产环境由后端决定。无论提示是什么，组件都按后端返回的
+`type` 渲染，因此不会出现“前端选滑块、后端发点选”的错配。
+
+只想开放部分类型时，在后端配置类型池即可（不在池内的类型不会下发，debug 指定也会被拒绝）：
+
+```yaml
+captcha:
+  types:
+    - slider
+    - click
 ```
 
 也可按需使用底层组件：`SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `AngleCaptcha` / `ScratchCaptcha` / `CurveCaptcha` / `FloatingCaptcha`。
@@ -76,7 +90,7 @@ function onVerified(result) {
 | `api` | 自定义 API 客户端 | 自动创建 |
 | `request` | 自定义请求函数 | 内置 fetch |
 | `width` / `height` | 图片尺寸 | `340` / `190` |
-| `mode` | 验证方式：slider / click / click-shape / rotate / angle / scratch / curve / slide-curve / swing-tile | `slider` |
+| `mode` | 类型提示：`auto` 由后端类型池决定；具体类型（slider / click / click-shape / rotate / angle / scratch / curve / slide-curve / swing-tile）仅 debug 模式生效 | `auto` |
 | `shape` | 滑块/摆动图块初始形状（仅 debug 生效，传 random 则后端随机） | `''` |
 | `shapes` / `shapeLabels` | 形状选择器列表与标签（demo 由 `GET {prefix}/types?debug=1` 下发，非 debug 返回空列表） | 接口返回 |
 | `debug` | 是否请求调试答案（仅联调） | `false` |

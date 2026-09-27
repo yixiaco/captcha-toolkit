@@ -38,7 +38,6 @@ createApp(App)
 <template>
   <Captcha
     display="inline"
-    mode="slider"
     :width="300"
     :height="170"
     @success="onVerified"
@@ -46,7 +45,6 @@ createApp(App)
 
   <CaptchaModal
     :visible="visible"
-    mode="click"
     @success="onVerified"
   />
 </template>
@@ -59,6 +57,25 @@ function onVerified(result: VerifyResult) {
   console.log('Verified, ticket:', result.ticket)
 }
 </script>
+```
+
+The default is `mode="auto"`: the component asks the server without a `type`, lets the server
+pick one, and renders whichever interaction the response carries (slider / click / shape click /
+rotate / angle / scratch / curve / slide curve / swing tile).
+
+`mode="slider"`, `mode="click"` and friends are only **hints**: they apply when the frontend runs
+with `debug` *and* the backend has `debug-enabled=true`. In production the server decides. The
+component always renders the `type` returned by the server, so a hint can never make the UI
+mismatch the issued challenge.
+
+To expose only some types, restrict the pool on the backend (types outside it are never issued,
+and debug requests for them are rejected):
+
+```yaml
+captcha:
+  types:
+    - slider
+    - click
 ```
 
 Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `AngleCaptcha` / `ScratchCaptcha` / `CurveCaptcha` / `FloatingCaptcha`.
@@ -77,7 +94,7 @@ Lower-level components: `SliderCaptcha` / `ClickCaptcha` / `RotateCaptcha` / `An
 | `api` | Custom API client | auto |
 | `request` | Custom request function | fetch |
 | `width` / `height` | Image size | `340` / `190` |
-| `mode` | slider / click / rotate / angle / scratch / curve / slide-curve / swing-tile | `slider` |
+| `mode` | Type hint: `auto` lets the server pool decide; a concrete type (slider / click / click-shape / rotate / angle / scratch / curve / slide-curve / swing-tile) only applies in debug | `auto` |
 | `shape` | Initial slider shape (debug only) | `''` |
 | `debug` | Request debug answers | `false` |
 | `autoReload` | Reload after failure | `true` |

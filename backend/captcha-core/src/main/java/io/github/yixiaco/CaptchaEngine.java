@@ -38,11 +38,16 @@ import io.github.yixiaco.type.CaptchaType;
 import io.github.yixiaco.util.FingerprintHasher;
 import io.github.yixiaco.word.WordFactory;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.random.RandomGenerator;
 
 /**
  * 验证码引擎（门面模式）：对调用方屏蔽工厂、生成器、存储、编码细节。
@@ -51,6 +56,8 @@ import java.util.UUID;
  * <pre>
  * CaptchaEngine engine = CaptchaEngine.of(config, store, codec, List.of(), backgroundProvider);
  * CaptchaChallenge challenge = engine.create(CaptchaType.SLIDER, Map.of("shape", "classic"), false);
+ * // 面向 HTTP 客户端下发时用 createForClient：非 debug 下类型由后端类型池决定
+ * CaptchaChallenge auto = engine.createForClient(null, Map.of(), false, null);
  * VerifyResult result = engine.verify(challenge.getId(),
  *         CaptchaAnswer.slider(100.0 / challenge.getWidth()));
  * </pre>
@@ -59,6 +66,12 @@ public class CaptchaEngine {
 
     /** 验证码类型 → 生成器映射（各类型携带各自的泛型载荷） */
     private final Map<CaptchaType, CaptchaGenerator<?>> generators;
+
+    /** 允许下发的类型池（非空，按 {@link CaptchaType} 声明顺序） */
+    private final List<CaptchaType> typePool;
+
+    /** 类型随机源；为 null 时每次选择使用 {@link ThreadLocalRandom} */
+    private final RandomGenerator typeRandom;
 
     /** 验证码会话存储 */
     private final CaptchaSessionStore store;
@@ -101,7 +114,7 @@ public class CaptchaEngine {
     public CaptchaEngine(List<CaptchaFactory> factories, CaptchaConfig config,
                          CaptchaSessionStore store, CaptchaTicketStore ticketStore,
                          CaptchaImageCodec codec) {
-        this(buildGenerators(factories, config), store, ticketStore, codec,
+        this(buildGenerators(factories, config), config, store, ticketStore, codec,
                 config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000,
                 config.getMessageProvider(), effectiveRateLimiter(config),
                 config.getRateLimit().isEnabled(), config.getRateLimit().getFingerprintSalt());
@@ -182,7 +195,7 @@ public class CaptchaEngine {
                 new SlideCurveCaptchaFactory(sliderBackgroundProvider).create(config));
         map.putIfAbsent(CaptchaType.SWING_TILE,
                 new SwingTileCaptchaFactory(sliderBackgroundProvider).create(config));
-        return new CaptchaEngine(map, store, ticketStore, codec,
+        return new CaptchaEngine(map, config, store, ticketStore, codec,
                 config.isDebugEnabled(), config.getTicketExpireSeconds() * 1000,
                 config.getMessageProvider(), effectiveRateLimiter(config),
                 config.getRateLimit().isEnabled(), config.getRateLimit().getFingerprintSalt());
@@ -190,6 +203,7 @@ public class CaptchaEngine {
 
     /** 私有构造：统一接收已组装好的生成器映射与依赖 */
     private CaptchaEngine(Map<CaptchaType, CaptchaGenerator<?>> generators,
+                          CaptchaConfig config,
                           CaptchaSessionStore store,
                           CaptchaTicketStore ticketStore,
                           CaptchaImageCodec codec,
@@ -200,6 +214,8 @@ public class CaptchaEngine {
                           boolean deviceRateLimitEnabled,
                           String fingerprintSalt) {
         this.generators = generators;
+        this.typePool = buildTypePool(config.getTypes(), generators.keySet());
+        this.typeRandom = config.getTypeRandom();
         this.store = store;
         this.ticketStore = ticketStore;
         this.codec = codec;
@@ -237,6 +253,40 @@ public class CaptchaEngine {
         map.putIfAbsent(CaptchaType.SLIDE_CURVE, new SlideCurveCaptchaFactory().create(config));
         map.putIfAbsent(CaptchaType.SWING_TILE, new SwingTileCaptchaFactory().create(config));
         return map;
+    }
+
+    /**
+     * 解析允许下发的类型池：未配置时取全部已注册类型。
+     *
+     * <p>配置了未知编码或未注册类型时直接抛异常，避免把配置错误拖到线上请求才暴露。</p>
+     */
+    private static List<CaptchaType> buildTypePool(List<String> configured,
+                                                  Set<CaptchaType> registered) {
+        if (configured == null || configured.isEmpty()) {
+            return List.copyOf(registered);
+        }
+        Set<CaptchaType> pool = new LinkedHashSet<>();
+        for (String code : configured) {
+            if (code == null || code.isBlank()) {
+                continue;
+            }
+            CaptchaType type;
+            try {
+                type = CaptchaType.fromCode(code.trim());
+            } catch (IllegalArgumentException e) {
+                throw new CaptchaException("captcha.types 配置了未知的验证码类型: " + code
+                        + "，可选值: " + Arrays.stream(CaptchaType.values())
+                                .map(CaptchaType::getCode).toList());
+            }
+            if (!registered.contains(type)) {
+                throw new CaptchaException("captcha.types 配置的验证码类型未注册: " + code);
+            }
+            pool.add(type);
+        }
+        if (pool.isEmpty()) {
+            throw new CaptchaException("captcha.types 不能全部为空");
+        }
+        return List.copyOf(pool);
     }
 
     /**
@@ -300,6 +350,51 @@ public class CaptchaEngine {
     }
 
     /**
+     * 面向客户端（HTTP）下发一张验证码：<b>类型由后端决定</b>。
+     *
+     * <p>只有 debug 请求且 {@code captcha.debug-enabled=true} 时，才允许调用方用
+     * {@code requestedTypeCode} 指定类型；其余情况下该参数一律被忽略，
+     * 由引擎从类型池（{@code captcha.types}，为空表示全部已注册类型）中随机挑选。</p>
+     *
+     * @param requestedTypeCode 客户端请求的类型编码（slider / click / ...；null、空串或 auto 表示交给后端）
+     * @param params            扩展参数，例如滑块 shape（非 debug 时会被丢弃）
+     * @param debug             客户端是否请求调试信息
+     * @param deviceFingerprint 设备指纹（可为 null；限流开启且指纹缺失时不计数）
+     * @return 下发的验证码，其中 {@code type} 为后端实际选择的类型
+     * @throws IllegalArgumentException 客户端类型编码非法，或 debug 请求了类型池之外的类型
+     */
+    public CaptchaChallenge<?> createForClient(String requestedTypeCode,
+                                               Map<String, String> params,
+                                               boolean debug,
+                                               String deviceFingerprint) {
+        // debug 是否真正生效由引擎配置决定：debug-enabled 关闭时客户端无权指定类型
+        boolean effectiveDebug = debug && debugEnabled;
+        CaptchaType requested = effectiveDebug ? parseClientType(requestedTypeCode) : null;
+        if (requested != null && !typePool.contains(requested)) {
+            throw new IllegalArgumentException("验证码类型未开放: " + requested.getCode());
+        }
+        return create(requested != null ? requested : nextType(),
+                params, effectiveDebug, deviceFingerprint);
+    }
+
+    /** 解析客户端请求的类型；null、空串与 auto 都表示“由后端决定” */
+    private static CaptchaType parseClientType(String code) {
+        if (code == null || code.isBlank() || "auto".equalsIgnoreCase(code.trim())) {
+            return null;
+        }
+        return CaptchaType.fromCode(code.trim());
+    }
+
+    /** 从类型池中随机挑选一种类型 */
+    private CaptchaType nextType() {
+        if (typePool.size() == 1) {
+            return typePool.get(0);
+        }
+        RandomGenerator random = typeRandom != null ? typeRandom : ThreadLocalRandom.current();
+        return typePool.get(random.nextInt(typePool.size()));
+    }
+
+    /**
      * 校验答案。无论成功失败都会销毁会话（一次性使用）。
      */
     public VerifyResult verify(String id, CaptchaAnswer answer) {
@@ -358,9 +453,9 @@ public class CaptchaEngine {
     }
 
 
-    /** 返回引擎支持的所有验证码类型编码（升序） */
+    /** 返回后端允许下发的验证码类型编码（升序，即类型池内容） */
     public List<String> supportedTypes() {
-        return generators.keySet().stream()
+        return typePool.stream()
                 .map(CaptchaType::getCode)
                 .sorted()
                 .toList();
@@ -368,25 +463,29 @@ public class CaptchaEngine {
 
     /**
      * 返回各类型支持的拼图形状信息列表（key 为验证码类型编码）。
+     * 未纳入类型池的类型返回空列表。
      *
      * @param debug 是否返回完整形状列表；非 debug 时返回空列表，
      *              避免把可用图形白名单暴露给前端
      */
     public Map<String, List<ShapeInfo>> supportedShapes(boolean debug) {
         Map<String, List<ShapeInfo>> shapes = new LinkedHashMap<>();
-        if (!debug) {
-            shapes.put("slider", List.of());
-            shapes.put("swing-tile", List.of());
-            return shapes;
+        List<ShapeInfo> slider = List.of();
+        List<ShapeInfo> swingTile = List.of();
+        if (debug) {
+            CaptchaGenerator<?> sliderGenerator = typePool.contains(CaptchaType.SLIDER)
+                    ? generators.get(CaptchaType.SLIDER) : null;
+            if (sliderGenerator instanceof SliderCaptchaGenerator generator) {
+                slider = generator.getShapeOptions();
+            }
+            CaptchaGenerator<?> swingTileGenerator = typePool.contains(CaptchaType.SWING_TILE)
+                    ? generators.get(CaptchaType.SWING_TILE) : null;
+            if (swingTileGenerator instanceof SwingTileCaptchaGenerator generator) {
+                swingTile = generator.getShapeOptions();
+            }
         }
-        CaptchaGenerator<?> generator = generators.get(CaptchaType.SLIDER);
-        if (generator instanceof SliderCaptchaGenerator slider) {
-            shapes.put("slider", slider.getShapeOptions());
-        }
-        CaptchaGenerator<?> swingTile = generators.get(CaptchaType.SWING_TILE);
-        if (swingTile instanceof SwingTileCaptchaGenerator swing) {
-            shapes.put("swing-tile", swing.getShapeOptions());
-        }
+        shapes.put("slider", slider);
+        shapes.put("swing-tile", swingTile);
         return shapes;
     }
 

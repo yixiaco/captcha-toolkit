@@ -27,12 +27,23 @@ The default prefix is `/api/captcha`, configurable via `captcha.api-prefix`.
 
 | Method | Path | Description |
 | --- | --- | --- |
-| GET | `{prefix}?type=slider\|click\|rotate\|angle\|scratch\|curve\|slide-curve\|swing-tile` | Create a challenge |
+| GET | `{prefix}?debug=1` | Create a challenge (type is chosen by the server; `type` only works in debug) |
 | POST | `{prefix}/verify` | Verify the answer |
 | GET/POST | `{prefix}/ticket/verify` | Verify a one-time ticket |
 | GET | `{prefix}/types` | List supported types and shapes |
 
 ### Create a Challenge
+
+```http
+GET /api/captcha
+```
+
+The challenge type is decided **by the server**: the engine picks a random type from the
+`captcha.types` pool (empty means every registered type), and the `type` field in the response
+is the type that was actually issued. A `type` parameter sent by the client is ignored unless
+the request has `debug=1` *and* the server runs with `captcha.debug-enabled=true`; even then it
+must belong to the pool, otherwise the endpoint answers `BAD_REQUEST`. In debug you can still
+pick both type and shape:
 
 ```http
 GET /api/captcha?type=slider&shape=classic&debug=1

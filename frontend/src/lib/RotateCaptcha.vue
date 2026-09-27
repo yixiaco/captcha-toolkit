@@ -39,7 +39,7 @@
         v-if="status === 'error'"
         :text="opts.loadFailedText"
         :retry-text="opts.retryText"
-        @retry="loadCaptcha"
+        @retry="loadCaptcha()"
       />
 
       <transition name="fade">
@@ -112,7 +112,7 @@
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useCaptchaOptions } from './options';
 import CaptchaLoadError from './CaptchaLoadError.vue';
-import type { RotateChallengeData, VerifyResult } from './api';
+import type { CaptchaChallenge, RotateChallengeData, VerifyResult } from './api';
 import type { CaptchaStatus, ClientType } from './types';
 import { createTrace, pushNormalizedPoint, buildCompressedTrace } from './trace';
 import type { BehaviorTrace } from './trace';
@@ -146,6 +146,8 @@ interface Props {
   imageAlt?: string | null
   /** 客户端类型：web / h5 / mini_program */
   clientType?: ClientType | null
+  /** 父级预取的验证码：传入后组件不再自行请求，由上层统一按后端类型下发 */
+  challenge?: CaptchaChallenge<RotateChallengeData> | null
 }
 
 // 布尔可选 props 统一用 null 作为“未传”标记，避免 Vue 默认 false 覆盖全局配置
@@ -158,6 +160,8 @@ const emit = defineEmits<{
   (e: 'success', result: VerifyResult): void
   (e: 'fail', result: VerifyResult): void
   (e: 'error', error: unknown): void
+  /** 受控模式下请求父级重新下发一张验证码 */
+  (e: 'refresh', params?: Record<string, unknown>): void
 }>();
 
 const opts = useCaptchaOptions(props);
@@ -208,7 +212,32 @@ function trackPoint(event: PointerEvent, type: 0 | 1 | 2) {
   pushNormalizedPoint(trace!, x, y, type);
 }
 
-async function loadCaptcha() {
+/** 应用后端下发的验证码：自行请求与父级下发共用同一套渲染逻辑 */
+async function applyChallenge(res: CaptchaChallenge<RotateChallengeData>) {
+  captchaId.value = res.id;
+  image1.value = res.image1;
+  image2.value = res.image2 || '';
+  pieceLeft.value = 0;
+  rotation.value = 0;
+  status.value = 'idle';
+  if (opts.debug && rootRef.value) {
+    rootRef.value.dataset.captchaId = res.id;
+    if (res.data?.debugAngle != null) {
+      rootRef.value.dataset.debugAngle = String(res.data.debugAngle);
+    }
+  }
+}
+
+/**
+ * 从后端获取旋转验证码。
+ *
+ * <p>父级已接管下发时（{@code challenge} 存在）只把刷新请求交回父级。</p>
+ */
+async function loadCaptcha(params: Record<string, unknown> = {}) {
+  if (props.challenge) {
+    emit('refresh', params);
+    return;
+  }
   status.value = 'loading';
   image1.value = '';
   image2.value = '';
@@ -218,18 +247,11 @@ async function loadCaptcha() {
       type: 'rotate',
       debug: opts.debug ? '1' : undefined,
     });
-    captchaId.value = res.id;
-    image1.value = res.image1;
-    image2.value = res.image2 || '';
-    pieceLeft.value = 0;
-    rotation.value = 0;
-    status.value = 'idle';
-    if (opts.debug && rootRef.value) {
-      rootRef.value.dataset.captchaId = res.id;
-      if (res.data?.debugAngle != null) {
-        rootRef.value.dataset.debugAngle = String(res.data.debugAngle);
-      }
+    if (res.type && res.type !== 'rotate') {
+      throw new Error(`后端下发了 ${res.type} 类型的验证码，旋转组件无法渲染；`
+        + '请改用 <Captcha> 由组件按后端类型自动渲染，或把 captcha.types 固定为单一类型');
     }
+    await applyChallenge(res);
   } catch (error) {
     console.error('加载旋转验证码失败', error);
     emit('error', error);
@@ -308,6 +330,11 @@ async function onPointerUp(event: PointerEvent) {
 onMounted(async () => {
   await nextTick();
   trackWidth = trackRef.value ? trackRef.value.clientWidth : opts.width;
+  // 父级已下发验证码：直接渲染，不再自行请求
+  if (props.challenge) {
+    await applyChallenge(props.challenge);
+    return;
+  }
   loadCaptcha();
 });
 

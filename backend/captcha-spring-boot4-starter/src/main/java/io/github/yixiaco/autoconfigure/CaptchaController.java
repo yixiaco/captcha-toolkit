@@ -1,7 +1,6 @@
 package io.github.yixiaco.autoconfigure;
 
 import io.github.yixiaco.CaptchaEngine;
-import io.github.yixiaco.type.CaptchaType;
 import io.github.yixiaco.exception.RateLimitExceededException;
 import io.github.yixiaco.i18n.CaptchaMessages;
 import io.github.yixiaco.i18n.MessageProvider;
@@ -31,6 +30,10 @@ import java.util.Map;
  * <br>POST {prefix}/verify
  * <br>GET/POST {prefix}/ticket/verify?ticket=...（业务接口校验一次性票据）
  * <br>GET  {prefix}/types
+ *
+ * <p>类型由后端决定：非 debug 请求下 {@code type} 参数会被忽略，
+ * 引擎从 {@code captcha.types} 类型池中随机挑选；只有 debug 请求且
+ * {@code captcha.debug-enabled=true} 时，前端才能用 {@code type} 指定类型。</p>
  */
 @RestController
 @RequestMapping("${captcha.api-prefix:/api/captcha}")
@@ -59,9 +62,12 @@ public class CaptchaController {
         this.messageProvider = messageProvider;
     }
 
-    /** 下发一张验证码：type 指定类型，shape 指定滑块形状，debug 请求调试答案 */
+    /**
+     * 下发一张验证码：类型由后端决定（仅 debug 模式下 type 参数生效），
+     * shape 指定滑块形状（同样仅 debug 生效），debug 请求调试答案。
+     */
     @GetMapping
-    public Object create(@RequestParam(defaultValue = "slider") String type,
+    public Object create(@RequestParam(required = false) String type,
                          @RequestParam(required = false) String shape,
                          @RequestParam(defaultValue = "false") boolean debug,
                          @RequestParam(required = false) String deviceFingerprint,
@@ -73,11 +79,14 @@ public class CaptchaController {
             params.put("shape", shape);
         }
         try {
-            return engine.create(CaptchaType.fromCode(type), params,
-                    debug && properties.isDebugEnabled(), deviceFingerprint);
+            return engine.createForClient(type, params, debug, deviceFingerprint);
         } catch (RateLimitExceededException e) {
             return VerifyResult.fail(CaptchaMessages.RATE_LIMIT_EXCEEDED,
                     "RATE_LIMITED", messageProvider)
+                    .localize(resolveLocale(lang, acceptLanguage), messageProvider);
+        } catch (IllegalArgumentException e) {
+            // 客户端传了未知类型，或 debug 指定了类型池之外的类型
+            return VerifyResult.badRequest(CaptchaMessages.VERIFY_UNSUPPORTED_TYPE, messageProvider)
                     .localize(resolveLocale(lang, acceptLanguage), messageProvider);
         }
     }
@@ -118,7 +127,7 @@ public class CaptchaController {
                 .localize(resolveLocale(request.getLang(), acceptLanguage), messageProvider);
     }
 
-    /** 查询后端支持的类型与滑块形状（debug 模式才返回形状列表，否则为空列表） */
+    /** 查询后端允许下发的类型与滑块形状（debug 模式才返回形状列表，否则为空列表） */
     @GetMapping("/types")
     public Map<String, Object> types(@RequestParam(defaultValue = "false") boolean debug) {
         Map<String, Object> body = new LinkedHashMap<>();

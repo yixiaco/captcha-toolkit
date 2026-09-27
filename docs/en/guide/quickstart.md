@@ -60,9 +60,11 @@ npm run build:lib    # build the library (includes .d.ts)
 - `http://localhost:5173/?captcha=curve` curve drawing
 - `http://localhost:5173/?captcha=slide-curve` slide curve
 - `http://localhost:5173/?captcha=swing-tile` swing tile
-- `http://localhost:5173/?captcha=random` random mode
+- `http://localhost:5173/?captcha=auto` (alias `random`) server-decided type
 
-For slider debugging, append a shape, e.g. `?captcha=slider&shape=classic`.
+Picking a concrete type is a debug-only convenience: the demo runs with `debug-enabled: true`, so
+`?captcha=` is honoured there; in production the server picks from the `captcha.types` pool. For
+slider debugging, append a shape, e.g. `?captcha=slider&shape=classic`.
 
 ## API Self Check
 

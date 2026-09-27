@@ -13,8 +13,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -57,27 +59,67 @@ class CaptchaBoot3AutoConfigurationTest {
     }
 
     @Test
-    void createsSliderChallengeWithoutExtraConfiguration() throws Exception {
-        HttpResponse<String> response = get(apiBase, "?type=slider");
+    void createsChallengeWithServerSelectedType() throws Exception {
+        // 类型由后端决定：不带任何参数也能下发验证码
+        HttpResponse<String> response = get(apiBase, "");
         assertEquals(200, response.statusCode(), response.body());
 
         Map<String, Object> challenge = json(response.body());
-        assertEquals("slider", challenge.get("type"));
+        Object type = challenge.get("type");
+        assertTrue(type instanceof String && !((String) type).isEmpty(),
+                "应返回后端选择的类型: " + response.body());
         assertNotNull(challenge.get("id"));
-        assertNotNull(challenge.get("image1"));
-        assertNotNull(challenge.get("image2"));
+        // 部分类型（如角度验证）只下发独立小图，因此至少应有一张图片
+        assertTrue(challenge.get("image1") != null || challenge.get("image2") != null,
+                "应下发验证图片: " + response.body());
     }
 
     @Test
     void debugFlagAloneNeverExposesAnswers() throws Exception {
-        HttpResponse<String> response = get(apiBase, "?type=slider&debug=true");
-        assertEquals(200, response.statusCode(), response.body());
+        // 类型池固定为滑块，确保这条断言针对确实带答案字段的类型
+        try (ConfigurableApplicationContext sliderOnly = new SpringApplicationBuilder(Boot3TestApplication.class)
+                .properties("server.port=0", "captcha.types=slider")
+                .run()) {
+            HttpResponse<String> response = get(baseUrl(sliderOnly), "?type=slider&debug=true");
+            assertEquals(200, response.statusCode(), response.body());
 
-        // 后端 debug-enabled 默认关闭：前端单独传 debug=1 不应拿到答案字段
-        Object data = json(response.body()).get("data");
-        assertTrue(data instanceof Map, "data 载荷缺失: " + response.body());
-        assertFalse(((Map<?, ?>) data).containsKey("debugX"),
-                "非 debug 响应不应包含答案: " + response.body());
+            // 后端 debug-enabled 默认关闭：前端单独传 debug=1 不应拿到答案字段
+            Map<String, Object> challenge = json(response.body());
+            assertEquals("slider", challenge.get("type"), response.body());
+            Object data = challenge.get("data");
+            assertTrue(data instanceof Map, "data 载荷缺失: " + response.body());
+            assertFalse(((Map<?, ?>) data).containsKey("debugX"),
+                    "非 debug 响应不应包含答案: " + response.body());
+        }
+    }
+
+    @Test
+    void typeIsDecidedByServerUnlessDebugEnabled() throws Exception {
+        try (ConfigurableApplicationContext debugApp = new SpringApplicationBuilder(Boot3TestApplication.class)
+                .properties("server.port=0", "captcha.types=slider,click",
+                        "captcha.debug-enabled=true")
+                .run()) {
+            String base = baseUrl(debugApp);
+
+            // debug 模式下前端指定的类型生效（且受类型池限制）
+            assertEquals("click", json(get(base, "?type=click&debug=1").body()).get("type"));
+
+            // 未带 debug 时同一个 type 参数被忽略：多次请求应出现后端随机挑出的不同结果
+            Set<Object> picked = new HashSet<>();
+            for (int i = 0; i < 12; i++) {
+                Object type = json(get(base, "?type=click").body()).get("type");
+                assertTrue(Set.of("slider", "click").contains(type),
+                        "下发类型应落在类型池内: " + type);
+                picked.add(type);
+            }
+            assertTrue(picked.size() > 1,
+                    "非 debug 下类型应由后端决定，而不是沿用客户端的 click: " + picked);
+
+            // debug 指定类型池之外的类型：拒绝而不是降级
+            Map<String, Object> rejected = json(get(base, "?type=rotate&debug=1").body());
+            assertEquals(Boolean.FALSE, rejected.get("success"), rejected.toString());
+            assertEquals("BAD_REQUEST", rejected.get("code"), rejected.toString());
+        }
     }
 
     @Test
