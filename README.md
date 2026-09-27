@@ -68,7 +68,7 @@ docs/                            VitePress 文档站
    <dependency>
      <groupId>io.github.yixiaco</groupId>
      <artifactId>captcha-spring-boot4-starter</artifactId>
-     <version>0.3.0</version>
+     <version>0.4.0</version>
    </dependency>
    ```
 
@@ -282,7 +282,7 @@ mvn -pl captcha-demo-boot2 -am spring-boot:run
 
 ```bash
 mvn -pl captcha-demo-boot2 -am -DskipTests package
-java -jar captcha-demo-boot2/target/captcha-demo-boot2-0.3.0.jar
+java -jar captcha-demo-boot2/target/captcha-demo-boot2-0.4.0.jar
 ```
 
 需要同时跑两个演示时，用 `--server.port=xxxx` 或 `SERVER_PORT=xxxx` 临时改端口，

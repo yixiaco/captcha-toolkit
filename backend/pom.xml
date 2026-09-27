@@ -14,7 +14,7 @@
 
     <groupId>io.github.yixiaco</groupId>
     <artifactId>captcha-toolkit-parent</artifactId>
-    <version>0.3.0</version>
+    <version>0.4.0</version>
     <packaging>pom</packaging>
     <name>captcha-toolkit-parent</name>
     <description>可嵌入的极验风格行为验证码工具：核心引擎 + Spring Boot 2.7/3/4 Starter + 演示应用</description>

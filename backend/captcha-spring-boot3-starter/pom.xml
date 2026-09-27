@@ -20,7 +20,7 @@
     <groupId>io.github.yixiaco</groupId>
     <artifactId>captcha-spring-boot3-starter</artifactId>
     <!-- 需与 backend/pom.xml 中 captcha-toolkit-parent 的版本保持一致（无法继承，只能手写） -->
-    <version>0.3.0</version>
+    <version>0.4.0</version>
     <packaging>jar</packaging>
     <name>captcha-spring-boot3-starter</name>
     <description>Spring Boot 3 自动配置：Spring Boot 3.5 基线 + Java 17，供 Boot 3 / JDK 17 宿主接入</description>

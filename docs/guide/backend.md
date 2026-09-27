@@ -14,7 +14,7 @@
 <dependency>
   <groupId>io.github.yixiaco</groupId>
   <artifactId>captcha-spring-boot4-starter</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
 </dependency>
 ```
 
